@@ -152,6 +152,21 @@ export const useStore = create<StoreState>()(
         const original = getState().projects.find((p) => p.id === id);
         if (!original) return null;
         const now = Date.now();
+        const sceneIdMap = new Map<string, string>();
+        const scenes = original.scenes.map((sc) => {
+          const newId = nanoid();
+          sceneIdMap.set(sc.id, newId);
+          return { ...sc, id: newId };
+        });
+        const links = (original.links ?? [])
+          .map((link) => {
+            const fromSceneId = sceneIdMap.get(link.fromSceneId);
+            const toSceneId = sceneIdMap.get(link.toSceneId);
+            return fromSceneId && toSceneId
+              ? { ...link, id: nanoid(), fromSceneId, toSceneId }
+              : null;
+          })
+          .filter((link): link is SceneLink => link !== null);
         const copy: Project = {
           ...structuredClone(original),
           id: nanoid(),
@@ -159,7 +174,8 @@ export const useStore = create<StoreState>()(
           createdAt: now,
           updatedAt: now,
           // New scene ids; images are shared by reference (blobs aren't copied).
-          scenes: original.scenes.map((sc) => ({ ...sc, id: nanoid() })),
+          scenes,
+          links,
         };
         set((s) => ({ projects: [copy, ...s.projects] }));
         return copy.id;
@@ -198,7 +214,11 @@ export const useStore = create<StoreState>()(
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === projectId
-              ? touch({ ...p, scenes: p.scenes.filter((sc) => sc.id !== sceneId) })
+              ? touch({
+                  ...p,
+                  scenes: p.scenes.filter((sc) => sc.id !== sceneId),
+                  links: (p.links ?? []).filter((l) => l.fromSceneId !== sceneId && l.toSceneId !== sceneId),
+                })
               : p,
           ),
         }));
@@ -215,6 +235,7 @@ export const useStore = create<StoreState>()(
               ...structuredClone(src),
               id: nanoid(),
               title: src.title ? `${src.title} (Copy)` : "",
+              layout: src.layout ? { x: src.layout.x + 40, y: src.layout.y + 40 } : undefined,
               collapsed: false,
             };
             const scenes = [...p.scenes];

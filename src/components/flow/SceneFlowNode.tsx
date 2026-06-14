@@ -47,6 +47,7 @@ function SceneFlowNodeImpl({ id }: NodeProps) {
 
   if (!scene) return null; // scene deleted out from under us — node is being removed
 
+  const startEditing = () => setEditing(true);
   const commit = () => {
     updateScene(projectId, scene.id, { title: draft.trim() });
     setEditing(false);
@@ -119,16 +120,41 @@ function SceneFlowNodeImpl({ id }: NodeProps) {
                   }}
                   onBlur={commit}
                   placeholder="Untitled scene"
-                  className="nodrag min-w-0 flex-1 rounded border border-[var(--color-border-strong)] bg-white px-1.5 py-0.5 text-[13px] font-semibold leading-tight text-[var(--color-ink)] outline-none focus:border-[var(--color-ash)]"
+                  className="nodrag nopan min-w-0 flex-1 rounded border border-[var(--color-border-strong)] bg-white px-1.5 py-0.5 text-[13px] font-semibold leading-tight text-[var(--color-ink)] outline-none focus:border-[var(--color-ash)]"
                 />
               ) : (
-                <h3
-                  onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
-                  title="Double-click to rename"
-                  className="nodrag truncate text-[13px] font-semibold leading-tight text-[var(--color-ink)]"
-                >
-                  {scene.title || <span className="font-normal text-[var(--color-ink-faint)]">Untitled scene</span>}
-                </h3>
+                <>
+                  <h3
+                    onClick={(e) => {
+                      if (isActive) {
+                        e.stopPropagation();
+                        startEditing();
+                      }
+                    }}
+                    onDoubleClick={(e) => { e.stopPropagation(); startEditing(); }}
+                    title={isActive ? "Click to rename" : "Select, then click to rename"}
+                    className={cn(
+                      "nodrag min-w-0 flex-1 truncate text-[13px] font-semibold leading-tight text-[var(--color-ink)]",
+                      isActive && "cursor-text rounded-sm hover:bg-[var(--color-surface-2)]",
+                    )}
+                  >
+                    {scene.title || <span className="font-normal text-[var(--color-ink-faint)]">Untitled scene</span>}
+                  </h3>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditing();
+                    }}
+                    title="Rename scene title"
+                    aria-label="Rename scene title"
+                    className={cn(
+                      "nodrag nopan grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-semibold text-[var(--color-ink-faint)] transition-opacity hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+                      isActive || hovered ? "opacity-100" : "opacity-0",
+                    )}
+                  >
+                    Aa
+                  </button>
+                </>
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1">
@@ -148,7 +174,7 @@ function SceneFlowNodeImpl({ id }: NodeProps) {
             onClick={(e) => { e.stopPropagation(); onEdit(scene.id); }}
             title="Edit full scene"
             aria-label="Edit full scene"
-            className="nodrag h-6 w-6 shrink-0 place-items-center rounded-md text-[var(--color-ink-faint)] opacity-0 transition-opacity hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] group-hover/node:opacity-100 [display:grid]"
+            className="nodrag nopan h-6 w-6 shrink-0 place-items-center rounded-md text-[var(--color-ink-faint)] opacity-0 transition-opacity hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] group-hover/node:opacity-100 [display:grid]"
           >
             <Pencil size={13} />
           </button>

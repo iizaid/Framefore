@@ -35,6 +35,8 @@ import { FlowCallbacksContext, type CanvasToolMode, type FlowCallbacks } from ".
 
 // Module-level so identities never change between renders — React Flow strongly
 // recommends this to avoid re-instantiating custom node/edge components.
+// Future canvas entities (notes, section frames, branch nodes) can be added here
+// without changing the core rule that timeline order drives exported video order.
 const nodeTypes = { scene: SceneFlowNode };
 const edgeTypes = { order: OrderEdge, sceneLink: SceneLinkEdge };
 
@@ -105,6 +107,38 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
   const scenes = project.scenes;
   const links = project.links;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName;
+      if (
+        target?.isContentEditable ||
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (key === "v") setToolMode("select");
+      else if (key === "c") setToolMode("connect");
+      else if (key === "h" || event.key === " ") {
+        event.preventDefault();
+        setToolMode("pan");
+      } else if (key === "f") {
+        event.preventDefault();
+        void rf.fitView({ duration: 300, padding: 0.2, maxZoom: 1 });
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [rf]);
 
   // ── Reconcile nodes from the store (source of truth for which scenes exist
   // and where they sit). Reuse the previous node object when its position is
@@ -292,8 +326,8 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
             <Panel position="top-center">
               <div className="pointer-events-none rounded-full border border-[var(--color-border-strong)] bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[var(--color-ink-soft)] shadow-sm backdrop-blur">
                 {toolMode === "connect"
-                  ? "Connect mode: drag from a right port to a left port."
-                  : "Pan mode: drag the canvas to move around."}
+                  ? "Connect mode: drag from a right port to a left port. V selects, H pans."
+                  : "Pan mode: drag the canvas to move around. V selects, C connects."}
               </div>
             </Panel>
           )}
