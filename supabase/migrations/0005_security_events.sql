@@ -21,8 +21,13 @@ CREATE TABLE IF NOT EXISTS public.security_events (
   -- Arbitrary metadata: { projectId, sceneCount, error, provider, ... }
   -- Never log passwords, tokens, or full credentials here.
   metadata    jsonb       NOT NULL DEFAULT '{}'::jsonb,
-  created_at  timestamptz NOT NULL DEFAULT now()
+  created_at  timestamptz NOT NULL DEFAULT now(),
   -- No updated_at: rows are immutable once written.
+
+  -- Bound the event_type vocabulary length and force metadata to be an object
+  -- (never an array/scalar) so the audit log can't be stuffed with huge blobs.
+  CONSTRAINT security_events_type_len   CHECK (char_length(event_type) BETWEEN 1 AND 100),
+  CONSTRAINT security_events_meta_object CHECK (jsonb_typeof(metadata) = 'object')
 );
 
 -- Fast "recent events for this user" query.

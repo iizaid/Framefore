@@ -48,7 +48,25 @@ CREATE TABLE IF NOT EXISTS public.projects (
   -- Full narration script for the whole video.
   narration           text        NOT NULL DEFAULT '',
   created_at          timestamptz NOT NULL DEFAULT now(),
-  updated_at          timestamptz NOT NULL DEFAULT now()
+  updated_at          timestamptz NOT NULL DEFAULT now(),
+
+  -- ── Tenant-integrity anchor ───────────────────────────────────────────────
+  -- id is already unique (PK), but this composite UNIQUE makes (id, user_id) a
+  -- valid FK target. Child tables reference it so a row can never point at a
+  -- project owned by a different user — enforced structurally, below RLS.
+  CONSTRAINT projects_id_user_uniq UNIQUE (id, user_id),
+
+  -- ── Payload guards (defense against huge / malformed payloads) ────────────
+  CONSTRAINT projects_title_len   CHECK (char_length(title)               <= 160),
+  CONSTRAINT projects_desc_len    CHECK (char_length(description)         <= 5000),
+  CONSTRAINT projects_topic_len   CHECK (char_length(topic)               <= 500),
+  CONSTRAINT projects_platform_len     CHECK (char_length(platform)       <= 80),
+  CONSTRAINT projects_aspect_len       CHECK (char_length(aspect_ratio)   <= 20),
+  CONSTRAINT projects_img_model_len    CHECK (char_length(default_image_model) <= 120),
+  CONSTRAINT projects_vid_model_len    CHECK (char_length(default_video_model) <= 120),
+  CONSTRAINT projects_target_len_range CHECK (target_length_sec >= 0 AND target_length_sec <= 86400),
+  -- global must be a JSON object, not an array/scalar (prevents shape abuse).
+  CONSTRAINT projects_global_is_object CHECK (jsonb_typeof(global) = 'object')
 );
 
 -- Idempotent migration guard: one cloud row per (user, local project).
@@ -134,7 +152,33 @@ CREATE TABLE IF NOT EXISTS public.scenes (
   narration_dir       text        NOT NULL DEFAULT 'ltr',
 
   created_at          timestamptz NOT NULL DEFAULT now(),
-  updated_at          timestamptz NOT NULL DEFAULT now()
+  updated_at          timestamptz NOT NULL DEFAULT now(),
+
+  -- ── Tenant-integrity anchors ──────────────────────────────────────────────
+  -- (1) Composite UNIQUE so scene_links / scene_assets can reference a scene
+  --     together with its project_id + user_id (cross-tenant links impossible).
+  CONSTRAINT scenes_id_project_user_uniq UNIQUE (id, project_id, user_id),
+  -- (2) Composite FK: the scene's (project_id, user_id) pair MUST match a real
+  --     project owned by the same user. A user can never move a scene into
+  --     another user's project, nor forge user_id, even via the service role.
+  CONSTRAINT scenes_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+
+  -- ── Data-integrity guards ─────────────────────────────────────────────────
+  -- order_index is the video order; it must be a sane non-negative position.
+  CONSTRAINT scenes_order_nonneg     CHECK (order_index >= 0),
+  CONSTRAINT scenes_duration_range   CHECK (duration_sec >= 1 AND duration_sec <= 600),
+  CONSTRAINT scenes_title_len        CHECK (char_length(title)         <= 160),
+  CONSTRAINT scenes_subject_len      CHECK (char_length(subject_name)  <= 160),
+  CONSTRAINT scenes_visual_len       CHECK (char_length(visual_prompt) <= 20000),
+  CONSTRAINT scenes_narration_len    CHECK (char_length(narration_part)<= 20000),
+  CONSTRAINT scenes_prompt_dir_ck    CHECK (prompt_dir    IN ('ltr','rtl','auto')),
+  CONSTRAINT scenes_narration_dir_ck CHECK (narration_dir IN ('ltr','rtl','auto')),
+  -- JSONB shape guards: bags must be objects; layout is object-or-NULL.
+  CONSTRAINT scenes_craft_is_object  CHECK (jsonb_typeof(craft)     = 'object'),
+  CONSTRAINT scenes_notes_is_object  CHECK (jsonb_typeof(notes_bag) = 'object'),
+  CONSTRAINT scenes_layout_is_object CHECK (layout IS NULL OR jsonb_typeof(layout) = 'object')
 );
 
 -- Primary access pattern: "all scenes for a project in video order".
@@ -171,7 +215,23 @@ CREATE TABLE IF NOT EXISTS public.scene_links (
   label         text,
   type          text,
   created_at    timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now()
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+
+  -- ── Tenant-integrity FKs ──────────────────────────────────────────────────
+  -- The link's project must belong to the user, and BOTH endpoint scenes must
+  -- belong to that same project + user. This makes a scene_link that crosses
+  -- tenants or projects structurally impossible — not merely RLS-blocked.
+  CONSTRAINT scene_links_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+  CONSTRAINT scene_links_from_scene_fk
+    FOREIGN KEY (from_scene_id, project_id, user_id)
+    REFERENCES public.scenes(id, project_id, user_id) ON DELETE CASCADE,
+  CONSTRAINT scene_links_to_scene_fk
+    FOREIGN KEY (to_scene_id, project_id, user_id)
+    REFERENCES public.scenes(id, project_id, user_id) ON DELETE CASCADE,
+  CONSTRAINT scene_links_label_len CHECK (label IS NULL OR char_length(label) <= 200),
+  CONSTRAINT scene_links_type_len  CHECK (type  IS NULL OR char_length(type)  <= 60)
 );
 
 CREATE INDEX IF NOT EXISTS scene_links_project_idx ON public.scene_links(project_id);
@@ -200,7 +260,15 @@ CREATE TABLE IF NOT EXISTS public.canvas_notes (
   -- CanvasNoteKind: 'idea' | 'todo' | 'fix' | 'reference'
   kind        text        NOT NULL DEFAULT 'idea',
   created_at  timestamptz NOT NULL DEFAULT now(),
-  updated_at  timestamptz NOT NULL DEFAULT now()
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+
+  -- Tenant-integrity: note's project must be owned by the same user.
+  CONSTRAINT canvas_notes_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+  CONSTRAINT canvas_notes_text_len CHECK (char_length(text) <= 5000),
+  CONSTRAINT canvas_notes_x_range  CHECK (x BETWEEN -1000000 AND 1000000),
+  CONSTRAINT canvas_notes_y_range  CHECK (y BETWEEN -1000000 AND 1000000)
 );
 
 CREATE INDEX IF NOT EXISTS canvas_notes_project_idx ON public.canvas_notes(project_id);
@@ -234,7 +302,17 @@ CREATE TABLE IF NOT EXISTS public.canvas_sections (
   -- CanvasSectionType: 'hook'|'setup'|'conflict'|'climax'|'outro'|'custom'
   kind        text        NOT NULL DEFAULT 'custom',
   created_at  timestamptz NOT NULL DEFAULT now(),
-  updated_at  timestamptz NOT NULL DEFAULT now()
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+
+  -- Tenant-integrity: section's project must be owned by the same user.
+  CONSTRAINT canvas_sections_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+  CONSTRAINT canvas_sections_title_len CHECK (char_length(title) <= 200),
+  CONSTRAINT canvas_sections_w_range   CHECK (width  BETWEEN 0 AND 100000),
+  CONSTRAINT canvas_sections_h_range   CHECK (height BETWEEN 0 AND 100000),
+  CONSTRAINT canvas_sections_x_range   CHECK (x BETWEEN -1000000 AND 1000000),
+  CONSTRAINT canvas_sections_y_range   CHECK (y BETWEEN -1000000 AND 1000000)
 );
 
 CREATE INDEX IF NOT EXISTS canvas_sections_project_idx ON public.canvas_sections(project_id);
@@ -276,7 +354,17 @@ CREATE TABLE IF NOT EXISTS public.canvas_links (
   --                 'todo'|'idea'|'fix'|'note'
   type            text,
   created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now()
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+
+  -- Tenant-integrity: link's project must be owned by the same user. The node
+  -- endpoints stay polymorphic text (scene/note/section), validated in app code
+  -- on save — they carry NO sequencing meaning regardless of integrity.
+  CONSTRAINT canvas_links_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+  CONSTRAINT canvas_links_from_len  CHECK (char_length(from_node_id) <= 128),
+  CONSTRAINT canvas_links_to_len    CHECK (char_length(to_node_id)   <= 128),
+  CONSTRAINT canvas_links_label_len CHECK (label IS NULL OR char_length(label) <= 200)
 );
 
 CREATE INDEX IF NOT EXISTS canvas_links_project_idx ON public.canvas_links(project_id);
@@ -313,7 +401,30 @@ CREATE TABLE IF NOT EXISTS public.scene_assets (
   -- Order within the scene's image list (mirrors local images array index).
   position          int         NOT NULL DEFAULT 0,
   created_at        timestamptz NOT NULL DEFAULT now(),
-  updated_at        timestamptz NOT NULL DEFAULT now()
+  updated_at        timestamptz NOT NULL DEFAULT now(),
+
+  -- ── Tenant-integrity FKs ──────────────────────────────────────────────────
+  -- The asset's scene AND project must both belong to the same user. An asset
+  -- can never be attached to another user's scene/project, even via raw SQL.
+  CONSTRAINT scene_assets_project_user_fk
+    FOREIGN KEY (project_id, user_id)
+    REFERENCES public.projects(id, user_id) ON DELETE CASCADE,
+  CONSTRAINT scene_assets_scene_fk
+    FOREIGN KEY (scene_id, project_id, user_id)
+    REFERENCES public.scenes(id, project_id, user_id) ON DELETE CASCADE,
+
+  -- ── Data-integrity guards (mirror the Storage bucket rules) ───────────────
+  CONSTRAINT scene_assets_size_range CHECK (size_bytes >= 0 AND size_bytes <= 10485760),
+  CONSTRAINT scene_assets_position_nonneg CHECK (position >= 0),
+  CONSTRAINT scene_assets_path_len   CHECK (char_length(storage_path) BETWEEN 1 AND 1024),
+  CONSTRAINT scene_assets_name_len   CHECK (char_length(name) <= 255),
+  -- Empty mime is allowed only as an "unknown yet" placeholder; any non-empty
+  -- value must be a non-SVG image type (SVG can carry script — excluded here
+  -- and in the Storage bucket's allowed_mime_types).
+  CONSTRAINT scene_assets_mime_image CHECK (
+    mime_type = ''
+    OR (mime_type LIKE 'image/%' AND mime_type <> 'image/svg+xml')
+  )
 );
 
 CREATE INDEX IF NOT EXISTS scene_assets_scene_idx   ON public.scene_assets(scene_id);

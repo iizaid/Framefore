@@ -31,7 +31,14 @@ instructions.
 | `0002_framefore_core_tables.sql` | `projects`, `scenes`, `scene_links`, `canvas_notes`, `canvas_sections`, `canvas_links`, `scene_assets` |
 | `0003_framefore_rls_policies.sql` | RLS enabled + all per-command policies |
 | `0004_reference_images_storage.sql` | `reference-images` private Storage bucket + policies |
-| `0005_security_events.sql` | Optional audit log table |
+| `0005_security_events.sql` | Optional per-user audit log table |
+| `0006_admin_roles.sql` | Admin roles (no self-promotion) + audit log + role functions |
+| `0007_rate_limit_events.sql` | Service-role-only counter table for future Edge-Function limits |
+
+Phase 4.3.1 hardened these (composite FKs for tenant isolation, stricter UPDATE
+policies, admin model, check constraints, storage path validation). See
+`supabase/SECURITY_REVIEW.md`, `supabase/SCHEMA_OVERVIEW.md`,
+`supabase/ADMIN_MODEL.md`, and `supabase/RATE_LIMITING.md`.
 
 **These migrations are not yet wired to the app** — the frontend is still
 fully local-first. No local project data is read from or written to Supabase yet.

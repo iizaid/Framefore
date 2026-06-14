@@ -14,7 +14,18 @@ Read this file before running anything.
 | `migrations/0002_framefore_core_tables.sql` | projects, scenes, scene_links, canvas_notes, canvas_sections, canvas_links, scene_assets |
 | `migrations/0003_framefore_rls_policies.sql` | Row Level Security enabled + per-command policies on every user-owned table |
 | `migrations/0004_reference_images_storage.sql` | `reference-images` private Storage bucket + Storage RLS policies |
-| `migrations/0005_security_events.sql` | Optional append-only audit log table |
+| `migrations/0005_security_events.sql` | Optional append-only per-user audit log table |
+| `migrations/0006_admin_roles.sql` | `user_roles`, role-check functions, `grant/revoke_app_role()`, `admin_audit_events` |
+| `migrations/0007_rate_limit_events.sql` | Service-role-only counter table for future Edge-Function rate limits |
+
+### Companion docs
+
+| Doc | Covers |
+|---|---|
+| `SCHEMA_OVERVIEW.md` | Tables, golden rule, 3-layer isolation, indexes |
+| `ADMIN_MODEL.md` | Roles, no-self-promotion, first-owner bootstrap |
+| `RATE_LIMITING.md` | What the DB does vs. dashboard/Cloudflare/Edge Functions |
+| `SECURITY_REVIEW.md` | Pre-launch threat review + residual risks + checklist |
 
 ### What each migration does
 
@@ -53,6 +64,26 @@ a later phase; this migration only declares the rules.
 UPDATE/DELETE from client. Useful for logging migration events, login anomalies,
 password changes. Not required for MVP.
 
+**0006** — admin role architecture. `user_roles` (owner/admin/support/reviewer)
+is **read-only from the client and has no write policy** — the only write path is
+the `SECURITY DEFINER` `grant_app_role()`/`revoke_app_role()` functions, which
+require the caller to already be owner/admin (no self-promotion). The first owner
+is bootstrapped manually via the SQL editor. `admin_audit_events` logs privileged
+actions and is admin-readable only. See `ADMIN_MODEL.md`.
+
+**0007** — `rate_limit_events`, a service-role-only table (RLS on, zero policies)
+that is infrastructure for **future** Edge-Function rate limits. It does **not**
+and cannot rate-limit Supabase Auth login/signup — that is a dashboard +
+CAPTCHA + Cloudflare concern. See `RATE_LIMITING.md`.
+
+### Tenant integrity is structural, not just RLS
+
+0002 adds composite UNIQUE constraints and composite FKs so that a scene, link,
+or asset pointing at **another user's** project/scene is physically impossible to
+store — enforced below RLS, even against the service role. 0003's UPDATE policies
+add `WITH CHECK` parent/endpoint ownership so rows can't be *rewritten* across
+tenants. See `SCHEMA_OVERVIEW.md` and `SECURITY_REVIEW.md`.
+
 ---
 
 ## How to apply
@@ -62,7 +93,7 @@ password changes. Not required for MVP.
 ### Method A — Supabase Dashboard SQL Editor (recommended for one-off setup)
 
 1. Open your Supabase project → SQL Editor.
-2. Paste and run each file **in order**: 0001 → 0002 → 0003 → 0004 → 0005.
+2. Paste and run each file **in order**: 0001 → 0002 → 0003 → 0004 → 0005 → 0006 → 0007.
 3. Check for errors after each file before proceeding to the next.
 
 ### Method B — Supabase CLI
@@ -142,6 +173,7 @@ Run `tests/rls-manual-checks.sql` in the SQL Editor. It includes:
 | 4.2 — Auth UI (login/signup/OAuth/reset) | ✅ Done |
 | 4.2 mini-patch — callback cleanup + reset page | ✅ Done |
 | **4.3 — Database migrations (this folder)** | ✅ SQL written, not yet applied |
+| **4.3.1 — Production hardening (FKs, RLS, admin, rate-limit, docs)** | ✅ SQL/docs written, not yet applied |
 | 4.4 — Cloud repository layer (TypeScript) | ⏳ Next |
 | 4.5 — Local → cloud migration UI | ⏳ Future |
 | 4.6 — Project sync + conflict resolution | ⏳ Future |
@@ -151,6 +183,26 @@ these tables yet. Applying these migrations creates the schema but does not alte
 any existing behaviour.
 
 ---
+
+## Data lifecycle & privacy
+
+- **Account deletion** — deleting an `auth.users` row cascades to `profiles`,
+  `user_settings`, `projects`, and (via FKs) all scenes/links/notes/sections/
+  assets/security_events/roles/rate-limit rows. **Storage objects do NOT cascade**
+  — a cleanup job/Edge Function must delete the user's `reference-images/{user_id}/`
+  prefix explicitly. A destructive `delete_account()` function is intentionally
+  **not** implemented yet (do it server-side, with confirmation + audit).
+- **Project deletion** — cascades to all child rows; Storage objects under that
+  project's path must be deleted by the app/Edge Function (orphan risk otherwise).
+- **Audit / rate-limit retention** — `security_events`, `admin_audit_events`, and
+  `rate_limit_events` grow unbounded. Add a scheduled purge (e.g. keep 90–180 days;
+  `rate_limit_events` can use `expires_at`). Purge is a service-role operation.
+- **Backups** — enable Point-in-Time Recovery on the Supabase project; verify a
+  restore before launch.
+- **GDPR/privacy** — store only a salted `ip_hash` (never raw IPs); never log
+  tokens/passwords; support data export via the per-user SELECT policies.
+
+See `SECURITY_REVIEW.md` for the full residual-risk list and pre-launch checklist.
 
 ## Important warnings
 
