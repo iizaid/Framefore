@@ -74,7 +74,7 @@ export function FlowToolbar({
       </div>
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />
       <div className="flex items-center gap-1" aria-label="Canvas create tools">
-        <ToolBtn label="Scene tool (S)" active={toolMode === "scene"} onClick={() => onToolModeChange("scene")}>
+        <ToolBtn label="Scene tool (S or A)" active={toolMode === "scene"} onClick={() => onToolModeChange("scene")}>
           <Plus size={15} />
         </ToolBtn>
         <ToolBtn label="Note tool (N)" active={toolMode === "note"} className="max-sm:hidden" onClick={() => onToolModeChange("note")}>
@@ -93,7 +93,7 @@ export function FlowToolbar({
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
       <div className="flex items-center gap-1" aria-label="Canvas history">
         <ToolBtn label="Undo (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={() => undoCanvas(projectId)}><Undo2 size={15} /></ToolBtn>
-        <ToolBtn label="Redo (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={() => redoCanvas(projectId)}><Redo2 size={15} /></ToolBtn>
+        <ToolBtn label="Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled={!canRedo} onClick={() => redoCanvas(projectId)}><Redo2 size={15} /></ToolBtn>
       </div>
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
       <div className="flex items-center gap-1 max-sm:hidden" aria-label="Canvas layout">

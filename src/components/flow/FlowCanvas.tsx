@@ -20,7 +20,13 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import { isEditableShortcutTarget } from "@/lib/shortcuts";
+import {
+  getCanvasShortcutAction,
+  isEditableShortcutTarget,
+  isHelpShortcut,
+  isRedoShortcut,
+  isUndoShortcut,
+} from "@/lib/shortcuts";
 import type { CanvasNodeType, Project } from "@/types";
 import {
   CANVAS_CARD_W,
@@ -141,36 +147,31 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
         return;
       }
 
-      const key = event.key.toLowerCase();
-      const mod = event.metaKey || event.ctrlKey;
-      if (mod && key === "z") {
+      if (isUndoShortcut(event)) {
         event.preventDefault();
-        if (event.shiftKey) redoCanvas(project.id);
-        else undoCanvas(project.id);
+        undoCanvas(project.id);
         return;
       }
-      if (event.ctrlKey && key === "y") {
+      if (isRedoShortcut(event)) {
         event.preventDefault();
         redoCanvas(project.id);
         return;
       }
-      if (key === "?" || (event.shiftKey && event.key === "/")) {
+      if (isHelpShortcut(event)) {
         event.preventDefault();
         setShortcutsOpen((open) => !open);
         return;
       }
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (key === "v") setToolMode("select");
-      else if (key === "c") setToolMode("connect");
-      else if (key === "s") setToolMode("scene");
-      else if (key === "n") setToolMode("note");
-      else if (key === "g") setToolMode("section");
-      else if (key === "h" || event.key === " ") {
-        event.preventDefault();
-        setToolMode("pan");
-      } else if (key === "f") {
+
+      const action = getCanvasShortcutAction(event);
+      if (!action) return;
+
+      if (action === "fit") {
         event.preventDefault();
         void rf.fitView({ duration: 300, padding: 0.2, maxZoom: 1 });
+      } else {
+        event.preventDefault();
+        setToolMode(action);
       }
     };
 
