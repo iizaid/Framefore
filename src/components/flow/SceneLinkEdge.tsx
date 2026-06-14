@@ -3,6 +3,7 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
+  getSmoothStepPath,
   type EdgeProps,
 } from "@xyflow/react";
 import { Pencil, Trash2, Check } from "lucide-react";
@@ -56,6 +57,7 @@ function SceneLinkEdgeImpl({
   const label = d.label ?? "";
   const linkKind = d.linkKind ?? "scene";
   const isCanvasLink = linkKind === "canvas";
+  const hasNoteEndpoint = d.sourceNodeType === "note" || d.targetNodeType === "note";
   const linkType = d.type as LinkTypeValue | undefined;
   const linkTypes = isCanvasLink ? CANVAS_LINK_TYPES : SCENE_LINK_TYPES;
   const typeLabel = linkTypes.find((t) => t.value === linkType)?.label;
@@ -81,15 +83,27 @@ function SceneLinkEdgeImpl({
     if (!selected) setEditing(false);
   }, [selected]);
 
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    curvature: 0.28,
-  });
+  const [edgePath, labelX, labelY] =
+    isCanvasLink && hasNoteEndpoint
+      ? getSmoothStepPath({
+          sourceX,
+          sourceY,
+          sourcePosition,
+          targetX,
+          targetY,
+          targetPosition,
+          borderRadius: 20,
+          offset: 24,
+        })
+      : getBezierPath({
+          sourceX,
+          sourceY,
+          sourcePosition,
+          targetX,
+          targetY,
+          targetPosition,
+          curvature: 0.34,
+        });
 
   const commitLabel = () => {
     const patch = { label: draft.trim() || undefined };

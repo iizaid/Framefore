@@ -10,7 +10,7 @@ import {
   useReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
-  getBezierPath,
+  getSmoothStepPath,
   type Node,
   type Edge,
   type NodeChange,
@@ -20,6 +20,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { cn } from "@/lib/utils";
+import { isEditableShortcutTarget } from "@/lib/shortcuts";
 import type { CanvasNodeType, Project } from "@/types";
 import {
   CANVAS_CARD_W,
@@ -64,14 +65,15 @@ function WorkflowConnectionLine({
   toPosition,
   connectionStatus,
 }: ConnectionLineComponentProps) {
-  const [path] = getBezierPath({
+  const [path] = getSmoothStepPath({
     sourceX: fromX,
     sourceY: fromY,
     sourcePosition: fromPosition,
     targetX: toX,
     targetY: toY,
     targetPosition: toPosition,
-    curvature: 0.32,
+    borderRadius: 18,
+    offset: 22,
   });
   const isValid = connectionStatus === "valid";
 
@@ -99,22 +101,25 @@ function WorkflowConnectionLine({
 
 function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const setSceneLayout = useStore((s) => s.setSceneLayout);
+  const addCanvasScene = useStore((s) => s.addCanvasScene);
   const addLink = useStore((s) => s.addLink);
   const deleteLink = useStore((s) => s.deleteLink);
   const addCanvasLink = useStore((s) => s.addCanvasLink);
   const deleteCanvasLink = useStore((s) => s.deleteCanvasLink);
-  const addScene = useStore((s) => s.addScene);
   const addCanvasNote = useStore((s) => s.addCanvasNote);
   const updateCanvasNote = useStore((s) => s.updateCanvasNote);
   const deleteCanvasNote = useStore((s) => s.deleteCanvasNote);
   const addCanvasSection = useStore((s) => s.addCanvasSection);
   const updateCanvasSection = useStore((s) => s.updateCanvasSection);
   const deleteCanvasSection = useStore((s) => s.deleteCanvasSection);
+  const undoCanvas = useStore((s) => s.undoCanvas);
+  const redoCanvas = useStore((s) => s.redoCanvas);
   const rf = useReactFlow();
 
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [toolMode, setToolMode] = useState<CanvasToolMode>("select");
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const scenes = project.scenes;
   const links = project.links;
@@ -132,21 +137,29 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const tagName = target?.tagName;
-      if (
-        target?.isContentEditable ||
-        tagName === "INPUT" ||
-        tagName === "TEXTAREA" ||
-        tagName === "SELECT" ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      ) {
+      if (isEditableShortcutTarget(event.target)) {
         return;
       }
 
       const key = event.key.toLowerCase();
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) redoCanvas(project.id);
+        else undoCanvas(project.id);
+        return;
+      }
+      if (event.ctrlKey && key === "y") {
+        event.preventDefault();
+        redoCanvas(project.id);
+        return;
+      }
+      if (key === "?" || (event.shiftKey && event.key === "/")) {
+        event.preventDefault();
+        setShortcutsOpen((open) => !open);
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (key === "v") setToolMode("select");
       else if (key === "c") setToolMode("connect");
       else if (key === "s") setToolMode("scene");
@@ -163,7 +176,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [rf]);
+  }, [project.id, redoCanvas, rf, undoCanvas]);
 
   // ── Reconcile nodes from the store (source of truth for which scenes exist
   // and where they sit). Reuse the previous node object when its position is
@@ -240,7 +253,14 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
         sourceHandle: "out",
         targetHandle: "in",
         type: "sceneLink",
-        data: { linkId: l.id, linkKind: "scene", label: l.label, type: l.type },
+        data: {
+          linkId: l.id,
+          linkKind: "scene",
+          sourceNodeType: "scene",
+          targetNodeType: "scene",
+          label: l.label,
+          type: l.type,
+        },
         zIndex: 20,
         markerEnd: LINK_MARKER,
       }));
@@ -260,7 +280,14 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
         sourceHandle: "out",
         targetHandle: "in",
         type: "sceneLink",
-        data: { linkId: l.id, linkKind: "canvas", label: l.label, type: l.type },
+        data: {
+          linkId: l.id,
+          linkKind: "canvas",
+          sourceNodeType: l.fromNodeType,
+          targetNodeType: l.toNodeType,
+          label: l.label,
+          type: l.type,
+        },
         zIndex: 20,
         markerEnd: LINK_MARKER,
       }));
@@ -383,16 +410,10 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
       const position = rf.screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
       if (toolMode === "scene") {
-        const before = new Set(useStore.getState().projects.find((p) => p.id === project.id)?.scenes.map((s) => s.id));
-        addScene(project.id);
-        const created = useStore
-          .getState()
-          .projects.find((p) => p.id === project.id)
-          ?.scenes.find((s) => !before.has(s.id));
-        if (created) {
-          setSceneLayout(project.id, created.id, Math.round(position.x), Math.round(position.y));
+        const createdId = addCanvasScene(project.id, position.x, position.y);
+        if (createdId) {
           internalSelect.current = true;
-          onSelect(created.id);
+          onSelect(createdId);
         }
         setToolMode("select");
         return;
@@ -412,7 +433,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
       onSelect(null);
     },
-    [addCanvasNote, addCanvasSection, addScene, onSelect, project.id, rf, setSceneLayout, toolMode],
+    [addCanvasNote, addCanvasScene, addCanvasSection, onSelect, project.id, rf, toolMode],
   );
 
   const prevActive = useRef<string | null>(null);
@@ -489,7 +510,13 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
             </Panel>
           )}
           <Panel position="bottom-center">
-            <FlowToolbar projectId={project.id} toolMode={toolMode} onToolModeChange={setToolMode} />
+            <FlowToolbar
+              projectId={project.id}
+              toolMode={toolMode}
+              shortcutsOpen={shortcutsOpen}
+              onShortcutsOpenChange={setShortcutsOpen}
+              onToolModeChange={setToolMode}
+            />
           </Panel>
         </ReactFlow>
 

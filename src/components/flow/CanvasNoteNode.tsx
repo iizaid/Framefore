@@ -22,9 +22,8 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
   );
   const updateCanvasNote = useStore((s) => s.updateCanvasNote);
   const deleteCanvasNote = useStore((s) => s.deleteCanvasNote);
-  const addScene = useStore((s) => s.addScene);
+  const addCanvasScene = useStore((s) => s.addCanvasScene);
   const updateScene = useStore((s) => s.updateScene);
-  const setSceneLayout = useStore((s) => s.setSceneLayout);
   const [draft, setDraft] = useState("");
   const [hovered, setHovered] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,7 +38,9 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
 
   if (!note) return null;
 
-  const commit = () => updateCanvasNote(projectId, noteId, { text: draft });
+  const commit = () => {
+    if (draft !== note.text) updateCanvasNote(projectId, noteId, { text: draft });
+  };
   const showHandles = hovered || selected || toolMode === "connect";
   const isConnectMode = toolMode === "connect";
   const kind = note.kind ?? "idea";
@@ -47,22 +48,16 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
   const createSceneFromNote = () => {
     const text = draft.trim() || note.text.trim();
     if (draft !== note.text) updateCanvasNote(projectId, noteId, { text: draft });
-    const before = new Set(useStore.getState().projects.find((p) => p.id === projectId)?.scenes.map((s) => s.id));
-    addScene(projectId);
-    const created = useStore
-      .getState()
-      .projects.find((p) => p.id === projectId)
-      ?.scenes.find((scene) => !before.has(scene.id));
-    if (!created) return;
+    const createdId = addCanvasScene(projectId, Math.round(note.x + 300), Math.round(note.y));
+    if (!createdId) return;
 
     const firstLine = text.split(/\r?\n/).find((line) => line.trim())?.trim();
-    updateScene(projectId, created.id, {
+    updateScene(projectId, createdId, {
       title: firstLine ? firstLine.slice(0, 48) : "Scene from note",
       summary: text,
       visualPrompt: text,
     });
-    setSceneLayout(projectId, created.id, Math.round(note.x + 300), Math.round(note.y));
-    onSelect(created.id);
+    onSelect(createdId);
   };
 
   return (
@@ -79,12 +74,15 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
         position={Position.Left}
         id="in"
         isConnectable={isConnectMode}
-        className={cn("scene-handle scene-handle--in", showHandles && "is-visible")}
+        className={cn("scene-handle note-handle note-handle--in", showHandles && "is-visible")}
       />
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <select
           value={kind}
-          onChange={(e) => updateCanvasNote(projectId, noteId, { kind: e.target.value as CanvasNoteKind })}
+          onChange={(e) => {
+            const nextKind = e.target.value as CanvasNoteKind;
+            if (nextKind !== kind) updateCanvasNote(projectId, noteId, { kind: nextKind });
+          }}
           className="nodrag nopan h-6 max-w-[104px] rounded-full border border-[var(--color-border-strong)] bg-white px-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)] outline-none hover:bg-[var(--color-surface-2)]"
           aria-label="Note type"
           title="Note type"
@@ -140,7 +138,7 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
         position={Position.Right}
         id="out"
         isConnectable={isConnectMode}
-        className={cn("scene-handle scene-handle--out", showHandles && "is-visible")}
+        className={cn("scene-handle note-handle note-handle--out", showHandles && "is-visible")}
       />
     </div>
   );

@@ -25,7 +25,7 @@ function OrderEdgeImpl({
   data,
 }: EdgeProps) {
   const { projectId } = useFlowCallbacks();
-  const addScene = useStore((s) => s.addScene);
+  const addCanvasScene = useStore((s) => s.addCanvasScene);
   const [hovered, setHovered] = useState(false);
 
   const d = (data ?? {}) as OrderEdgeData;
@@ -85,7 +85,7 @@ function OrderEdgeImpl({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                addScene(projectId, d.fromIndex + 1);
+                addCanvasScene(projectId, labelX - 132, labelY - 94, d.fromIndex + 1);
               }}
               title="Add scene between"
               aria-label="Add scene between"

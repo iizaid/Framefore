@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import {
   Cable,
+  CircleHelp,
   Columns3,
   Frame,
   Hand,
@@ -13,9 +14,12 @@ import {
   RotateCcw,
   Rows3,
   StickyNote,
+  Redo2,
+  Undo2,
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
+import { CANVAS_SHORTCUTS } from "@/lib/shortcuts";
 import type { CanvasToolMode } from "./flowContext";
 
 // Floating canvas toolbar. Zoom / fit come from React Flow's imperative API;
@@ -24,15 +28,23 @@ import type { CanvasToolMode } from "./flowContext";
 export function FlowToolbar({
   projectId,
   toolMode,
+  shortcutsOpen,
+  onShortcutsOpenChange,
   onToolModeChange,
 }: {
   projectId: string;
   toolMode: CanvasToolMode;
+  shortcutsOpen: boolean;
+  onShortcutsOpenChange: (open: boolean) => void;
   onToolModeChange: (mode: CanvasToolMode) => void;
 }) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const arrangeScenes = useStore((s) => s.arrangeScenes);
   const resetLayout = useStore((s) => s.resetLayout);
+  const undoCanvas = useStore((s) => s.undoCanvas);
+  const redoCanvas = useStore((s) => s.redoCanvas);
+  const canUndo = useStore((s) => (s.canvasHistory[projectId]?.past.length ?? 0) > 0);
+  const canRedo = useStore((s) => (s.canvasHistory[projectId]?.future.length ?? 0) > 0);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fit = () => fitView({ duration: 300, padding: 0.2, maxZoom: 1 });
@@ -79,11 +91,47 @@ export function FlowToolbar({
         <ToolBtn label="Fit view (F)" onClick={fit}><Maximize2 size={15} /></ToolBtn>
       </div>
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
+      <div className="flex items-center gap-1" aria-label="Canvas history">
+        <ToolBtn label="Undo (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={() => undoCanvas(projectId)}><Undo2 size={15} /></ToolBtn>
+        <ToolBtn label="Redo (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={() => redoCanvas(projectId)}><Redo2 size={15} /></ToolBtn>
+      </div>
+      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
       <div className="flex items-center gap-1 max-sm:hidden" aria-label="Canvas layout">
         <ToolBtn label="Arrange vertical" onClick={() => arrange("vertical")}><Rows3 size={15} /></ToolBtn>
         <ToolBtn label="Arrange horizontal" onClick={() => arrange("horizontal")}><Columns3 size={15} /></ToolBtn>
         <ToolBtn label="Reset layout" onClick={reset}><RotateCcw size={15} /></ToolBtn>
       </div>
+      <ToolBtn
+        label="Shortcuts (?)"
+        active={shortcutsOpen}
+        onClick={() => onShortcutsOpenChange(!shortcutsOpen)}
+      >
+        <CircleHelp size={15} />
+      </ToolBtn>
+      {shortcutsOpen && (
+        <div className="absolute bottom-full right-0 mb-2 w-72 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white p-2 text-sm shadow-xl">
+          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)]">
+            Shortcuts
+          </div>
+          <div className="max-h-[60vh] overflow-auto">
+            {CANVAS_SHORTCUTS.map((shortcut) => (
+              <div key={shortcut.label} className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-[12px]">
+                <span className="text-[var(--color-ink-soft)]">{shortcut.label}</span>
+                <span className="flex shrink-0 items-center gap-1">
+                  {shortcut.keys.map((key) => (
+                    <kbd
+                      key={key}
+                      className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--color-ink-faint)]"
+                    >
+                      {key}
+                    </kbd>
+                  ))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="hidden max-sm:block">
         <ToolBtn label="More canvas tools" active={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
           <MoreHorizontal size={16} />
@@ -107,25 +155,30 @@ function ToolBtn({
   label,
   onClick,
   active = false,
+  disabled = false,
   className,
   children,
 }: {
   label: string;
   onClick: () => void;
   active?: boolean;
+  disabled?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       title={label}
       aria-label={label}
       className={cn(
         "grid h-8 w-8 place-items-center rounded-full transition-colors",
-        active
-          ? "bg-[#121212] text-white shadow-sm"
-          : "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+        disabled
+          ? "cursor-not-allowed text-[var(--color-ink-faint)] opacity-35"
+          : active
+            ? "bg-[#121212] text-white shadow-sm"
+            : "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
         className,
       )}
     >

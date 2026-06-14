@@ -92,6 +92,7 @@ function makeProject(partial: Partial<Project>): Project {
 interface StoreState {
   projects: Project[];
   hydrated: boolean;
+  canvasHistory: CanvasHistory;
 
   createProject: (partial: Partial<Project>) => string;
   updateProject: (id: string, patch: Partial<Project>) => void;
@@ -107,9 +108,12 @@ interface StoreState {
   setSceneDir: (projectId: string, sceneId: string, field: "promptDir" | "narrationDir", dir: Direction) => void;
 
   // Canvas (visual layout only — never touches video order).
+  addCanvasScene: (projectId: string, x: number, y: number, atIndex?: number) => string | null;
   setSceneLayout: (projectId: string, sceneId: string, x: number, y: number) => void;
   arrangeScenes: (projectId: string, axis: "vertical" | "horizontal") => void;
   resetLayout: (projectId: string) => void;
+  undoCanvas: (projectId: string) => void;
+  redoCanvas: (projectId: string) => void;
 
   // Manual canvas connections (visual workflow links only).
   addLink: (projectId: string, fromSceneId: string, toSceneId: string) => void;
@@ -153,11 +157,57 @@ function touch(p: Project): Project {
   return { ...p, updatedAt: Date.now() };
 }
 
+type CanvasSnapshot = Pick<Project, "scenes" | "links" | "canvasLinks" | "canvasNotes" | "canvasSections">;
+
+type CanvasHistoryEntry = {
+  past: CanvasSnapshot[];
+  future: CanvasSnapshot[];
+};
+
+type CanvasHistory = Record<string, CanvasHistoryEntry | undefined>;
+
+const CANVAS_HISTORY_LIMIT = 40;
+
+function cloneCanvasSnapshot(project: Project): CanvasSnapshot {
+  return {
+    scenes: structuredClone(project.scenes),
+    links: structuredClone(project.links ?? []),
+    canvasLinks: structuredClone(project.canvasLinks ?? []),
+    canvasNotes: structuredClone(project.canvasNotes ?? []),
+    canvasSections: structuredClone(project.canvasSections ?? []),
+  };
+}
+
+function restoreCanvasSnapshot(project: Project, snapshot: CanvasSnapshot): Project {
+  return touch({
+    ...project,
+    scenes: structuredClone(snapshot.scenes),
+    links: structuredClone(snapshot.links ?? []),
+    canvasLinks: structuredClone(snapshot.canvasLinks ?? []),
+    canvasNotes: structuredClone(snapshot.canvasNotes ?? []),
+    canvasSections: structuredClone(snapshot.canvasSections ?? []),
+  });
+}
+
+function pushCanvasHistory(state: StoreState, projectId: string): CanvasHistory {
+  const project = state.projects.find((p) => p.id === projectId);
+  if (!project) return state.canvasHistory;
+  const entry = state.canvasHistory[projectId] ?? { past: [], future: [] };
+  return {
+    ...state.canvasHistory,
+    [projectId]: {
+      past: [...entry.past.slice(-(CANVAS_HISTORY_LIMIT - 1)), cloneCanvasSnapshot(project)],
+      future: [],
+    },
+  };
+}
+
 export const useStore = create<StoreState>()(
   persist(
     (set, getState) => ({
       projects: [],
       hydrated: false,
+      canvasHistory: {},
 
       createProject: (partial) => {
         const project = makeProject(partial);
@@ -174,7 +224,10 @@ export const useStore = create<StoreState>()(
         const project = getState().projects.find((p) => p.id === id);
         // Clean up orphaned image blobs.
         project?.scenes.forEach((sc) => sc.images.forEach((img) => void deleteImage(img.id)));
-        set((s) => ({ projects: s.projects.filter((p) => p.id !== id) }));
+        set((s) => {
+          const { [id]: _deleted, ...canvasHistory } = s.canvasHistory;
+          return { projects: s.projects.filter((p) => p.id !== id), canvasHistory };
+        });
       },
 
       duplicateProject: (id) => {
@@ -331,9 +384,28 @@ export const useStore = create<StoreState>()(
           ),
         })),
 
+      addCanvasScene: (projectId, x, y, atIndex) => {
+        const project = getState().projects.find((p) => p.id === projectId);
+        if (!project) return null;
+        const scene = makeScene(project.scenes.length);
+        scene.collapsed = false;
+        scene.layout = { x: Math.round(x), y: Math.round(y) };
+        set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
+          projects: s.projects.map((p) => {
+            if (p.id !== projectId) return p;
+            const scenes = [...p.scenes];
+            scenes.splice(atIndex ?? scenes.length, 0, scene);
+            return touch({ ...p, scenes });
+          }),
+        }));
+        return scene.id;
+      },
+
       // Persist a single card's canvas position. Video order is untouched.
       setSceneLayout: (projectId, sceneId, x, y) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -347,6 +419,7 @@ export const useStore = create<StoreState>()(
       // Snap every card into a clean line following the current video order.
       arrangeScenes: (projectId, axis) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -360,6 +433,7 @@ export const useStore = create<StoreState>()(
       // Clear saved positions; the canvas falls back to a default vertical line.
       resetLayout: (projectId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({ ...p, scenes: p.scenes.map((sc) => ({ ...sc, layout: undefined })) })
@@ -367,10 +441,47 @@ export const useStore = create<StoreState>()(
           ),
         })),
 
+      undoCanvas: (projectId) =>
+        set((s) => {
+          const entry = s.canvasHistory[projectId];
+          const previous = entry?.past[entry.past.length - 1];
+          const project = s.projects.find((p) => p.id === projectId);
+          if (!entry || !previous || !project) return s;
+          return {
+            projects: s.projects.map((p) => (p.id === projectId ? restoreCanvasSnapshot(p, previous) : p)),
+            canvasHistory: {
+              ...s.canvasHistory,
+              [projectId]: {
+                past: entry.past.slice(0, -1),
+                future: [cloneCanvasSnapshot(project), ...entry.future].slice(0, CANVAS_HISTORY_LIMIT),
+              },
+            },
+          };
+        }),
+
+      redoCanvas: (projectId) =>
+        set((s) => {
+          const entry = s.canvasHistory[projectId];
+          const next = entry?.future[0];
+          const project = s.projects.find((p) => p.id === projectId);
+          if (!entry || !next || !project) return s;
+          return {
+            projects: s.projects.map((p) => (p.id === projectId ? restoreCanvasSnapshot(p, next) : p)),
+            canvasHistory: {
+              ...s.canvasHistory,
+              [projectId]: {
+                past: [...entry.past, cloneCanvasSnapshot(project)].slice(-CANVAS_HISTORY_LIMIT),
+                future: entry.future.slice(1),
+              },
+            },
+          };
+        }),
+
       // Create a manual visual link. Skips self-links and exact duplicates so the
       // graph stays clean. Does NOT touch scene order or transitionToNext.
       addLink: (projectId, fromSceneId, toSceneId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) => {
             if (p.id !== projectId) return p;
             if (fromSceneId === toSceneId) return p;
@@ -385,6 +496,7 @@ export const useStore = create<StoreState>()(
       // touches scene order — links are visual workflow annotations only.
       updateLink: (projectId, linkId, patch) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -397,6 +509,7 @@ export const useStore = create<StoreState>()(
 
       deleteLink: (projectId, linkId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId ? touch({ ...p, links: (p.links ?? []).filter((l) => l.id !== linkId) }) : p,
           ),
@@ -404,6 +517,7 @@ export const useStore = create<StoreState>()(
 
       addCanvasLink: (projectId, fromNodeId, toNodeId, fromNodeType, toNodeType) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) => {
             if (p.id !== projectId) return p;
             if (fromNodeId === toNodeId && fromNodeType === toNodeType) return p;
@@ -430,6 +544,7 @@ export const useStore = create<StoreState>()(
 
       updateCanvasLink: (projectId, linkId, patch) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -442,6 +557,7 @@ export const useStore = create<StoreState>()(
 
       deleteCanvasLink: (projectId, linkId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({ ...p, canvasLinks: (p.canvasLinks ?? []).filter((l) => l.id !== linkId) })
@@ -453,6 +569,7 @@ export const useStore = create<StoreState>()(
         const id = nanoid();
         const now = Date.now();
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -470,6 +587,7 @@ export const useStore = create<StoreState>()(
 
       updateCanvasNote: (projectId, noteId, patch) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -484,6 +602,7 @@ export const useStore = create<StoreState>()(
 
       deleteCanvasNote: (projectId, noteId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -505,6 +624,7 @@ export const useStore = create<StoreState>()(
         const existingCount = getState().projects.find((p) => p.id === projectId)?.canvasSections?.length ?? 0;
         const defaultTitles = ["Hook", "Setup", "Conflict", "Climax", "Outro"];
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -532,6 +652,7 @@ export const useStore = create<StoreState>()(
 
       updateCanvasSection: (projectId, sectionId, patch) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
@@ -546,6 +667,7 @@ export const useStore = create<StoreState>()(
 
       deleteCanvasSection: (projectId, sectionId) =>
         set((s) => ({
+          canvasHistory: pushCanvasHistory(s, projectId),
           projects: s.projects.map((p) =>
             p.id === projectId
               ? touch({
