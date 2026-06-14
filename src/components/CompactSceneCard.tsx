@@ -107,7 +107,7 @@ export function CompactSceneCard({
       {/* ── Card ── */}
       <motion.div
         layout
-        onClick={() => { onSelect(); onEdit(); }}
+        onClick={onSelect}
         className={cn(
           "group/card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white transition-all duration-200 sm:flex-row",
           isDragging

@@ -92,6 +92,26 @@ interface StoreState {
   duplicateScene: (projectId: string, sceneId: string) => void;
   reorderScenes: (projectId: string, fromId: string, toId: string) => void;
   setSceneDir: (projectId: string, sceneId: string, field: "promptDir" | "narrationDir", dir: Direction) => void;
+
+  // Canvas (visual layout only — never touches video order).
+  setSceneLayout: (projectId: string, sceneId: string, x: number, y: number) => void;
+  arrangeScenes: (projectId: string, axis: "vertical" | "horizontal") => void;
+  resetLayout: (projectId: string) => void;
+}
+
+// Canvas layout geometry shared by auto-arrange + the canvas fallback placement,
+// so a scene with no saved position lands exactly where auto-arrange would put it.
+export const CANVAS_CARD_W = 264;
+export const CANVAS_CARD_H = 188;
+const CANVAS_GAP_X = 80;
+const CANVAS_GAP_Y = 60;
+const CANVAS_ORIGIN = 48;
+
+// Deterministic position for a scene at a given index in either arrangement.
+export function defaultSceneLayout(index: number, axis: "vertical" | "horizontal" = "vertical") {
+  return axis === "horizontal"
+    ? { x: CANVAS_ORIGIN + index * (CANVAS_CARD_W + CANVAS_GAP_X), y: CANVAS_ORIGIN }
+    : { x: CANVAS_ORIGIN, y: CANVAS_ORIGIN + index * (CANVAS_CARD_H + CANVAS_GAP_Y) };
 }
 
 function touch(p: Project): Project {
@@ -219,6 +239,42 @@ export const useStore = create<StoreState>()(
                   ...p,
                   scenes: p.scenes.map((sc) => (sc.id === sceneId ? { ...sc, [field]: dir } : sc)),
                 }
+              : p,
+          ),
+        })),
+
+      // Persist a single card's canvas position. Video order is untouched.
+      setSceneLayout: (projectId, sceneId, x, y) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  scenes: p.scenes.map((sc) => (sc.id === sceneId ? { ...sc, layout: { x, y } } : sc)),
+                })
+              : p,
+          ),
+        })),
+
+      // Snap every card into a clean line following the current video order.
+      arrangeScenes: (projectId, axis) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  scenes: p.scenes.map((sc, i) => ({ ...sc, layout: defaultSceneLayout(i, axis) })),
+                })
+              : p,
+          ),
+        })),
+
+      // Clear saved positions; the canvas falls back to a default vertical line.
+      resetLayout: (projectId) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({ ...p, scenes: p.scenes.map((sc) => ({ ...sc, layout: undefined })) })
               : p,
           ),
         })),

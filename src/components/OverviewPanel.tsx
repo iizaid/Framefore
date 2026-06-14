@@ -1,27 +1,16 @@
 import { useState } from "react";
 import {
-  Download,
   ChevronDown,
   AlertTriangle,
   Send,
-  FileText,
 } from "lucide-react";
 import type { Project } from "@/types";
 import { cn, formatDuration } from "@/lib/utils";
 import { totalNarrationSeconds, totalSceneSeconds } from "@/lib/estimate";
 import { scoreProject, storyFlowHealth } from "@/lib/readiness";
 import { recommendPlatforms, formatMismatch, type Fit } from "@/lib/publish";
-import { Button } from "./ui/primitives";
 
-export function OverviewPanel({
-  project,
-  onExport,
-  onOpenScript,
-}: {
-  project: Project;
-  onExport: () => void;
-  onOpenScript: () => void;
-}) {
+export function OverviewPanel({ project }: { project: Project }) {
   const r = scoreProject(project);
   const sceneSec = totalSceneSeconds(project.scenes);
   const narrSec = totalNarrationSeconds(project);
@@ -63,10 +52,6 @@ export function OverviewPanel({
         <Stat value={formatDuration(sceneSec)} label="Video" />
         <Stat value={formatDuration(narrSec)} label="Narration" />
       </div>
-
-      <Button variant="primary" onClick={onExport} className="w-full">
-        <Download size={16} /> Export video plan
-      </Button>
 
       {/* Missing essentials — quiet, only when present */}
       {gaps.length > 0 && (
@@ -152,16 +137,6 @@ export function OverviewPanel({
           </div>
         </Collapsible>
       )}
-
-      {/* Script shortcut */}
-      <button
-        onClick={onOpenScript}
-        className="flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-[13px] font-medium text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-surface-2)] card-surface"
-      >
-        <FileText size={14} className="text-[var(--color-ink-faint)]" />
-        Open full script
-        <ChevronDown size={15} className="ml-auto -rotate-90 text-[var(--color-ink-faint)]" />
-      </button>
     </div>
   );
 }

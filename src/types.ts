@@ -52,6 +52,16 @@ export interface SceneImage {
   type: string;
 }
 
+// Free-form position of a scene card on the whiteboard canvas. This is PURELY a
+// visual workspace coordinate — it has no effect on the video sequence, which is
+// always governed by the order of `Project.scenes`. Optional so old projects
+// (and freshly created scenes) load fine; the canvas auto-places any scene that
+// lacks a layout.
+export interface SceneLayout {
+  x: number;
+  y: number;
+}
+
 export interface Scene {
   id: string;
   title: string;
@@ -86,6 +96,8 @@ export interface Scene {
   continuityNotes: string; // characters/locations/objects to keep consistent
   endingBeat: string; // how this scene ends (feeds the next scene's context)
   images: SceneImage[];
+
+  layout?: SceneLayout; // visual position on the canvas (NOT the video order)
 
   collapsed?: boolean;
   promptDir: Direction;

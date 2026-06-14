@@ -15,22 +15,26 @@ import {
   Search,
   Film,
   Home,
-  PanelRightClose,
   FileText,
   Settings2,
   ChevronsLeft,
+  Clock,
+  LayoutGrid,
+  Frame,
 } from "lucide-react";
 import type { SceneStatus } from "@/types";
 import { useStore } from "@/store/useStore";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
+import { totalSceneSeconds } from "@/lib/estimate";
 import { SCENE_STATUSES } from "@/lib/constants";
 import { Button, Input, Select } from "./ui/primitives";
 import { CompactSceneCard } from "./CompactSceneCard";
+import { CanvasBoard } from "./CanvasBoard";
 import { TimelineStrip } from "./TimelineStrip";
+import { SceneInspector } from "./SceneInspector";
 import { SceneEditorModal } from "./SceneEditorModal";
 import { ScriptDialog } from "./ScriptDialog";
 import { SettingsDialog } from "./SettingsDialog";
-import { OverviewPanel } from "./OverviewPanel";
 import { ExportDialog } from "./ExportDialog";
 
 export function Workspace({ projectId, onBack }: { projectId: string; onBack: () => void }) {
@@ -43,10 +47,25 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
   const [exportOpen, setExportOpen] = useState(false);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(true);
   const [timelineOpen, setTimelineOpen] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Board (vertical storyboard) vs. Canvas (free whiteboard). Persisted so the
+  // user's preferred workflow survives a refresh.
+  const [viewMode, setViewMode] = useState<"board" | "canvas">(() => {
+    try {
+      return localStorage.getItem("framefore-view") === "canvas" ? "canvas" : "board";
+    } catch {
+      return "board";
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("framefore-view", viewMode);
+    } catch {
+      /* ignore */
+    }
+  }, [viewMode]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -103,21 +122,25 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
     }, 0);
   };
 
+  const totalSec = totalSceneSeconds(project.scenes);
+  const activeScene = activeId ? project.scenes.find((s) => s.id === activeId) ?? null : null;
+  const activeIndex = activeScene ? project.scenes.indexOf(activeScene) : -1;
+
   return (
     <div className="flex h-full">
-      {/* ── Left rail ── */}
+      {/* ── Left rail (navigation + global tools) ── */}
       <WorkspaceRail
         onBack={onBack}
-        onAdd={addAndEdit}
+        onAddScene={addAndEdit}
         onScript={() => setScriptOpen(true)}
         onSettings={() => setSettingsOpen(true)}
         onExport={() => setExportOpen(true)}
       />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        {/* ── Top bar ── */}
+        {/* ── Top bar — project info only (tools live in the left rail) ── */}
         <header className="sticky top-0 z-30 border-b border-[var(--color-border-strong)] glass px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back to projects" className="sm:hidden">
               <ArrowLeft size={18} />
             </Button>
@@ -128,21 +151,26 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
                 {project.topic ? ` · ${project.topic}` : ""}
               </p>
             </div>
-            <Button variant="primary" size="sm" onClick={addAndEdit}>
-              <Plus size={16} /> <span className="hidden sm:inline">Add Scene</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setScriptOpen(true)} className="hidden sm:inline-flex">
-              <FileText size={15} /> Script
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)} className="hidden sm:inline-flex">
-              <Settings2 size={15} /> Settings
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-              <Download size={15} /> <span className="hidden sm:inline">Export</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setPanelOpen((o) => !o)} aria-label="Toggle overview">
-              <PanelRightClose size={18} />
-            </Button>
+            {project.scenes.length > 0 && (
+              <div className="hidden shrink-0 items-center gap-3 text-xs text-[var(--color-ink-faint)] sm:flex">
+                <span className="flex items-center gap-1">
+                  <Film size={13} /> {project.scenes.length} scene{project.scenes.length === 1 ? "" : "s"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock size={13} /> {formatDuration(totalSec)}
+                </span>
+              </div>
+            )}
+
+            {/* View toggle — Board (storyboard) vs Canvas (whiteboard) */}
+            <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-[var(--color-border-strong)] bg-white p-0.5">
+              <ViewToggle active={viewMode === "board"} label="Board" onClick={() => setViewMode("board")}>
+                <LayoutGrid size={14} />
+              </ViewToggle>
+              <ViewToggle active={viewMode === "canvas"} label="Canvas" onClick={() => setViewMode("canvas")}>
+                <Frame size={14} />
+              </ViewToggle>
+            </div>
           </div>
         </header>
 
@@ -150,9 +178,24 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
         <div className="flex min-h-0 flex-1">
           {/* Center column: storyboard wall + docked timeline */}
           <div className="flex min-w-0 flex-1 flex-col">
-          {/* Storyboard wall */}
-          <main className="dot-canvas min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-            <div className="mx-auto max-w-5xl">
+          {viewMode === "canvas" ? (
+            /* Whiteboard canvas — free-positioned cards, order-based connectors */
+            <CanvasBoard
+              project={project}
+              activeId={activeId}
+              onSelect={setActiveId}
+              onEdit={(id) => setEditingId(id)}
+            />
+          ) : (
+          /* Storyboard wall — clicking empty space deselects */
+          <main
+            className="dot-canvas min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8"
+            onClick={(e) => { if (e.target === e.currentTarget) setActiveId(null); }}
+          >
+            <div
+              className="mx-auto max-w-6xl"
+              onClick={(e) => { if (e.target === e.currentTarget) setActiveId(null); }}
+            >
               {/* compact filter toolbar */}
               {project.scenes.length > 0 && (
                 <div className="mb-5 flex items-center gap-2">
@@ -219,6 +262,7 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
               )}
             </div>
           </main>
+          )}
 
           {/* Docked timeline overview — supporting tool, under the board */}
           {project.scenes.length > 0 && (
@@ -229,30 +273,24 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
                 open={timelineOpen}
                 onToggle={() => setTimelineOpen((o) => !o)}
                 onSelect={selectScene}
+                onReorder={(fromId, toId) => reorderScenes(projectId, fromId, toId)}
               />
             </div>
           )}
           </div>
 
-          {/* Overview sidebar */}
-          <aside
-            className={cn(
-              "shrink-0 overflow-y-auto border-l border-[var(--color-border-strong)] bg-white transition-all duration-300",
-              "fixed inset-y-0 right-0 z-40 w-[88vw] max-w-md pt-16 lg:static lg:z-auto lg:w-[320px] lg:pt-0",
-              panelOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden lg:border-l-0",
-            )}
-          >
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--color-border-strong)] bg-white px-4 py-3">
-              <h2 className="text-sm font-semibold">Overview</h2>
-              <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={() => setPanelOpen(false)} aria-label="Close">
-                <PanelRightClose size={16} />
-              </Button>
-            </div>
-            <div className="p-4">
-              <OverviewPanel project={project} onExport={() => setExportOpen(true)} onOpenScript={() => setScriptOpen(true)} />
-            </div>
-          </aside>
-          {panelOpen && <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setPanelOpen(false)} />}
+          {/* Right panel — Scene Inspector, only when a scene is selected */}
+          {activeScene && (
+            <aside className="hidden w-[340px] shrink-0 border-l border-[var(--color-border-strong)] bg-white lg:block">
+              <SceneInspector
+                project={project}
+                scene={activeScene}
+                index={activeIndex}
+                onClose={() => setActiveId(null)}
+                onEdit={() => setEditingId(activeScene.id)}
+              />
+            </aside>
+          )}
         </div>
       </div>
 
@@ -266,13 +304,13 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
 
 function WorkspaceRail({
   onBack,
-  onAdd,
+  onAddScene,
   onScript,
   onSettings,
   onExport,
 }: {
   onBack: () => void;
-  onAdd: () => void;
+  onAddScene: () => void;
   onScript: () => void;
   onSettings: () => void;
   onExport: () => void;
@@ -318,9 +356,14 @@ function WorkspaceRail({
         )}
       </div>
 
+      {/* Navigation */}
       <RailItem label="Projects" expanded={expanded} onClick={onBack}><Home size={18} /></RailItem>
       <RailItem label="Board" expanded={expanded} active><Film size={18} /></RailItem>
-      <RailItem label="Add Scene" expanded={expanded} onClick={onAdd}><Plus size={18} /></RailItem>
+
+      <div className="my-2 h-px shrink-0 bg-[var(--color-border-strong)]" />
+
+      {/* Tools */}
+      <RailItem label="Add Scene" expanded={expanded} onClick={onAddScene}><Plus size={18} /></RailItem>
       <RailItem label="Script" expanded={expanded} onClick={onScript}><FileText size={18} /></RailItem>
       <RailItem label="Settings" expanded={expanded} onClick={onSettings}><Settings2 size={18} /></RailItem>
       <RailItem label="Export" expanded={expanded} onClick={onExport}><Download size={18} /></RailItem>
@@ -367,6 +410,36 @@ function RailItem({
     >
       <span className="grid shrink-0 place-items-center">{children}</span>
       {expanded && <span>{label}</span>}
+    </button>
+  );
+}
+
+function ViewToggle({
+  active,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={`${label} view`}
+      aria-label={`${label} view`}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-[#121212] text-white"
+          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+      )}
+    >
+      {children}
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
