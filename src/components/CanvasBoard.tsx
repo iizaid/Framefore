@@ -7,6 +7,7 @@ import {
   Plus,
   Minus,
   CornerDownRight,
+  X,
 } from "lucide-react";
 import type { Project } from "@/types";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ type Viewport = { x: number; y: number; scale: number };
 
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 2;
+const FIT_MAX_SCALE = 1; // never auto-zoom past 100% — keeps entry predictable
 const DRAG_THRESHOLD = 4; // px before a press becomes a drag (vs. a click-select)
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
@@ -41,6 +43,10 @@ export function CanvasBoard({
   const setSceneLayout = useStore((s) => s.setSceneLayout);
   const arrangeScenes = useStore((s) => s.arrangeScenes);
   const resetLayout = useStore((s) => s.resetLayout);
+  const updateScene = useStore((s) => s.updateScene);
+  const addLink = useStore((s) => s.addLink);
+  const deleteLink = useStore((s) => s.deleteLink);
+  const links = project.links ?? [];
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, scale: 1 });
@@ -55,6 +61,30 @@ export function CanvasBoard({
   }, [positions]);
 
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  // Latest viewport in a ref so pointer math (screen→world) always uses current
+  // pan/zoom even mid-gesture.
+  const viewportRef = useRef(viewport);
+  useEffect(() => {
+    viewportRef.current = viewport;
+  }, [viewport]);
+
+  // Screen (client) coordinates → world (canvas) coordinates.
+  const toWorld = useCallback((clientX: number, clientY: number): Pos => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const v = viewportRef.current;
+    const left = rect?.left ?? 0;
+    const top = rect?.top ?? 0;
+    return { x: (clientX - left - v.x) / v.scale, y: (clientY - top - v.y) / v.scale };
+  }, []);
+
+  // Manual connection drag + selection.
+  const [linkDrag, setLinkDrag] = useState<{ fromId: string; x: number; y: number } | null>(null);
+  const linkDragRef = useRef(linkDrag);
+  useEffect(() => {
+    linkDragRef.current = linkDrag;
+  }, [linkDrag]);
+  const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
 
   // Re-seed positions whenever scenes change (add/delete/reorder/layout edits).
   useEffect(() => {
@@ -88,7 +118,7 @@ export function CanvasBoard({
     const pad = 64;
     const bw = Math.max(maxX - minX, 1);
     const bh = Math.max(maxY - minY, 1);
-    const scale = clamp(Math.min((rect.width - pad * 2) / bw, (rect.height - pad * 2) / bh), MIN_SCALE, 1.4);
+    const scale = clamp(Math.min((rect.width - pad * 2) / bw, (rect.height - pad * 2) / bh), MIN_SCALE, FIT_MAX_SCALE);
     setViewport({
       x: (rect.width - bw * scale) / 2 - minX * scale,
       y: (rect.height - bh * scale) / 2 - minY * scale,
@@ -111,16 +141,22 @@ export function CanvasBoard({
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const rect = el.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
-      setViewport((v) => {
-        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-        const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
-        const wx = (cx - v.x) / v.scale;
-        const wy = (cy - v.y) / v.scale;
-        return { x: cx - wx * scale, y: cy - wy * scale, scale };
-      });
+      // Ctrl/Cmd + wheel (and trackpad pinch, which reports ctrlKey) → zoom.
+      // Plain wheel/trackpad scroll → pan, so the view never jumps unexpectedly.
+      if (e.ctrlKey || e.metaKey) {
+        const rect = el.getBoundingClientRect();
+        const cx = e.clientX - rect.left;
+        const cy = e.clientY - rect.top;
+        setViewport((v) => {
+          const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+          const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
+          const wx = (cx - v.x) / v.scale;
+          const wy = (cy - v.y) / v.scale;
+          return { x: cx - wx * scale, y: cy - wy * scale, scale };
+        });
+      } else {
+        setViewport((v) => ({ ...v, x: v.x - e.deltaX, y: v.y - e.deltaY }));
+      }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
@@ -201,10 +237,59 @@ export function CanvasBoard({
     const p = panRef.current;
     if (!p) return;
     containerRef.current?.releasePointerCapture?.(e.pointerId);
-    if (!p.moved) onSelect(null); // clicked empty canvas → deselect
+    if (!p.moved) {
+      onSelect(null); // clicked empty canvas → deselect
+      setSelectedLinkId(null);
+    }
     panRef.current = null;
     setPanning(false);
   };
+
+  // ── Manual link dragging (from an output handle to another card) ──
+  const onHandleDown = (e: React.PointerEvent, fromId: string) => {
+    e.stopPropagation(); // never start a card drag or background pan
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const w = toWorld(e.clientX, e.clientY);
+    setLinkDrag({ fromId, x: w.x, y: w.y });
+  };
+  const onHandleMove = (e: React.PointerEvent) => {
+    if (!linkDragRef.current) return;
+    e.stopPropagation();
+    const w = toWorld(e.clientX, e.clientY);
+    setLinkDrag((d) => (d ? { ...d, x: w.x, y: w.y } : d));
+  };
+  const onHandleUp = (e: React.PointerEvent) => {
+    const d = linkDragRef.current;
+    if (!d) return;
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    const w = toWorld(e.clientX, e.clientY);
+    // Drop hit-test against current card rectangles (excluding the source).
+    const pos = positionsRef.current;
+    const target = project.scenes.find((s, i) => {
+      if (s.id === d.fromId) return false;
+      const p = pos[s.id] ?? defaultSceneLayout(i, "vertical");
+      return w.x >= p.x && w.x <= p.x + CANVAS_CARD_W && w.y >= p.y && w.y <= p.y + CANVAS_CARD_H;
+    });
+    if (target) addLink(project.id, d.fromId, target.id);
+    setLinkDrag(null);
+  };
+
+  // Delete the selected manual link with the keyboard.
+  useEffect(() => {
+    if (!selectedLinkId) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
+      if (!typing && (e.key === "Delete" || e.key === "Backspace")) {
+        e.preventDefault();
+        deleteLink(project.id, selectedLinkId);
+        setSelectedLinkId(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedLinkId, deleteLink, project.id]);
 
   const arrangeAndFit = (axis: "vertical" | "horizontal") => {
     arrangeScenes(project.id, axis);
@@ -221,6 +306,22 @@ export function CanvasBoard({
   const centerOf = (id: string, i: number): Pos => {
     const p = positions[id] ?? defaultSceneLayout(i, "vertical");
     return { x: p.x + CANVAS_CARD_W / 2, y: p.y + CANVAS_CARD_H / 2 };
+  };
+
+  // Manual links anchor at card edge ports: output = right-center, input = left-center.
+  const indexOfId = (id: string) => project.scenes.findIndex((s) => s.id === id);
+  const outPort = (id: string): Pos => {
+    const p = positions[id] ?? defaultSceneLayout(indexOfId(id), "vertical");
+    return { x: p.x + CANVAS_CARD_W, y: p.y + CANVAS_CARD_H / 2 };
+  };
+  const inPort = (id: string): Pos => {
+    const p = positions[id] ?? defaultSceneLayout(indexOfId(id), "vertical");
+    return { x: p.x, y: p.y + CANVAS_CARD_H / 2 };
+  };
+  // Clean horizontal cubic bezier between two world points.
+  const curve = (a: Pos, b: Pos): string => {
+    const dx = Math.max(40, Math.abs(b.x - a.x) * 0.5);
+    return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
   };
 
   return (
@@ -262,6 +363,78 @@ export function CanvasBoard({
           })}
         </svg>
 
+        {/* Manual links (curved, stronger) + live drag preview */}
+        <svg className="absolute left-0 top-0 overflow-visible" style={{ pointerEvents: "none" }} width={1} height={1}>
+          {links.map((l) => {
+            const from = project.scenes.find((s) => s.id === l.fromSceneId);
+            const to = project.scenes.find((s) => s.id === l.toSceneId);
+            if (!from || !to) return null; // skip links to deleted scenes
+            const d = curve(outPort(l.fromSceneId), inPort(l.toSceneId));
+            const selected = selectedLinkId === l.id;
+            return (
+              <g key={l.id}>
+                {/* fat invisible hit area for easy selection */}
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={14}
+                  style={{ pointerEvents: "stroke", cursor: "pointer" }}
+                  onPointerDown={(e) => { e.stopPropagation(); setSelectedLinkId(l.id); onSelect(null); }}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={selected ? "rgba(18,18,18,0.95)" : "rgba(18,18,18,0.55)"}
+                  strokeWidth={selected ? 2.5 : 2}
+                  style={{ pointerEvents: "none" }}
+                />
+              </g>
+            );
+          })}
+
+          {linkDrag && (() => {
+            const a = outPort(linkDrag.fromId);
+            return (
+              <path
+                d={curve(a, { x: linkDrag.x, y: linkDrag.y })}
+                fill="none"
+                stroke="rgba(18,18,18,0.45)"
+                strokeWidth={2}
+                strokeDasharray="5 4"
+                style={{ pointerEvents: "none" }}
+              />
+            );
+          })()}
+        </svg>
+
+        {/* Delete control for the selected manual link */}
+        {selectedLinkId && (() => {
+          const l = links.find((x) => x.id === selectedLinkId);
+          if (!l) return null;
+          const from = project.scenes.find((s) => s.id === l.fromSceneId);
+          const to = project.scenes.find((s) => s.id === l.toSceneId);
+          if (!from || !to) return null;
+          const a = outPort(l.fromSceneId);
+          const b = inPort(l.toSceneId);
+          return (
+            <div
+              className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
+              style={{ left: (a.x + b.x) / 2, top: (a.y + b.y) / 2 }}
+            >
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); deleteLink(project.id, l.id); setSelectedLinkId(null); }}
+                title="Delete connection"
+                aria-label="Delete connection"
+                className="grid h-6 w-6 place-items-center rounded-full border border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] shadow-sm transition-colors hover:bg-rose-50 hover:text-rose-600"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          );
+        })()}
+
         {/* Transition labels at connector midpoints */}
         {project.scenes.slice(0, -1).map((s, i) => {
           const label = s.transitionToNext.trim();
@@ -289,7 +462,7 @@ export function CanvasBoard({
           return (
             <div
               key={scene.id}
-              className="absolute"
+              className="group/wrap absolute"
               style={{
                 left: pos.x,
                 top: pos.y,
@@ -307,6 +480,26 @@ export function CanvasBoard({
                 isActive={activeId === scene.id}
                 isDragging={isDragging}
                 onEdit={() => onEdit(scene.id)}
+                onRename={(title) => updateScene(project.id, scene.id, { title })}
+              />
+
+              {/* Input port (left) — visual target affordance */}
+              <span
+                className={cn(
+                  "pointer-events-none absolute left-0 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-neutral-400 shadow-sm transition-opacity",
+                  activeId === scene.id ? "opacity-100" : "opacity-0 group-hover/wrap:opacity-100",
+                )}
+              />
+              {/* Output port (right) — drag from here to connect */}
+              <span
+                onPointerDown={(e) => onHandleDown(e, scene.id)}
+                onPointerMove={onHandleMove}
+                onPointerUp={onHandleUp}
+                title="Drag to connect"
+                className={cn(
+                  "absolute right-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 translate-x-1/2 cursor-crosshair rounded-full border-2 border-white bg-neutral-800 shadow-sm transition-opacity hover:scale-125",
+                  activeId === scene.id || linkDrag?.fromId === scene.id ? "opacity-100" : "opacity-0 group-hover/wrap:opacity-100",
+                )}
               />
             </div>
           );

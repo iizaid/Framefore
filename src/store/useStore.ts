@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
 import { nanoid } from "nanoid";
-import type { Project, Scene, Direction } from "@/types";
+import type { Project, Scene, Direction, SceneLink } from "@/types";
 import { emptyGlobal } from "@/types";
 import { deleteImage } from "@/lib/images";
 
@@ -71,6 +71,7 @@ function makeProject(partial: Partial<Project>): Project {
     global: emptyGlobal(),
     narration: "",
     scenes: [],
+    links: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -97,6 +98,10 @@ interface StoreState {
   setSceneLayout: (projectId: string, sceneId: string, x: number, y: number) => void;
   arrangeScenes: (projectId: string, axis: "vertical" | "horizontal") => void;
   resetLayout: (projectId: string) => void;
+
+  // Manual canvas connections (visual workflow links only).
+  addLink: (projectId: string, fromSceneId: string, toSceneId: string) => void;
+  deleteLink: (projectId: string, linkId: string) => void;
 }
 
 // Canvas layout geometry shared by auto-arrange + the canvas fallback placement,
@@ -278,10 +283,31 @@ export const useStore = create<StoreState>()(
               : p,
           ),
         })),
+
+      // Create a manual visual link. Skips self-links and exact duplicates so the
+      // graph stays clean. Does NOT touch scene order or transitionToNext.
+      addLink: (projectId, fromSceneId, toSceneId) =>
+        set((s) => ({
+          projects: s.projects.map((p) => {
+            if (p.id !== projectId) return p;
+            if (fromSceneId === toSceneId) return p;
+            const links = p.links ?? [];
+            if (links.some((l) => l.fromSceneId === fromSceneId && l.toSceneId === toSceneId)) return p;
+            const link: SceneLink = { id: nanoid(), fromSceneId, toSceneId };
+            return touch({ ...p, links: [...links, link] });
+          }),
+        })),
+
+      deleteLink: (projectId, linkId) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId ? touch({ ...p, links: (p.links ?? []).filter((l) => l.id !== linkId) }) : p,
+          ),
+        })),
     }),
     {
       name: "framefore-state",
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => idbStorage),
       partialize: (s) => ({ projects: s.projects }) as StoreState,
       // Backfill fields added after v1 so older saved projects keep working.
@@ -295,6 +321,8 @@ export const useStore = create<StoreState>()(
             // v5: project-level default models (scenes inherit when empty).
             defaultImageModel: p.defaultImageModel ?? "",
             defaultVideoModel: p.defaultVideoModel ?? "",
+            // v6: manual canvas links (visual only).
+            links: p.links ?? [],
             scenes: (p.scenes ?? []).map((sc) => ({
               ...sc,
               role: sc.role ?? "none",

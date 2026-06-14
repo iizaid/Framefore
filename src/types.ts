@@ -62,6 +62,20 @@ export interface SceneLayout {
   y: number;
 }
 
+// A manual, visual relationship drawn between two scene cards on the canvas.
+// These are workflow annotations ONLY — they never affect the video sequence,
+// which is governed solely by the order of `Project.scenes`. Optional + stored
+// at the project level so old projects load untouched.
+export type SceneLinkType = "transition" | "continuity" | "reference" | "alternate";
+
+export interface SceneLink {
+  id: string;
+  fromSceneId: string;
+  toSceneId: string;
+  label?: string;
+  type?: SceneLinkType;
+}
+
 export interface Scene {
   id: string;
   title: string;
@@ -135,6 +149,7 @@ export interface Project {
   global: GlobalSettings;
   narration: string; // full script for the whole video
   scenes: Scene[];
+  links?: SceneLink[]; // manual canvas connections (visual only — not video order)
 
   createdAt: number;
   updatedAt: number;

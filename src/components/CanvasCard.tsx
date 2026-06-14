@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Clock, Clapperboard, ImageIcon, AlertTriangle, Pencil } from "lucide-react";
 import type { Project, Scene } from "@/types";
 import { cn, formatDuration } from "@/lib/utils";
@@ -17,6 +18,7 @@ export function CanvasCard({
   isActive,
   isDragging,
   onEdit,
+  onRename,
 }: {
   scene: Scene;
   index: number;
@@ -24,7 +26,32 @@ export function CanvasCard({
   isActive: boolean;
   isDragging: boolean;
   onEdit: () => void;
+  onRename: (title: string) => void;
 }) {
+  // Inline title editing — keeps the user on the canvas instead of opening the
+  // full editor for a quick rename.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(scene.title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(scene.title);
+      // Focus + select on the next frame so the field is ready.
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
+
+  const commit = () => {
+    onRename(draft.trim());
+    setEditing(false);
+  };
+  const cancel = () => setEditing(false);
+
   const cover = scene.images[0];
   const gaps = essentialGaps(scene);
   const status = STATUS_STYLE[scene.status];
@@ -62,9 +89,32 @@ export function CanvasCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className={cn("h-2 w-2 shrink-0 rounded-full", status.dot)} title={`Status: ${scene.status}`} />
-            <h3 className="truncate text-[13px] font-semibold leading-tight text-[var(--color-ink)]">
-              {scene.title || <span className="font-normal text-[var(--color-ink-faint)]">Untitled scene</span>}
-            </h3>
+            {editing ? (
+              <input
+                ref={inputRef}
+                value={draft}
+                dir="auto"
+                onChange={(e) => setDraft(e.target.value)}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); commit(); }
+                  else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+                }}
+                onBlur={commit}
+                placeholder="Untitled scene"
+                className="min-w-0 flex-1 rounded border border-[var(--color-border-strong)] bg-white px-1.5 py-0.5 text-[13px] font-semibold leading-tight text-[var(--color-ink)] outline-none focus:border-[var(--color-ash)]"
+              />
+            ) : (
+              <h3
+                onPointerDown={(e) => e.stopPropagation()}
+                onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
+                title="Double-click to rename"
+                className="truncate text-[13px] font-semibold leading-tight text-[var(--color-ink)]"
+              >
+                {scene.title || <span className="font-normal text-[var(--color-ink-faint)]">Untitled scene</span>}
+              </h3>
+            )}
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-1">
             <span className="flex items-center gap-1 rounded bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-ink-soft)]">
