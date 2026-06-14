@@ -15,7 +15,7 @@ export function SettingsPanel({ project }: { project: Project }) {
   return (
     <div className="space-y-4">
       <p className="text-[11px] leading-relaxed text-[var(--color-ink-faint)]">
-        Prepended to every scene's exported prompt, so you don't repeat yourself per scene.
+        Prepended to the STYLE line of every scene in the Prompt Pack — set it once instead of repeating it per scene.
       </p>
 
       <Field label="Global visual style">

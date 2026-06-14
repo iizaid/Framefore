@@ -78,6 +78,67 @@ export function storyFlowHealth(project: Project): FlowWarning[] {
   return warnings;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCTION CHECKLIST
+//
+// Lightweight "before you export" checks shared by the canvas tools popover and
+// the Export dialog. Each item is a count of scenes/notes that need attention —
+// never a blocker. Zero-count items are still returned so callers can show "all
+// clear" if they want; filter to count > 0 for warnings only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ChecklistItem {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export function productionChecklist(project: Project): ChecklistItem[] {
+  const scenes = project.scenes;
+  const notes = project.canvasNotes ?? [];
+  const canvasLinks = project.canvasLinks ?? [];
+  const sceneLinks = project.links ?? [];
+  const sections = project.canvasSections ?? [];
+
+  // A note is "connected" if any canvas link references it.
+  const linkedNoteIds = new Set<string>();
+  for (const l of canvasLinks) {
+    if (l.fromNodeType === "note") linkedNoteIds.add(l.fromNodeId);
+    if (l.toNodeType === "note") linkedNoteIds.add(l.toNodeId);
+  }
+  const unconnectedNotes = notes.filter((n) => has(n.text) && !linkedNoteIds.has(n.id)).length;
+
+  // A section with no scene geometrically inside it.
+  const emptySections = sections.filter((sec) => {
+    return !scenes.some(
+      (s) =>
+        s.layout &&
+        s.layout.x >= sec.x &&
+        s.layout.x <= sec.x + sec.width &&
+        s.layout.y >= sec.y &&
+        s.layout.y <= sec.y + sec.height,
+    );
+  }).length;
+
+  const unlabeledLinks =
+    sceneLinks.filter((l) => !has(l.label ?? "")).length +
+    canvasLinks.filter((l) => !has(l.label ?? "")).length;
+
+  return [
+    { key: "prompt", label: "Scenes without a prompt", count: scenes.filter((s) => !has(s.visualPrompt)).length },
+    { key: "narration", label: "Scenes without narration", count: scenes.filter((s) => !has(s.narrationPart)).length },
+    { key: "images", label: "Scenes without references", count: scenes.filter((s) => s.images.length === 0).length },
+    {
+      key: "transition",
+      label: "Scenes with no transition",
+      count: scenes.slice(0, -1).filter((s) => !has(s.transitionToNext)).length,
+    },
+    { key: "notes", label: "Unconnected canvas notes", count: unconnectedNotes },
+    { key: "sections", label: "Sections with no scenes", count: emptySections },
+    { key: "labels", label: "Links with no label", count: unlabeledLinks },
+  ];
+}
+
 export function scoreProject(project: Project): ProjectReadiness {
   const perScene = project.scenes.map((scene) => ({
     scene,

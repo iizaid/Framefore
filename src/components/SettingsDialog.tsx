@@ -74,7 +74,7 @@ export function SettingsDialog({ open, onClose, project }: { open: boolean; onCl
               />
             </Field>
             <p className="text-[11px] leading-relaxed text-[var(--color-ink-faint)]">
-              Publishing is set once for the whole project. Framefore recommends the best platforms based on your aspect ratio and total length in the Overview panel.
+              Drives platform recommendations and is written into every export as production metadata.
             </p>
           </div>
         )}
@@ -94,7 +94,7 @@ export function SettingsDialog({ open, onClose, project }: { open: boolean; onCl
               </datalist>
             </Field>
             <p className="text-[11px] leading-relaxed text-[var(--color-ink-faint)]">
-              Every scene uses these models by default. Override a model on individual scenes only when you need something different — that resolved model is shown on each card and included in your export.
+              Used for any scene that doesn't set its own model. The resolved model shows on each card and in every export.
             </p>
           </div>
         )}

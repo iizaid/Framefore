@@ -6,6 +6,7 @@ import {
   Columns3,
   Frame,
   Hand,
+  ListChecks,
   Maximize2,
   MoreHorizontal,
   Minus,
@@ -20,11 +21,12 @@ import {
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
 import { CANVAS_SHORTCUTS } from "@/lib/shortcuts";
+import { productionChecklist } from "@/lib/readiness";
 import type { CanvasToolMode } from "./flowContext";
 
-// Floating canvas toolbar. Zoom / fit come from React Flow's imperative API;
-// arrange + reset call the same store actions the old canvas used, then re-fit so
-// the freshly arranged layout is framed. Rendered inside a <Panel> by FlowCanvas.
+// Floating canvas toolbar. The bar itself stays compact — only the everyday tools
+// (modes, create, history, fit, shortcuts) live on it. Occasional layout actions
+// and the production checklist live in the "More" menu so the bar never crowds.
 export function FlowToolbar({
   projectId,
   toolMode,
@@ -43,6 +45,7 @@ export function FlowToolbar({
   const resetLayout = useStore((s) => s.resetLayout);
   const undoCanvas = useStore((s) => s.undoCanvas);
   const redoCanvas = useStore((s) => s.redoCanvas);
+  const project = useStore((s) => s.projects.find((p) => p.id === projectId));
   const canUndo = useStore((s) => (s.canvasHistory[projectId]?.past.length ?? 0) > 0);
   const canRedo = useStore((s) => (s.canvasHistory[projectId]?.future.length ?? 0) > 0);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -59,8 +62,11 @@ export function FlowToolbar({
     refit();
   };
 
+  const checks = project ? productionChecklist(project).filter((c) => c.count > 0) : [];
+
   return (
     <div className="relative flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white/95 p-1.5 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.45)] backdrop-blur max-sm:gap-0.5 max-sm:p-2">
+      {/* 1 · Work mode */}
       <div className="flex items-center gap-1" aria-label="Canvas modes">
         <ToolBtn label="Select (V)" active={toolMode === "select"} onClick={() => onToolModeChange("select")}>
           <MousePointer2 size={15} />
@@ -72,7 +78,10 @@ export function FlowToolbar({
           <Hand size={15} />
         </ToolBtn>
       </div>
-      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />
+
+      <Divider />
+
+      {/* 2 · Create */}
       <div className="flex items-center gap-1" aria-label="Canvas create tools">
         <ToolBtn label="Scene tool (S or A)" active={toolMode === "scene"} onClick={() => onToolModeChange("scene")}>
           <Plus size={15} />
@@ -84,28 +93,67 @@ export function FlowToolbar({
           <Frame size={15} />
         </ToolBtn>
       </div>
-      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
-      <div className="flex items-center gap-1" aria-label="Canvas view">
-        <ToolBtn label="Zoom out" className="max-sm:hidden" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></ToolBtn>
-        <ToolBtn label="Zoom in" className="max-sm:hidden" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></ToolBtn>
-        <ToolBtn label="Fit view (F)" onClick={fit}><Maximize2 size={15} /></ToolBtn>
-      </div>
-      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
+
+      <Divider />
+
+      {/* 3 · History */}
       <div className="flex items-center gap-1" aria-label="Canvas history">
         <ToolBtn label="Undo (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={() => undoCanvas(projectId)}><Undo2 size={15} /></ToolBtn>
         <ToolBtn label="Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled={!canRedo} onClick={() => redoCanvas(projectId)}><Redo2 size={15} /></ToolBtn>
       </div>
-      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
-      <div className="flex items-center gap-1 max-sm:hidden" aria-label="Canvas layout">
-        <ToolBtn label="Arrange vertical" onClick={() => arrange("vertical")}><Rows3 size={15} /></ToolBtn>
-        <ToolBtn label="Arrange horizontal" onClick={() => arrange("horizontal")}><Columns3 size={15} /></ToolBtn>
-        <ToolBtn label="Reset layout" onClick={reset}><RotateCcw size={15} /></ToolBtn>
+
+      <Divider />
+
+      {/* 4 · View / Layout */}
+      <div className="flex items-center gap-1" aria-label="Canvas view">
+        <ToolBtn label="Fit view (F)" onClick={fit}><Maximize2 size={15} /></ToolBtn>
+        <div className="relative">
+          <ToolBtn label="More tools & checks" active={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
+            <MoreHorizontal size={16} />
+            {checks.length > 0 && (
+              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
+            )}
+          </ToolBtn>
+          {moreOpen && (
+            <>
+              <button className="fixed inset-0 z-10 cursor-default" aria-hidden onClick={() => setMoreOpen(false)} />
+              <div className="absolute bottom-full right-0 z-20 mb-2 w-60 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white py-1 text-sm shadow-xl">
+                {/* Create tools — only needed here on mobile */}
+                <div className="sm:hidden">
+                  <MenuBtn label="Note tool" onClick={() => { setMoreOpen(false); onToolModeChange("note"); }}><StickyNote size={15} /></MenuBtn>
+                  <MenuBtn label="Section tool" onClick={() => { setMoreOpen(false); onToolModeChange("section"); }}><Frame size={15} /></MenuBtn>
+                  <MenuDivider />
+                </div>
+                <MenuBtn label="Arrange by timeline order" onClick={() => { setMoreOpen(false); arrange("vertical"); }}><Rows3 size={15} /></MenuBtn>
+                <MenuBtn label="Arrange horizontal" onClick={() => { setMoreOpen(false); arrange("horizontal"); }}><Columns3 size={15} /></MenuBtn>
+                <MenuBtn label="Reset layout" onClick={() => { setMoreOpen(false); reset(); }}><RotateCcw size={15} /></MenuBtn>
+                <MenuDivider />
+                <MenuBtn label="Zoom in" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></MenuBtn>
+                <MenuBtn label="Zoom out" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></MenuBtn>
+                <MenuDivider />
+                <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)]">
+                  <span className="flex items-center gap-1.5"><ListChecks size={12} /> Production checklist</span>
+                </div>
+                {checks.length === 0 ? (
+                  <div className="px-3 py-1.5 text-[12px] text-emerald-700">All checks passing ✓</div>
+                ) : (
+                  checks.map((c) => (
+                    <div key={c.key} className="flex items-center justify-between gap-2 px-3 py-1 text-[12px] text-[var(--color-ink-soft)]">
+                      <span>{c.label}</span>
+                      <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">{c.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <ToolBtn
-        label="Shortcuts (?)"
-        active={shortcutsOpen}
-        onClick={() => onShortcutsOpenChange(!shortcutsOpen)}
-      >
+
+      <Divider />
+
+      {/* 5 · Help */}
+      <ToolBtn label="Shortcuts (?)" active={shortcutsOpen} onClick={() => onShortcutsOpenChange(!shortcutsOpen)}>
         <CircleHelp size={15} />
       </ToolBtn>
       {shortcutsOpen && (
@@ -132,23 +180,12 @@ export function FlowToolbar({
           </div>
         </div>
       )}
-      <div className="hidden max-sm:block">
-        <ToolBtn label="More canvas tools" active={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
-          <MoreHorizontal size={16} />
-        </ToolBtn>
-        {moreOpen && (
-          <div className="absolute bottom-full right-0 mb-2 w-44 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white py-1 text-sm shadow-xl">
-            <MenuBtn label="Note tool" onClick={() => { setMoreOpen(false); onToolModeChange("note"); }}><StickyNote size={15} /></MenuBtn>
-            <MenuBtn label="Section tool" onClick={() => { setMoreOpen(false); onToolModeChange("section"); }}><Frame size={15} /></MenuBtn>
-            <div className="my-1 h-px bg-[var(--color-border-strong)]" />
-            <MenuBtn label="Arrange vertical" onClick={() => { setMoreOpen(false); arrange("vertical"); }}><Rows3 size={15} /></MenuBtn>
-            <MenuBtn label="Arrange horizontal" onClick={() => { setMoreOpen(false); arrange("horizontal"); }}><Columns3 size={15} /></MenuBtn>
-            <MenuBtn label="Reset layout" onClick={() => { setMoreOpen(false); reset(); }}><RotateCcw size={15} /></MenuBtn>
-          </div>
-        )}
-      </div>
     </div>
   );
+}
+
+function Divider() {
+  return <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />;
 }
 
 function ToolBtn({
@@ -173,7 +210,7 @@ function ToolBtn({
       title={label}
       aria-label={label}
       className={cn(
-        "grid h-8 w-8 place-items-center rounded-full transition-colors",
+        "relative grid h-8 w-8 place-items-center rounded-full transition-colors",
         disabled
           ? "cursor-not-allowed text-[var(--color-ink-faint)] opacity-35"
           : active
@@ -185,6 +222,10 @@ function ToolBtn({
       {children}
     </button>
   );
+}
+
+function MenuDivider() {
+  return <div className="my-1 h-px bg-[var(--color-border-strong)]" />;
 }
 
 function MenuBtn({
