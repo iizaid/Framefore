@@ -38,10 +38,22 @@ $$;
 
 CREATE TABLE IF NOT EXISTS public.profiles (
   id          uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  -- Nullable: OAuth providers may omit these; email/password signups have NULLs.
   full_name   text,
   avatar_url  text,
   created_at  timestamptz NOT NULL DEFAULT now(),
-  updated_at  timestamptz NOT NULL DEFAULT now()
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+
+  -- Payload guards. All allow NULL so OAuth users with no name/avatar are fine.
+  CONSTRAINT profiles_full_name_len CHECK (full_name IS NULL OR char_length(full_name) <= 160),
+  CONSTRAINT profiles_avatar_len    CHECK (avatar_url IS NULL OR char_length(avatar_url) <= 2048),
+  -- avatar_url, if present, must be an http(s) URL — blocks javascript:/data:/
+  -- file: schemes that could be abused if ever rendered without sanitisation.
+  CONSTRAINT profiles_avatar_scheme CHECK (
+    avatar_url IS NULL
+    OR avatar_url LIKE 'http://%'
+    OR avatar_url LIKE 'https://%'
+  )
 );
 
 -- Keep updated_at current on every update.
@@ -61,10 +73,16 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
   has_migrated_local   boolean     NOT NULL DEFAULT false,
   preferred_theme      text        NOT NULL DEFAULT 'system',
   -- Open JSONB bag for future preferences (e.g., default models, last-opened
-  -- project id) without schema churn.
+  -- project id) WITHOUT schema churn. It is intentionally future-safe but still
+  -- bounded: the CHECK forces it to be a JSON OBJECT (never an array/scalar/huge
+  -- string), so new keys can be added freely while the shape stays predictable.
   preferences          jsonb       NOT NULL DEFAULT '{}'::jsonb,
   created_at           timestamptz NOT NULL DEFAULT now(),
-  updated_at           timestamptz NOT NULL DEFAULT now()
+  updated_at           timestamptz NOT NULL DEFAULT now(),
+
+  -- Constrain theme to the three values the app actually supports.
+  CONSTRAINT user_settings_theme_ck      CHECK (preferred_theme IN ('system','light','dark')),
+  CONSTRAINT user_settings_prefs_object  CHECK (jsonb_typeof(preferences) = 'object')
 );
 
 DROP TRIGGER IF EXISTS set_user_settings_updated_at ON public.user_settings;

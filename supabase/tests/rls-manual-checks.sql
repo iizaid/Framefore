@@ -176,9 +176,16 @@ ORDER BY on_table, conname;
 SELECT routine_name, security_type
 FROM information_schema.routines
 WHERE routine_schema = 'public'
-  AND routine_name IN ('has_app_role','is_admin','is_owner','grant_app_role','revoke_app_role')
+  AND routine_name IN (
+    'has_current_user_role','admin_has_app_role','is_admin','is_owner',
+    'grant_app_role','revoke_app_role'
+  )
 ORDER BY routine_name;
--- Expected: all present, security_type = 'DEFINER'.
+-- Expected: all 6 present, security_type = 'DEFINER'.
+-- Expected: the OLD 'has_app_role' is NOT present (removed to stop role
+-- enumeration). Confirm with:
+--   SELECT count(*) FROM information_schema.routines
+--   WHERE routine_schema='public' AND routine_name='has_app_role';  -- expect 0
 
 
 -- ---------------------------------------------------------------------------
@@ -205,6 +212,19 @@ WHERE conrelid = 'public.scene_assets'::regclass
 ORDER BY conname;
 -- Expect scene_assets_mime_image (excludes image/svg+xml) and
 -- scene_assets_size_range (<= 10485760).
+
+
+-- ---------------------------------------------------------------------------
+-- CHECK 13: profiles / user_settings payload constraints exist
+-- ---------------------------------------------------------------------------
+
+SELECT conrelid::regclass AS on_table, conname, pg_get_constraintdef(oid) AS definition
+FROM pg_constraint
+WHERE conrelid IN ('public.profiles'::regclass, 'public.user_settings'::regclass)
+  AND contype = 'c'
+ORDER BY on_table, conname;
+-- Expect: profiles_full_name_len, profiles_avatar_len, profiles_avatar_scheme,
+--         user_settings_theme_ck, user_settings_prefs_object.
 
 
 -- ---------------------------------------------------------------------------
@@ -383,6 +403,45 @@ ROLLBACK;
 --     but the policy predicate is:
 --       (storage.foldername(name))[1] = auth.uid()::text
 --     so name='<USER_A_ID>/<PROJECT_A_ID>/s/x.png' as User B fails the WITH CHECK.
+--     Also: moving an object into a project_id you don't own fails ri_update_own.
+
+-- A15. Role enumeration: normal user probes ANOTHER user's role  → expect false,
+--      NOT the true/false answer for that user. admin_has_app_role fails closed.
+BEGIN;
+  SELECT set_config('request.jwt.claims', json_build_object('sub','<USER_B_ID>','role','authenticated')::text, true);
+  SET LOCAL role TO authenticated;
+  SELECT public.admin_has_app_role('<USER_A_ID>', 'owner');  -- expect: false (B is not admin)
+  -- The old enumeration oracle is gone; this must error (function does not exist):
+  -- SELECT public.has_app_role('<USER_A_ID>', 'owner');     -- expect: ERROR undefined function
+ROLLBACK;
+
+-- A16. Self role check: a normal user may check ONLY their own status.
+BEGIN;
+  SELECT set_config('request.jwt.claims', json_build_object('sub','<USER_B_ID>','role','authenticated')::text, true);
+  SET LOCAL role TO authenticated;
+  SELECT public.has_current_user_role('reviewer');  -- ok: answers for B only (no uid arg to forge)
+  SELECT public.is_admin();                         -- ok: false for a normal user
+ROLLBACK;
+
+-- A17. Forged profile payload: oversized / bad-scheme values  → expect ERROR (CHECK)
+BEGIN;
+  SELECT set_config('request.jwt.claims', json_build_object('sub','<USER_B_ID>','role','authenticated')::text, true);
+  SET LOCAL role TO authenticated;
+  -- javascript: scheme avatar must be rejected by profiles_avatar_scheme
+  UPDATE public.profiles SET avatar_url = 'javascript:alert(1)' WHERE id = '<USER_B_ID>';  -- ERROR
+  -- 300-char full_name must be rejected by profiles_full_name_len
+  UPDATE public.profiles SET full_name = repeat('x', 300) WHERE id = '<USER_B_ID>';        -- ERROR
+ROLLBACK;
+
+-- A18. user_settings constraints: bad theme + non-object preferences  → expect ERROR
+BEGIN;
+  SELECT set_config('request.jwt.claims', json_build_object('sub','<USER_B_ID>','role','authenticated')::text, true);
+  SET LOCAL role TO authenticated;
+  UPDATE public.user_settings SET preferred_theme = 'neon' WHERE user_id = '<USER_B_ID>';  -- ERROR (theme_ck)
+  -- preferences must be a JSON object, not an array/scalar:
+  UPDATE public.user_settings SET preferences = '[1,2,3]'::jsonb WHERE user_id = '<USER_B_ID>'; -- ERROR (prefs_object)
+  UPDATE public.user_settings SET preferences = '"hi"'::jsonb   WHERE user_id = '<USER_B_ID>'; -- ERROR (prefs_object)
+ROLLBACK;
 
 */
 

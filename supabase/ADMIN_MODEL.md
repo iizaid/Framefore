@@ -52,10 +52,28 @@ can't lock yourself out.
 |---|---|---|
 | `is_admin()` | bool | caller is owner or admin |
 | `is_owner()` | bool | caller is owner |
-| `has_app_role(uid, role)` | bool | arbitrary check |
+| `has_current_user_role(role)` | bool | **self-only** — caller's own role status (no uid arg to forge) |
+| `admin_has_app_role(target, role)` | bool | arbitrary lookup, **admin-only** — returns `false` for non-admins |
 
 All are `SECURITY DEFINER`, `STABLE`, `SET search_path = public`, with EXECUTE
 revoked from `anon`/`public` and granted to `authenticated`.
+
+### No public role enumeration
+
+The earlier `has_app_role(uid, role)` was **removed**: being SECURITY DEFINER and
+callable by any authenticated user, it let anyone probe an *arbitrary* user's
+roles (a privacy oracle for locating admin accounts). Replacements:
+
+- A normal user can check **only their own** status via `has_current_user_role()`
+  / `is_admin()` / `is_owner()` — none take a user-supplied UUID.
+- Arbitrary-user lookups go through `admin_has_app_role()`, which **fails closed**
+  (returns `false`) unless the caller is an admin, so it cannot be used to
+  enumerate roles.
+- Admins may also read role rows directly via the `user_roles` SELECT policy
+  (`auth.uid() = user_id OR is_admin()`).
+
+If a stale `has_app_role(uuid, text)` exists in a previously-applied staging DB,
+drop it: `DROP FUNCTION IF EXISTS public.has_app_role(uuid, text);`
 
 ## Admin access to USER CONTENT (deliberate decision)
 

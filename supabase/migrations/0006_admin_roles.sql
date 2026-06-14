@@ -56,8 +56,15 @@ CREATE TRIGGER set_user_roles_updated_at
 -- view (a user can confirm their own admin status; policies can call is_admin()
 -- without needing a SELECT policy that exposes other users' role rows).
 -- No dynamic SQL anywhere. Explicit search_path. STABLE (no writes).
+--
+-- PRIVACY: there is deliberately NO function that lets a normal user look up an
+-- ARBITRARY user's role. The self-check below takes no uid argument — it can
+-- only ever read auth.uid(), so it cannot be used to enumerate other accounts'
+-- privileges. Arbitrary-uid lookups go through admin_has_app_role(), which
+-- returns false for non-admins (fails closed; leaks nothing).
 
-CREATE OR REPLACE FUNCTION public.has_app_role(uid uuid, required_role text)
+-- Self-only: "does the CURRENT caller hold this role?" Safe to expose broadly.
+CREATE OR REPLACE FUNCTION public.has_current_user_role(required_role text)
 RETURNS boolean
 LANGUAGE sql
 STABLE
@@ -66,8 +73,24 @@ SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles r
-    WHERE r.user_id = uid AND r.role = required_role
+    WHERE r.user_id = auth.uid() AND r.role = required_role
   );
+$$;
+
+-- Admin-only arbitrary lookup. Returns false (NOT an error) when the caller is
+-- not an admin, so it can't be used as a role-enumeration oracle.
+CREATE OR REPLACE FUNCTION public.admin_has_app_role(target_user uuid, required_role text)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT public.is_admin()
+     AND EXISTS (
+       SELECT 1 FROM public.user_roles r
+       WHERE r.user_id = target_user AND r.role = required_role
+     );
 $$;
 
 -- "Is the current caller an admin?" — owner is a superset of admin.
@@ -98,12 +121,21 @@ AS $$
 $$;
 
 -- Lock down execution: revoke from anonymous, allow signed-in users to call.
-REVOKE ALL ON FUNCTION public.has_app_role(uuid, text) FROM public, anon;
-REVOKE ALL ON FUNCTION public.is_admin()                FROM public, anon;
-REVOKE ALL ON FUNCTION public.is_owner()                FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.has_app_role(uuid, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.is_admin()                TO authenticated;
-GRANT EXECUTE ON FUNCTION public.is_owner()                TO authenticated;
+-- has_current_user_role / admin_has_app_role are both safe to expose to
+-- authenticated: the first is self-only; the second fails closed for non-admins.
+REVOKE ALL ON FUNCTION public.has_current_user_role(text)      FROM public, anon;
+REVOKE ALL ON FUNCTION public.admin_has_app_role(uuid, text)   FROM public, anon;
+REVOKE ALL ON FUNCTION public.is_admin()                       FROM public, anon;
+REVOKE ALL ON FUNCTION public.is_owner()                       FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.has_current_user_role(text)    TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_has_app_role(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin()                     TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_owner()                     TO authenticated;
+
+-- NOTE: the old public.has_app_role(uuid, text) has been removed (it let any
+-- authenticated user probe an arbitrary user's roles). If a prior version of
+-- this migration was applied to a staging project, drop the stale function:
+--   DROP FUNCTION IF EXISTS public.has_app_role(uuid, text);
 
 -- ---------------------------------------------------------------------------
 -- 3. RLS on user_roles — read-only for the client, NO write path

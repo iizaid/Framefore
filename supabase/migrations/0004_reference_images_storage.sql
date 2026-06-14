@@ -76,7 +76,15 @@ CREATE POLICY "ri_insert_own" ON storage.objects
     )
   );
 
--- Allow updating metadata on own files (e.g., content-type correction).
+-- Allow updating metadata on own files (e.g., content-type correction) and,
+-- importantly, gate object RENAME/MOVE. The Supabase client `move`/`copy` APIs
+-- mutate storage.objects.name, so WITH CHECK applies to the DESTINATION path.
+--   USING  (old row): segment[1] = caller — you can only act on your own folder,
+--          and we deliberately do NOT require the project row to still exist, so
+--          cleanup/relocation of objects from a just-deleted project keeps working.
+--   WITH CHECK (new row): segment[1] = caller AND segment[2] is a project the
+--          caller owns — you cannot move an object into another user's project
+--          path (nor into a non-existent/foreign project_id). Matches INSERT.
 DROP POLICY IF EXISTS "ri_update_own" ON storage.objects;
 CREATE POLICY "ri_update_own" ON storage.objects
   FOR UPDATE USING (
@@ -85,6 +93,11 @@ CREATE POLICY "ri_update_own" ON storage.objects
   ) WITH CHECK (
     bucket_id = 'reference-images'
     AND (storage.foldername(name))[1] = auth.uid()::text
+    AND EXISTS (
+      SELECT 1 FROM public.projects p
+      WHERE p.id::text = (storage.foldername(name))[2]
+        AND p.user_id = auth.uid()
+    )
   );
 
 -- Delete own files (called on scene/project delete; Storage objects don't
@@ -103,12 +116,15 @@ CREATE POLICY "ri_delete_own" ON storage.objects
 --   image. If SVG support is needed later, serve it as an attachment
 --   (Content-Disposition: attachment) only. See plan/14-security-threat-model.md.
 --
--- * Why only INSERT validates project ownership (segment [2]), not SELECT/UPDATE/
---   DELETE: those still gate on segment [1] = auth.uid() (you can only ever touch
---   your own top-level folder). SELECT/DELETE deliberately do NOT require the
---   project row to still exist, so orphan cleanup keeps working after a project
---   is deleted (project delete cascades the DB rows but Storage objects do not
---   cascade — the app/an Edge Function must delete them explicitly).
+-- * Project-ownership (segment [2]) is validated on the WRITE paths that set a
+--   destination path: INSERT (WITH CHECK) and UPDATE (WITH CHECK, covering
+--   rename/move). SELECT and DELETE gate only on segment [1] = auth.uid() and
+--   deliberately do NOT require the project row to still exist, so orphan cleanup
+--   keeps working after a project is deleted (project delete cascades the DB rows
+--   but Storage objects do not cascade — the app/an Edge Function must delete them
+--   explicitly). Net effect: a user can never place or move an object into another
+--   user's folder OR into a project_id they don't own, yet can still read/delete
+--   their own leftover objects during cleanup.
 --
 -- * Strongest-possible enforcement (scene_id segment [3] ownership, atomic
 --   project+scene+object lifecycle) is NOT expressible in a single Storage RLS

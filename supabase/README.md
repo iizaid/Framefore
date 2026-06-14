@@ -34,7 +34,11 @@ Creates `public.profiles` (display name + avatar) and `public.user_settings`
 (theme, migration flag, preferences JSONB). The `handle_new_user()` trigger fires
 on every `auth.users` INSERT — email signup and OAuth alike — and creates both
 rows automatically. Uses `SECURITY DEFINER` with an explicit `SET search_path`
-to prevent search-path injection.
+to prevent search-path injection. `profiles` and `user_settings` carry
+production-safe CHECK constraints (name/avatar length, avatar must be an
+`http(s)` URL, `preferred_theme IN ('system','light','dark')`, and `preferences`
+must be a JSON object) — all NULL-tolerant so OAuth users without a name/avatar
+still work.
 
 **0002** — the core domain model in Postgres. Key design decisions:
 - `scenes.order_index` **is the video order** (the "golden rule"). Export must
@@ -69,7 +73,10 @@ is **read-only from the client and has no write policy** — the only write path
 the `SECURITY DEFINER` `grant_app_role()`/`revoke_app_role()` functions, which
 require the caller to already be owner/admin (no self-promotion). The first owner
 is bootstrapped manually via the SQL editor. `admin_audit_events` logs privileged
-actions and is admin-readable only. See `ADMIN_MODEL.md`.
+actions and is admin-readable only. Role-check helpers are **self-only unless
+admin** (`has_current_user_role()`/`is_admin()`/`is_owner()` read only
+`auth.uid()`; `admin_has_app_role()` returns `false` for non-admins) — there is no
+public role-enumeration function. See `ADMIN_MODEL.md`.
 
 **0007** — `rate_limit_events`, a service-role-only table (RLS on, zero policies)
 that is infrastructure for **future** Edge-Function rate limits. It does **not**

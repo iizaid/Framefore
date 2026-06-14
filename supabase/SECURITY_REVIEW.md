@@ -31,20 +31,31 @@ payloads, bypass frontend validation, and abuse auth/rate limits.
   owner/admin. First owner is bootstrapped manually via the service role. Roles are
   not on `profiles`, so profile edits can't escalate. See `ADMIN_MODEL.md`.
 
+### Role privacy (no enumeration)
+- Role helper functions are **self-only unless admin**: `has_current_user_role()`,
+  `is_admin()`, `is_owner()` read only `auth.uid()` (no user-supplied UUID to
+  forge). The arbitrary-uid `admin_has_app_role()` **fails closed** (returns
+  `false`) for non-admins. The old `has_app_role(uid, role)`, which let any
+  authenticated user probe another user's roles, was removed.
+
 ### SQL-function safety
-- All functions (`set_updated_at`, `handle_new_user`, `has_app_role`, `is_admin`,
-  `is_owner`, `grant_app_role`, `revoke_app_role`) set an explicit `search_path`
-  and use **no dynamic SQL** (no `EXECUTE`/`format`), so SQL injection via these
-  functions is not possible. `SECURITY DEFINER` is used only where required; EXECUTE
-  is revoked from `anon`/`public`.
+- All functions (`set_updated_at`, `handle_new_user`, `has_current_user_role`,
+  `admin_has_app_role`, `is_admin`, `is_owner`, `grant_app_role`,
+  `revoke_app_role`) set an explicit `search_path` and use **no dynamic SQL** (no
+  `EXECUTE`/`format`), so SQL injection via these functions is not possible.
+  `SECURITY DEFINER` is used only where required; EXECUTE is revoked from
+  `anon`/`public`.
 - Client queries must always use the typed/parameterized Supabase client — never
   build SQL from user input.
 
 ### Storage (0004)
 - Private bucket, 10 MB cap, image MIME allow-list, **SVG excluded** (script
-  vector). RLS gates on `segment[1] = auth.uid()`; INSERT additionally requires
-  `segment[2]` (project_id) to be a project the caller owns. Serve via short-lived
-  signed URLs only.
+  vector). RLS gates on `segment[1] = auth.uid()`; both write paths that set a
+  destination — INSERT and UPDATE (rename/move) — additionally require
+  `segment[2]` (project_id) to be a project the caller owns, so an object can't be
+  placed or moved into another user's folder or a foreign project. SELECT/DELETE
+  stay segment[1]-only to preserve orphan cleanup. Serve via short-lived signed
+  URLs only.
 
 ### Audit
 - `security_events` (per-user) and `admin_audit_events` (admin-read) are
