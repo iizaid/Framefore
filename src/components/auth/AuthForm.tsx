@@ -168,7 +168,7 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
         // ── Forgot-password inline form ──────────────────────────────────────
         resetSent ? (
           <div className="flex flex-col gap-4">
-            <SuccessBanner message="If that email is registered, a password reset link is on its way." />
+            <SuccessBanner message="Check your email — if that address is registered, a password reset link is on its way." />
             <button
               type="button"
               onClick={() => {

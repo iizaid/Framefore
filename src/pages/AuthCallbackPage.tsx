@@ -15,7 +15,10 @@ export function AuthCallbackPage() {
       return;
     }
 
-    let active = true;
+    let mounted = true;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let subscription: { unsubscribe: () => void } | undefined;
+    const client = supabase;
 
     // Provider can return an error in the URL (query or hash fragment).
     const params = new URLSearchParams(
@@ -28,8 +31,8 @@ export function AuthCallbackPage() {
     }
 
     (async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (!active) return;
+      const { data, error } = await client.auth.getSession();
+      if (!mounted) return;
       if (error) {
         setError(error.message);
         return;
@@ -40,23 +43,21 @@ export function AuthCallbackPage() {
       }
 
       // Session may still be exchanging — wait for the auth state to flip.
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-        if (session) navigate("/app", { replace: true });
-      });
+      subscription = client.auth.onAuthStateChange((_e, session) => {
+        if (mounted && session) navigate("/app", { replace: true });
+      }).data.subscription;
 
       // Safety net: if nothing arrives, send the user back to sign in.
-      const timeout = setTimeout(() => {
-        if (active) setError("We couldn't finish signing you in. Please try again.");
+      timeout = setTimeout(() => {
+        if (mounted) setError("We couldn't finish signing you in. Please try again.");
       }, 8000);
-
-      return () => {
-        sub.subscription.unsubscribe();
-        clearTimeout(timeout);
-      };
     })();
 
+    // Returned synchronously so React actually runs it on unmount.
     return () => {
-      active = false;
+      mounted = false;
+      if (timeout) clearTimeout(timeout);
+      subscription?.unsubscribe();
     };
   }, [navigate]);
 

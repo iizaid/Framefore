@@ -72,11 +72,16 @@ Authentication → URL Configuration:
 | Setting | Value |
 | --- | --- |
 | Site URL (local dev) | `http://localhost:5173` |
-| Redirect URL (local dev) | `http://localhost:5173/auth/callback` |
-| Redirect URL (production) | `https://YOUR_DOMAIN.com/auth/callback` |
+| Redirect URL — OAuth & confirmation (local) | `http://localhost:5173/auth/callback` |
+| Redirect URL — password reset (local) | `http://localhost:5173/reset-password` |
+| Redirect URL — OAuth & confirmation (prod) | `https://YOUR_DOMAIN.com/auth/callback` |
+| Redirect URL — password reset (prod) | `https://YOUR_DOMAIN.com/reset-password` |
 
-The app builds this URL at runtime from `window.location.origin + "/auth/callback"`,
-so it works in any environment as long as the URL above is allow-listed.
+The app builds these URLs at runtime from `window.location.origin`, so they work in any
+environment as long as each one is allow-listed:
+
+- **OAuth (Google/GitHub)** and **signup email confirmation** → `/auth/callback`
+- **Password reset emails** → `/reset-password` (where the user sets a new password)
 
 ## 4. OAuth providers (optional)
 

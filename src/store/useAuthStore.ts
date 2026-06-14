@@ -2,10 +2,14 @@ import { create } from "zustand";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-// OAuth + password-reset both redirect the browser back here. The dedicated
+// OAuth + signup-confirmation redirect the browser here. The dedicated
 // /auth/callback route lets Supabase finish exchanging the code for a session
 // before we forward the user into /app.
 const AUTH_REDIRECT = `${window.location.origin}/auth/callback`;
+
+// Password-reset emails land on a dedicated page where the user sets a new
+// password using the temporary session Supabase establishes from the link.
+const RESET_REDIRECT = `${window.location.origin}/reset-password`;
 
 interface AuthState {
   user: User | null;
@@ -22,6 +26,7 @@ interface AuthState {
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithGitHub: () => Promise<{ error: string | null }>;
   requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
   resendConfirmation: (email: string) => Promise<{ error: string | null }>;
   clearError: () => void;
 }
@@ -134,8 +139,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!supabase) return { error: "Auth is not configured." };
     set({ loading: true, error: null });
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: AUTH_REDIRECT,
+      redirectTo: RESET_REDIRECT,
     });
+    set({ loading: false });
+    if (error) {
+      set({ error: error.message });
+      return { error: error.message };
+    }
+    return { error: null };
+  },
+
+  updatePassword: async (newPassword) => {
+    if (!supabase) return { error: "Auth is not configured." };
+    set({ loading: true, error: null });
+    // Relies on the temporary session Supabase establishes from the reset link.
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     set({ loading: false });
     if (error) {
       set({ error: error.message });
