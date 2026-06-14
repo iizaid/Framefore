@@ -1,0 +1,163 @@
+# Supabase — Framefore Database
+
+This folder contains Supabase SQL migration files and manual test queries for
+the Framefore cloud backend. **These migrations are not applied automatically.**
+Read this file before running anything.
+
+---
+
+## Migrations
+
+| File | Purpose |
+|---|---|
+| `migrations/0001_profiles_and_auth_helpers.sql` | Profiles table, user settings table, `set_updated_at()` trigger function, `handle_new_user()` trigger |
+| `migrations/0002_framefore_core_tables.sql` | projects, scenes, scene_links, canvas_notes, canvas_sections, canvas_links, scene_assets |
+| `migrations/0003_framefore_rls_policies.sql` | Row Level Security enabled + per-command policies on every user-owned table |
+| `migrations/0004_reference_images_storage.sql` | `reference-images` private Storage bucket + Storage RLS policies |
+| `migrations/0005_security_events.sql` | Optional append-only audit log table |
+
+### What each migration does
+
+**0001** — bootstraps the per-user data that must exist before any project data.
+Creates `public.profiles` (display name + avatar) and `public.user_settings`
+(theme, migration flag, preferences JSONB). The `handle_new_user()` trigger fires
+on every `auth.users` INSERT — email signup and OAuth alike — and creates both
+rows automatically. Uses `SECURITY DEFINER` with an explicit `SET search_path`
+to prevent search-path injection.
+
+**0002** — the core domain model in Postgres. Key design decisions:
+- `scenes.order_index` **is the video order** (the "golden rule"). Export must
+  always `ORDER BY order_index ASC`. Canvas `layout` {x,y} is stored on scenes
+  as a JSONB column but is visual-only and never affects sequencing.
+- Canvas tables (`canvas_notes`, `canvas_sections`, `canvas_links`, `scene_links`)
+  are visual workspace annotations — they carry zero sequencing meaning.
+- `client_id` columns on projects, scenes, and canvas_notes/sections hold the
+  original local nanoid, enabling idempotent local→cloud migration.
+- JSONB bags (`craft`, `notes_bag`, `global`) hold high-churn flexible fields;
+  first-class columns are reserved for anything queried/sorted/indexed.
+- `user_id` is denormalized onto every child table so RLS policies stay fast
+  (simple `auth.uid() = user_id` equality, no joins).
+
+**0003** — enables RLS on all nine user-owned tables and creates explicit
+per-command policies (`SELECT`/`INSERT`/`UPDATE`/`DELETE`). Child table INSERT
+policies also verify the parent project belongs to the same user (defense-in-depth
+against a forged `project_id`). UPDATE policies use both `USING` and `WITH CHECK`
+to prevent reading *and* writing across ownership boundaries.
+
+**0004** — declares the `reference-images` private Storage bucket (10 MB limit,
+PNG/JPEG/WebP/GIF only, SVG excluded). Storage RLS on `storage.objects` gates
+access by the first path segment (`{user_id}/...`). Binary uploads are wired in
+a later phase; this migration only declares the rules.
+
+**0005** — optional append-only audit table. INSERT + SELECT own; no
+UPDATE/DELETE from client. Useful for logging migration events, login anomalies,
+password changes. Not required for MVP.
+
+---
+
+## How to apply
+
+> **Review every migration in a staging project before running in production.**
+
+### Method A — Supabase Dashboard SQL Editor (recommended for one-off setup)
+
+1. Open your Supabase project → SQL Editor.
+2. Paste and run each file **in order**: 0001 → 0002 → 0003 → 0004 → 0005.
+3. Check for errors after each file before proceeding to the next.
+
+### Method B — Supabase CLI
+
+```bash
+# Install (if not already)
+npm install -g supabase
+
+# Link to your project (get ref from Dashboard → Settings → General)
+supabase link --project-ref <your-project-ref>
+
+# Push migrations
+supabase db push
+```
+
+The CLI reads files from `supabase/migrations/` in filename order. Each file
+must be idempotent (they are — using `IF NOT EXISTS`, `OR REPLACE`, and
+`DROP … IF EXISTS`).
+
+---
+
+## Required Supabase Auth settings
+
+In **Dashboard → Authentication → URL Configuration**:
+
+| Setting | Local dev | Production |
+|---|---|---|
+| Site URL | `http://localhost:5173` | `https://YOUR_DOMAIN.com` |
+| Redirect URL (OAuth + email confirm) | `http://localhost:5173/auth/callback` | `https://YOUR_DOMAIN.com/auth/callback` |
+| Redirect URL (password reset) | `http://localhost:5173/reset-password` | `https://YOUR_DOMAIN.com/reset-password` |
+
+In **Dashboard → Authentication → Providers**:
+- **Google**: enable, add Client ID + Secret from Google Cloud Console.
+  Google's "Authorized redirect URI" → your Supabase callback:
+  `https://<project-ref>.supabase.co/auth/v1/callback`
+- **GitHub**: enable, add Client ID + Secret from GitHub OAuth Apps.
+  GitHub's "Authorization callback URL" → same Supabase URL above.
+
+---
+
+## Required environment variables
+
+In `.env.local` (gitignored — never commit):
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+Get both from **Dashboard → Project Settings → API**.
+
+**NEVER** add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`, any `VITE_*`
+variable, or the repo. The service-role key bypasses all RLS and must only exist
+in trusted server environments (Edge Functions, CI secrets, etc.).
+
+---
+
+## Verifying RLS manually
+
+Run `tests/rls-manual-checks.sql` in the SQL Editor. It includes:
+
+1. Confirm RLS is enabled on all tables.
+2. Confirm all expected policies exist with correct commands.
+3. Confirm `handle_new_user` and `set_updated_at` triggers are wired.
+4. Confirm `scenes.order_index` is NOT NULL.
+5. Confirm `reference-images` bucket is private.
+6. Confirm Storage policies exist.
+7. Simulation blocks (commented out) showing how to test cross-user isolation.
+8. Export query to verify `order_index` ordering works correctly.
+
+---
+
+## Current phase status
+
+| Phase | Status |
+|---|---|
+| 4.2 — Auth UI (login/signup/OAuth/reset) | ✅ Done |
+| 4.2 mini-patch — callback cleanup + reset page | ✅ Done |
+| **4.3 — Database migrations (this folder)** | ✅ SQL written, not yet applied |
+| 4.4 — Cloud repository layer (TypeScript) | ⏳ Next |
+| 4.5 — Local → cloud migration UI | ⏳ Future |
+| 4.6 — Project sync + conflict resolution | ⏳ Future |
+
+The app is still **fully local-first**. No frontend code reads from or writes to
+these tables yet. Applying these migrations creates the schema but does not alter
+any existing behaviour.
+
+---
+
+## Important warnings
+
+- Do not run migrations blindly on a production project. Test in staging first.
+- Do not run 0003 before 0002 — policies reference tables that must exist.
+- Do not run 0004's INSERT into `storage.buckets` if the bucket already exists
+  via the Dashboard — the `ON CONFLICT DO NOTHING` handles it, but verify first.
+- Keep the service-role key out of any frontend variable.
+- Keep RLS enabled on every table. Never disable it to "fix" a permission error
+  — fix the policy instead.

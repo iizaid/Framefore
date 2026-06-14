@@ -19,49 +19,23 @@ When the env vars are missing the app degrades gracefully: the landing page and 
 still work, and `/login` / `/signup` show a friendly "authentication is not configured"
 message with disabled buttons instead of crashing.
 
-## 2. Profiles table
+## 2. Database migrations (Phase 4.3)
 
-Run this in Supabase SQL Editor:
+Full SQL migrations are now in `supabase/migrations/`. Apply them in order via
+the Supabase SQL Editor or Supabase CLI. See `supabase/README.md` for detailed
+instructions.
 
-```sql
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text,
-  avatar_url text,
-  created_at timestamptz default now() not null,
-  updated_at timestamptz default now() not null
-);
+| File | Creates |
+|---|---|
+| `0001_profiles_and_auth_helpers.sql` | `profiles`, `user_settings`, `handle_new_user()` trigger |
+| `0002_framefore_core_tables.sql` | `projects`, `scenes`, `scene_links`, `canvas_notes`, `canvas_sections`, `canvas_links`, `scene_assets` |
+| `0003_framefore_rls_policies.sql` | RLS enabled + all per-command policies |
+| `0004_reference_images_storage.sql` | `reference-images` private Storage bucket + policies |
+| `0005_security_events.sql` | Optional audit log table |
 
--- Enable RLS
-alter table public.profiles enable row level security;
-
--- Users can only read/update their own profile
-create policy "Users can view own profile"
-  on public.profiles for select
-  using (auth.uid() = id);
-
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = id);
-
--- Auto-create profile on signup
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (
-    new.id,
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'avatar_url'
-  );
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-```
+**These migrations are not yet wired to the app** — the frontend is still
+fully local-first. No local project data is read from or written to Supabase yet.
+The next phase (4.4) will create the TypeScript cloud repository layer.
 
 ## 3. Redirect URLs
 
