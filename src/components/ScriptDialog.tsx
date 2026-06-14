@@ -44,11 +44,11 @@ export function ScriptDialog({ open, onClose, project }: { open: boolean; onClos
             className="max-h-[50vh] overflow-y-auto"
           />
         </Field>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-[11px] text-[var(--color-ink-faint)]">
             {wordCount(project.narration)} words · ~{formatDuration(scriptSec)}
           </span>
-          <Button variant="subtle" size="sm" onClick={autoAssign} disabled={project.scenes.length === 0}>
+          <Button variant="subtle" size="sm" className="w-full sm:w-auto" onClick={autoAssign} disabled={project.scenes.length === 0}>
             <Wand2 size={14} /> Distribute across {project.scenes.length} scene{project.scenes.length === 1 ? "" : "s"}
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import { Clock, ChevronDown } from "lucide-react";
+import { Clock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -71,7 +71,7 @@ export function TimelineStrip({
         {open && (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={scenes.map((s) => s.id)} strategy={horizontalListSortingStrategy}>
-              <div className="flex items-stretch gap-1">
+              <div className="no-scrollbar -mx-1 flex items-stretch gap-1 overflow-x-auto px-1">
                 {scenes.map((scene, i) => (
                   <TimelineSegment
                     key={scene.id}
@@ -79,6 +79,8 @@ export function TimelineStrip({
                     index={i}
                     isActive={scene.id === activeId}
                     onSelect={() => onSelect(scene.id)}
+                    onMoveLeft={i > 0 ? () => onReorder(scene.id, scenes[i - 1].id) : undefined}
+                    onMoveRight={i < scenes.length - 1 ? () => onReorder(scene.id, scenes[i + 1].id) : undefined}
                   />
                 ))}
               </div>
@@ -95,11 +97,15 @@ function TimelineSegment({
   index,
   isActive,
   onSelect,
+  onMoveLeft,
+  onMoveRight,
 }: {
   scene: Scene;
   index: number;
   isActive: boolean;
   onSelect: () => void;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: scene.id });
   const gaps = essentialGaps(scene);
@@ -114,23 +120,28 @@ function TimelineSegment({
   };
 
   return (
-    <button
+    <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      onClick={onSelect}
       title={`Scene ${String(index + 1).padStart(2, "0")}${scene.title ? ` — ${scene.title}` : ""} · ${formatDuration(scene.durationSec)} · drag to reorder`}
       className={cn(
-        "group/seg relative flex min-w-[52px] cursor-grab touch-none select-none flex-col justify-between overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors active:cursor-grabbing",
+        "group/seg relative flex min-h-12 min-w-[72px] cursor-grab touch-none select-none flex-col justify-between overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors active:cursor-grabbing sm:min-h-0 sm:min-w-[52px]",
         isDragging
           ? "border-neutral-400 bg-white text-[var(--color-ink)] shadow-lg"
           : isActive
             ? "border-neutral-900 bg-neutral-900 text-white"
-            : "border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] hover:border-neutral-300 hover:bg-[var(--color-surface-2)]",
+          : "border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] hover:border-neutral-300 hover:bg-[var(--color-surface-2)]",
       )}
     >
-      <div className="flex items-center justify-between gap-1">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="absolute inset-0"
+        aria-label={`Select scene ${index + 1}`}
+      />
+      <div className="pointer-events-none flex items-center justify-between gap-1">
         <span className="text-[11px] font-semibold tabular-nums leading-none">
           {String(index + 1).padStart(2, "0")}
         </span>
@@ -143,12 +154,34 @@ function TimelineSegment({
       </div>
       <span
         className={cn(
-          "mt-1 truncate text-[10px] font-medium leading-none",
+          "pointer-events-none mt-1 truncate text-[10px] font-medium leading-none",
           isActive && !isDragging ? "text-white/80" : "text-[var(--color-ink-faint)]",
         )}
       >
         {formatDuration(scene.durationSec)}
       </span>
-    </button>
+      {isActive && (onMoveLeft || onMoveRight) && (
+        <div className="relative z-10 mt-1 hidden gap-1 max-sm:flex">
+          <button
+            type="button"
+            disabled={!onMoveLeft}
+            onClick={(e) => { e.stopPropagation(); onMoveLeft?.(); }}
+            className="grid h-6 flex-1 place-items-center rounded bg-white/15 text-white disabled:opacity-30"
+            aria-label="Move scene left"
+          >
+            <ChevronLeft size={13} />
+          </button>
+          <button
+            type="button"
+            disabled={!onMoveRight}
+            onClick={(e) => { e.stopPropagation(); onMoveRight?.(); }}
+            className="grid h-6 flex-1 place-items-center rounded bg-white/15 text-white disabled:opacity-30"
+            aria-label="Move scene right"
+          >
+            <ChevronRight size={13} />
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

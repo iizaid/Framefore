@@ -81,7 +81,7 @@ export function ExportDialog({ open, onClose, project }: { open: boolean; onClos
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Export video plan" className="max-w-3xl">
+    <Modal open={open} onClose={onClose} title="Export video plan" className="max-w-3xl max-sm:max-h-[92dvh]">
       {!hasScenes ? (
         <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-strong)] py-16 text-center">
           <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-surface-2)] text-[var(--color-ink-faint)]">
@@ -100,7 +100,7 @@ export function ExportDialog({ open, onClose, project }: { open: boolean; onClos
             <button
               onClick={() => setActive("promptPack")}
               className={cn(
-                "rounded-xl border p-3 text-left transition-colors",
+                "min-h-20 rounded-xl border p-3 text-left transition-colors",
                 active === "promptPack"
                   ? "border-neutral-900 bg-neutral-900/[0.04] ring-1 ring-neutral-900/10"
                   : "border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)]",
@@ -128,7 +128,7 @@ export function ExportDialog({ open, onClose, project }: { open: boolean; onClos
                     onClick={() => setActive(f.key)}
                     title={f.desc}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors",
+                      "flex min-h-10 items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors",
                       active === f.key
                         ? "bg-[var(--color-surface-2)] text-[var(--color-ink)]"
                         : "text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)]",
@@ -164,15 +164,15 @@ export function ExportDialog({ open, onClose, project }: { open: boolean; onClos
               )}
             </div>
 
-            <pre className="no-scrollbar h-[320px] overflow-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] p-3.5 text-[11px] leading-relaxed text-[var(--color-ink-soft)] whitespace-pre-wrap break-words">
+            <pre className="no-scrollbar h-[240px] overflow-auto rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] p-3.5 text-[11px] leading-relaxed text-[var(--color-ink-soft)] whitespace-pre-wrap break-words sm:h-[320px]">
               {content || "This format is empty for the current scenes."}
             </pre>
 
-            <div className="mt-3 flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={download} disabled={!content}>
+            <div className="sticky bottom-0 -mx-4 mt-3 flex justify-end gap-2 border-t border-[var(--color-border)] bg-white px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={download} disabled={!content}>
                 <Download size={14} /> Download .{fmt.ext}
               </Button>
-              <Button variant="primary" size="sm" onClick={copy} disabled={!content}>
+              <Button variant="primary" size="sm" className="flex-1 sm:flex-none" onClick={copy} disabled={!content}>
                 <Copy size={14} /> Copy
               </Button>
             </div>

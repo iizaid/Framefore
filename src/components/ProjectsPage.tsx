@@ -66,26 +66,26 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-10">
       {/* Header */}
       <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-3 flex items-center gap-3">
             <img src="/black.svg" alt="Framefore" className="h-9 w-9" />
-            <h1 className="font-display text-4xl text-[var(--color-charcoal)]">Framefore</h1>
+            <h1 className="font-display text-3xl text-[var(--color-charcoal)] sm:text-4xl">Framefore</h1>
           </div>
           <p className="max-w-md text-sm text-[var(--color-ink-soft)]">
             Plan AI videos scene by scene. Write prompts, attach references, balance narration,
             and export production-ready prompt packs.
           </p>
         </div>
-        <Button variant="primary" size="md" onClick={() => setDialog({ mode: "create" })}>
+        <Button variant="primary" size="md" className="w-full sm:w-auto" onClick={() => setDialog({ mode: "create" })}>
           <Plus size={18} /> New Project
         </Button>
       </header>
 
       {projects.length > 0 && (
-        <div className="relative mb-6 max-w-sm">
+        <div className="relative mb-6 max-w-sm max-sm:max-w-none">
           <Search
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-faint)]"
@@ -252,7 +252,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]/40 px-6 py-24 text-center"
+      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]/40 px-5 py-16 text-center sm:px-6 sm:py-24"
     >
       <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-neutral-900">
         <Clapperboard className="text-white" size={30} />

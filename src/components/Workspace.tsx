@@ -22,7 +22,7 @@ import {
   LayoutGrid,
   Frame,
 } from "lucide-react";
-import type { SceneStatus } from "@/types";
+import type { Project, Scene, SceneStatus } from "@/types";
 import { useStore } from "@/store/useStore";
 import { cn, formatDuration } from "@/lib/utils";
 import { totalSceneSeconds } from "@/lib/estimate";
@@ -127,7 +127,7 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
   const activeIndex = activeScene ? project.scenes.indexOf(activeScene) : -1;
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-w-0 overflow-hidden">
       {/* ── Left rail (navigation + global tools) ── */}
       <WorkspaceRail
         onBack={onBack}
@@ -137,9 +137,9 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
         onExport={() => setExportOpen(true)}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── Top bar — project info only (tools live in the left rail) ── */}
-        <header className="sticky top-0 z-30 border-b border-[var(--color-border-strong)] glass px-4 py-3 sm:px-6">
+        <header className="sticky top-0 z-30 border-b border-[var(--color-border-strong)] glass px-3 py-2.5 sm:px-6 sm:py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back to projects" className="sm:hidden">
               <ArrowLeft size={18} />
@@ -162,6 +162,10 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
               </div>
             )}
 
+            <Button variant="primary" size="icon" onClick={addAndEdit} aria-label="Add scene" className="h-10 w-10 md:hidden">
+              <Plus size={18} />
+            </Button>
+
             {/* View toggle — Board (storyboard) vs Canvas (whiteboard) */}
             <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-[var(--color-border-strong)] bg-white p-0.5">
               <ViewToggle active={viewMode === "board"} label="Board" onClick={() => setViewMode("board")}>
@@ -175,9 +179,9 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
         </header>
 
         {/* ── Body ── */}
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
           {/* Center column: storyboard wall + docked timeline */}
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col pb-[72px] md:pb-0">
           {viewMode === "canvas" ? (
             /* Professional node-based canvas (React Flow) — free-positioned scene
                nodes, locked order spine, editable manual links. */
@@ -190,7 +194,7 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
           ) : (
           /* Storyboard wall — clicking empty space deselects */
           <main
-            className="dot-canvas min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8"
+            className="dot-canvas min-w-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6 lg:px-8 lg:py-6"
             onClick={(e) => { if (e.target === e.currentTarget) setActiveId(null); }}
           >
             <div
@@ -199,18 +203,18 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
             >
               {/* compact filter toolbar */}
               {project.scenes.length > 0 && (
-                <div className="mb-5 flex items-center gap-2">
-                  <div className="relative w-40">
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <div className="relative min-w-[180px] flex-1 sm:w-40 sm:flex-none">
                     <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-faint)]" />
                     <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search scenes…" className="h-8 pl-8 text-xs" />
                   </div>
-                  <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as SceneStatus | "all")} className="h-8 w-auto text-xs">
+                  <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as SceneStatus | "all")} className="h-8 w-auto min-w-[132px] text-xs">
                     <option value="all">All statuses</option>
                     {SCENE_STATUSES.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </Select>
-                  <span className="ml-auto text-xs text-[var(--color-ink-faint)]">
+                  <span className="ml-auto hidden text-xs text-[var(--color-ink-faint)] sm:block">
                     {project.scenes.length} scene{project.scenes.length === 1 ? "" : "s"}
                   </span>
                 </div>
@@ -295,11 +299,117 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
         </div>
       </div>
 
+      {activeScene && (
+        <MobileInspectorSheet
+          project={project}
+          scene={activeScene}
+          index={activeIndex}
+          onClose={() => setActiveId(null)}
+          onEdit={() => setEditingId(activeScene.id)}
+        />
+      )}
+
+      <MobileBottomNav
+        onBack={onBack}
+        onBoard={() => setViewMode("board")}
+        onAddScene={addAndEdit}
+        onScript={() => setScriptOpen(true)}
+        onSettings={() => setSettingsOpen(true)}
+        onExport={() => setExportOpen(true)}
+      />
+
       <SceneEditorModal open={editingId !== null} onClose={() => setEditingId(null)} project={project} sceneId={editingId} />
       <ScriptDialog open={scriptOpen} onClose={() => setScriptOpen(false)} project={project} />
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} project={project} />
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} project={project} />
     </div>
+  );
+}
+
+function MobileInspectorSheet({
+  project,
+  scene,
+  index,
+  onClose,
+  onEdit,
+}: {
+  project: Project;
+  scene: Scene;
+  index: number;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="lg:hidden">
+      <button
+        className="fixed inset-0 z-40 bg-black/25"
+        aria-label="Close inspector"
+        onClick={onClose}
+      />
+      <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[82dvh] overflow-hidden rounded-t-2xl border-t border-[var(--color-border-strong)] bg-white shadow-2xl">
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-neutral-300" aria-hidden />
+        <div className="max-h-[calc(82dvh-0.75rem)] overflow-hidden">
+          <SceneInspector project={project} scene={scene} index={index} onClose={onClose} onEdit={onEdit} />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function MobileBottomNav({
+  onBack,
+  onBoard,
+  onAddScene,
+  onScript,
+  onSettings,
+  onExport,
+}: {
+  onBack: () => void;
+  onBoard: () => void;
+  onAddScene: () => void;
+  onScript: () => void;
+  onSettings: () => void;
+  onExport: () => void;
+}) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border-strong)] bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-14px_34px_-28px_rgba(0,0,0,0.6)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-6 gap-1">
+        <MobileNavBtn label="Projects" onClick={onBack}><Home size={17} /></MobileNavBtn>
+        <MobileNavBtn label="Board" onClick={onBoard}><LayoutGrid size={17} /></MobileNavBtn>
+        <MobileNavBtn label="Add" primary onClick={onAddScene}><Plus size={18} /></MobileNavBtn>
+        <MobileNavBtn label="Script" onClick={onScript}><FileText size={17} /></MobileNavBtn>
+        <MobileNavBtn label="Export" onClick={onExport}><Download size={17} /></MobileNavBtn>
+        <MobileNavBtn label="Settings" onClick={onSettings}><Settings2 size={17} /></MobileNavBtn>
+      </div>
+    </nav>
+  );
+}
+
+function MobileNavBtn({
+  children,
+  label,
+  onClick,
+  primary,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        "flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-medium transition-colors",
+        primary
+          ? "bg-[#121212] text-white"
+          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+      )}
+    >
+      {children}
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -335,22 +445,22 @@ function WorkspaceRail({
   return (
     <nav
       className={cn(
-        "hidden shrink-0 flex-col gap-0.5 border-r border-[var(--color-border-strong)] bg-[var(--color-surface-2)] p-2 transition-[width] duration-200 sm:flex",
-        expanded ? "w-52" : "w-16",
+        "hidden shrink-0 flex-col gap-0.5 border-r border-[var(--color-border-strong)] bg-[var(--color-surface-2)] p-2 transition-[width] duration-200 md:flex",
+        expanded ? "w-52 max-lg:w-16" : "w-16",
       )}
     >
       {/* Brand + collapse toggle */}
-      <div className={cn("mb-2 flex items-center", expanded ? "justify-between pl-1.5 pr-0.5" : "justify-center")}>
+      <div className={cn("mb-2 flex items-center", expanded ? "justify-between pl-1.5 pr-0.5 max-lg:justify-center max-lg:px-0" : "justify-center")}>
         <button onClick={onBack} title="Back to projects" className="flex items-center gap-2 transition-transform hover:scale-[1.03]">
           <img src="/black.svg" alt="Framefore" className="h-7 w-7" />
-          {expanded && <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)]">Framefore</span>}
+          {expanded && <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)] max-lg:hidden">Framefore</span>}
         </button>
         {expanded && (
           <button
             onClick={() => setExpanded(false)}
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
-            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] max-lg:hidden"
           >
             <ChevronsLeft size={16} />
           </button>
@@ -403,14 +513,14 @@ function RailItem({
       aria-label={label}
       className={cn(
         "flex h-10 items-center rounded-[12px] text-sm font-medium transition-colors",
-        expanded ? "gap-3 px-3" : "w-10 justify-center self-center px-0",
+        expanded ? "gap-3 px-3 max-lg:w-10 max-lg:justify-center max-lg:self-center max-lg:px-0" : "w-10 justify-center self-center px-0",
         active
           ? "bg-[#121212] text-white"
           : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
       )}
     >
       <span className="grid shrink-0 place-items-center">{children}</span>
-      {expanded && <span>{label}</span>}
+      {expanded && <span className="max-lg:hidden">{label}</span>}
     </button>
   );
 }

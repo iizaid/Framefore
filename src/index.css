@@ -70,6 +70,7 @@
     font-family: var(--font-sans);
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
   textarea,
   input {
@@ -220,6 +221,23 @@
 }
 .react-flow__attribution {
   display: none;
+}
+
+@media (width < 40rem) {
+  .react-flow__handle.scene-handle {
+    width: 18px;
+    height: 18px;
+  }
+  .react-flow__handle.scene-handle::after {
+    inset: -10px;
+  }
+  .react-flow__panel.bottom.center {
+    width: calc(100% - 1rem);
+  }
+  .react-flow__panel.bottom.center > div {
+    margin-inline: auto;
+    max-width: max-content;
+  }
 }
 
 ::-webkit-scrollbar {

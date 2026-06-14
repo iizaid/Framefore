@@ -103,10 +103,10 @@ export function SceneEditorModal({
   const resolvedVid = resolvedVideoModel(scene, project);
 
   return (
-    <Modal open={open} onClose={onClose} className="max-w-2xl p-0">
-      <div className="flex max-h-[85vh] min-h-0 flex-col">
+    <Modal open={open} onClose={onClose} className="max-w-2xl p-0 max-sm:h-dvh max-sm:max-h-dvh max-sm:rounded-none">
+      <div className="flex max-h-[85vh] min-h-0 flex-col max-sm:h-dvh max-sm:max-h-dvh">
         {/* Header */}
-        <div className="shrink-0 border-b border-[var(--color-border)] px-6 pb-0 pt-6">
+        <div className="shrink-0 border-b border-[var(--color-border)] px-4 pb-0 pt-4 sm:px-6 sm:pt-6">
           <div className="flex items-start gap-3 pr-8">
             <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#121212] text-sm font-semibold tabular-nums text-white">
               {String(index + 1).padStart(2, "0")}
@@ -116,7 +116,7 @@ export function SceneEditorModal({
                 value={scene.title}
                 onChange={(e) => set("title", e.target.value)}
                 placeholder={`Scene ${index + 1} title…`}
-                className="font-display w-full bg-transparent text-2xl leading-tight text-[var(--color-ink)] placeholder:font-sans placeholder:text-lg placeholder:font-normal placeholder:text-[var(--color-ink-faint)] focus:outline-none"
+                className="font-display w-full bg-transparent text-xl leading-tight text-[var(--color-ink)] placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:text-[var(--color-ink-faint)] focus:outline-none sm:text-2xl sm:placeholder:text-lg"
               />
               <p className="mt-0.5 text-xs text-[var(--color-ink-faint)]">
                 {formatDuration(scene.durationSec)}
@@ -146,10 +146,10 @@ export function SceneEditorModal({
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {tab === "basics" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Field label="Role">
                   <Select value={scene.role} onChange={(e) => set("role", e.target.value as SceneRole)}>
                     {SCENE_ROLES.map((r) => (
@@ -326,7 +326,7 @@ export function SceneEditorModal({
 
           {tab === "advanced" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <SuggestField label="Camera angle" value={scene.cameraAngle} onChange={(v) => set("cameraAngle", v)} options={SUGGESTIONS.cameraAngle} id={`cam-${scene.id}`} />
                 <SuggestField label="Camera movement" value={scene.cameraMovement} onChange={(v) => set("cameraMovement", v)} options={SUGGESTIONS.cameraMovement} id={`mov-${scene.id}`} />
                 <SuggestField label="Lighting" value={scene.lighting} onChange={(v) => set("lighting", v)} options={SUGGESTIONS.lighting} id={`light-${scene.id}`} />
@@ -351,7 +351,7 @@ export function SceneEditorModal({
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 items-center gap-2 border-t border-[var(--color-border)] px-6 py-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-[var(--color-border)] bg-white px-4 py-3 sm:px-6">
           <Button variant="primary" size="sm" onClick={handleCopyPrompt}>
             <Copy size={14} /> Copy prompt
           </Button>
@@ -361,7 +361,7 @@ export function SceneEditorModal({
           <Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" onClick={() => setConfirmDel(true)}>
             <Trash2 size={14} /> Delete
           </Button>
-          <Button variant="outline" size="sm" className="ml-auto" onClick={onClose}>
+          <Button variant="outline" size="sm" className="ml-auto max-sm:w-full" onClick={onClose}>
             Done
           </Button>
         </div>

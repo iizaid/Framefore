@@ -29,7 +29,7 @@ export function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8"
+          className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto p-0 sm:items-start sm:p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -47,7 +47,7 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
             className={cn(
-              "relative z-10 my-auto w-full max-w-lg rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-6 shadow-2xl",
+              "relative z-10 w-full max-w-lg overflow-y-auto rounded-t-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-4 shadow-2xl sm:my-auto sm:max-h-[calc(100dvh-4rem)] sm:rounded-2xl sm:p-6",
               className,
             )}
           >

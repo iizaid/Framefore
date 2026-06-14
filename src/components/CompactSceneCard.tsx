@@ -153,7 +153,7 @@ export function CompactSceneCard({
             </div>
             
             {/* actions */}
-            <div className="relative -mr-1 -mt-1 ml-auto flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover/card:opacity-100" onClick={(e) => e.stopPropagation()}>
+            <div className="relative -mr-1 -mt-1 ml-auto flex items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover/card:opacity-100" onClick={(e) => e.stopPropagation()}>
               <IconBtn title="Edit" onClick={onEdit}><Pencil size={14} /></IconBtn>
               <IconBtn title="Copy prompt" onClick={handleCopyPrompt}><Copy size={14} /></IconBtn>
               <IconBtn title="More" onClick={() => setMenu((m) => !m)}><MoreHorizontal size={14} /></IconBtn>
@@ -233,7 +233,7 @@ function IconBtn({ title, onClick, children }: { title: string; onClick: () => v
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="grid h-7 w-7 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+      className="grid h-9 w-9 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] sm:h-7 sm:w-7"
     >
       {children}
     </button>

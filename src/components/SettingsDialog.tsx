@@ -27,7 +27,7 @@ export function SettingsDialog({ open, onClose, project }: { open: boolean; onCl
   return (
     <Modal open={open} onClose={onClose} title="Project Settings" className="max-w-xl">
       {/* Tabs */}
-      <div className="-mt-1 mb-5 flex gap-1 border-b border-[var(--color-border)]">
+      <div className="no-scrollbar -mt-1 mb-5 flex gap-1 overflow-x-auto border-b border-[var(--color-border)]">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -48,7 +48,7 @@ export function SettingsDialog({ open, onClose, project }: { open: boolean; onCl
       <div className="max-h-[60vh] overflow-y-auto pr-1">
         {tab === "publishing" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Target platform">
                 <Select value={project.platform} onChange={(e) => set("platform", e.target.value as Platform)}>
                   {PLATFORMS.map((p) => (

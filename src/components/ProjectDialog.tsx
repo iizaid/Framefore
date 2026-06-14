@@ -104,7 +104,7 @@ export function ProjectDialog({
             placeholder="e.g. True crime / cybersecurity"
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Target platform">
             <Select value={draft.platform} onChange={(e) => set("platform", e.target.value as Platform)}>
               {PLATFORMS.map((p) => (
@@ -127,7 +127,7 @@ export function ProjectDialog({
             </Select>
           </Field>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label="Target length (min)">
             <Input
               type="number"
@@ -152,11 +152,11 @@ export function ProjectDialog({
             />
           </Field>
         </div>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex flex-col-reverse justify-end gap-2 pt-1 sm:flex-row">
+          <Button variant="outline" className="sm:w-auto" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={submit} disabled={!draft.title.trim()}>
+          <Button variant="primary" className="sm:w-auto" onClick={submit} disabled={!draft.title.trim()}>
             {mode === "create" ? "Create Project" : "Save"}
           </Button>
         </div>

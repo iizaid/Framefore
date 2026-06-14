@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import {
   Cable,
   Columns3,
   Hand,
   Maximize2,
+  MoreHorizontal,
   Minus,
   MousePointer2,
   Plus,
@@ -29,6 +31,7 @@ export function FlowToolbar({
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const arrangeScenes = useStore((s) => s.arrangeScenes);
   const resetLayout = useStore((s) => s.resetLayout);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const fit = () => fitView({ duration: 300, padding: 0.2, maxZoom: 1 });
   const refit = () => requestAnimationFrame(fit);
@@ -43,7 +46,7 @@ export function FlowToolbar({
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white/95 p-1.5 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.45)] backdrop-blur">
+    <div className="relative flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white/95 p-1.5 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.45)] backdrop-blur max-sm:gap-0.5 max-sm:p-2">
       <div className="flex items-center gap-1" aria-label="Canvas modes">
         <ToolBtn label="Select (V)" active={toolMode === "select"} onClick={() => onToolModeChange("select")}>
           <MousePointer2 size={15} />
@@ -57,15 +60,27 @@ export function FlowToolbar({
       </div>
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />
       <div className="flex items-center gap-1" aria-label="Canvas view">
-        <ToolBtn label="Zoom out" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></ToolBtn>
-        <ToolBtn label="Zoom in" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></ToolBtn>
+        <ToolBtn label="Zoom out" className="max-sm:hidden" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></ToolBtn>
+        <ToolBtn label="Zoom in" className="max-sm:hidden" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></ToolBtn>
         <ToolBtn label="Fit view (F)" onClick={fit}><Maximize2 size={15} /></ToolBtn>
       </div>
-      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />
-      <div className="flex items-center gap-1" aria-label="Canvas layout">
+      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
+      <div className="flex items-center gap-1 max-sm:hidden" aria-label="Canvas layout">
         <ToolBtn label="Arrange vertical" onClick={() => arrange("vertical")}><Rows3 size={15} /></ToolBtn>
         <ToolBtn label="Arrange horizontal" onClick={() => arrange("horizontal")}><Columns3 size={15} /></ToolBtn>
         <ToolBtn label="Reset layout" onClick={reset}><RotateCcw size={15} /></ToolBtn>
+      </div>
+      <div className="hidden max-sm:block">
+        <ToolBtn label="More canvas tools" active={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
+          <MoreHorizontal size={16} />
+        </ToolBtn>
+        {moreOpen && (
+          <div className="absolute bottom-full right-0 mb-2 w-44 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white py-1 text-sm shadow-xl">
+            <MenuBtn label="Arrange vertical" onClick={() => { setMoreOpen(false); arrange("vertical"); }}><Rows3 size={15} /></MenuBtn>
+            <MenuBtn label="Arrange horizontal" onClick={() => { setMoreOpen(false); arrange("horizontal"); }}><Columns3 size={15} /></MenuBtn>
+            <MenuBtn label="Reset layout" onClick={() => { setMoreOpen(false); reset(); }}><RotateCcw size={15} /></MenuBtn>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -75,11 +90,13 @@ function ToolBtn({
   label,
   onClick,
   active = false,
+  className,
   children,
 }: {
   label: string;
   onClick: () => void;
   active?: boolean;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -92,9 +109,30 @@ function ToolBtn({
         active
           ? "bg-[#121212] text-white shadow-sm"
           : "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+        className,
       )}
     >
       {children}
+    </button>
+  );
+}
+
+function MenuBtn({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
+    >
+      {children}
+      <span>{label}</span>
     </button>
   );
 }
