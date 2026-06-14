@@ -20,7 +20,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import type { Project } from "@/types";
+import type { CanvasNodeType, Project } from "@/types";
 import {
   CANVAS_CARD_W,
   CANVAS_CARD_H,
@@ -101,6 +101,8 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const setSceneLayout = useStore((s) => s.setSceneLayout);
   const addLink = useStore((s) => s.addLink);
   const deleteLink = useStore((s) => s.deleteLink);
+  const addCanvasLink = useStore((s) => s.addCanvasLink);
+  const deleteCanvasLink = useStore((s) => s.deleteCanvasLink);
   const addScene = useStore((s) => s.addScene);
   const addCanvasNote = useStore((s) => s.addCanvasNote);
   const updateCanvasNote = useStore((s) => s.updateCanvasNote);
@@ -116,8 +118,17 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
   const scenes = project.scenes;
   const links = project.links;
+  const canvasLinks = project.canvasLinks ?? [];
   const notes = project.canvasNotes ?? [];
   const sections = project.canvasSections ?? [];
+
+  const nodeTypeById = useMemo(() => {
+    const map = new Map<string, CanvasNodeType>();
+    scenes.forEach((scene) => map.set(scene.id, "scene"));
+    notes.forEach((note) => map.set(note.id, "note"));
+    sections.forEach((section) => map.set(section.id, "section"));
+    return map;
+  }, [scenes, notes, sections]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -229,17 +240,38 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
         sourceHandle: "out",
         targetHandle: "in",
         type: "sceneLink",
-        data: { linkId: l.id, label: l.label, type: l.type },
+        data: { linkId: l.id, linkKind: "scene", label: l.label, type: l.type },
+        zIndex: 20,
+        markerEnd: LINK_MARKER,
+      }));
+
+    const canvasRelationshipEdges: Edge[] = canvasLinks
+      .filter(
+        (l) =>
+          nodeTypeById.get(l.fromNodeId) === l.fromNodeType &&
+          nodeTypeById.get(l.toNodeId) === l.toNodeType &&
+          l.fromNodeType !== "section" &&
+          l.toNodeType !== "section",
+      )
+      .map((l) => ({
+        id: l.id,
+        source: l.fromNodeId,
+        target: l.toNodeId,
+        sourceHandle: "out",
+        targetHandle: "in",
+        type: "sceneLink",
+        data: { linkId: l.id, linkKind: "canvas", label: l.label, type: l.type },
+        zIndex: 20,
         markerEnd: LINK_MARKER,
       }));
 
     setEdges((prev) => {
       const selectedIds = new Set(prev.filter((e) => e.selected).map((e) => e.id));
-      return [...orderEdges, ...manualEdges].map((e) =>
+      return [...orderEdges, ...manualEdges, ...canvasRelationshipEdges].map((e) =>
         selectedIds.has(e.id) ? { ...e, selected: true } : e,
       );
     });
-  }, [scenes, links]);
+  }, [scenes, links, canvasLinks, nodeTypeById]);
 
   // ── Drag → persist position to the store on drop only (mirrors the old canvas).
   const onNodesChange = useCallback(
@@ -274,23 +306,39 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
     ],
   );
 
+  const isAllowedCanvasConnection = useCallback((sourceType?: CanvasNodeType, targetType?: CanvasNodeType) => {
+    if (!sourceType || !targetType) return false;
+    if (sourceType === "section" || targetType === "section") return false;
+    return sourceType === "scene" || sourceType === "note" || targetType === "scene" || targetType === "note";
+  }, []);
+
   // ── Edge changes. Only manual links are deletable; sync removals to the store.
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       setEdges((eds) => applyEdgeChanges(changes, eds));
+      const sceneLinkIds = new Set((links ?? []).map((l) => l.id));
+      const canvasLinkIds = new Set(canvasLinks.map((l) => l.id));
       for (const c of changes) {
-        if (c.type === "remove") deleteLink(project.id, c.id);
+        if (c.type === "remove") {
+          if (canvasLinkIds.has(c.id)) deleteCanvasLink(project.id, c.id);
+          else if (sceneLinkIds.has(c.id)) deleteLink(project.id, c.id);
+        }
       }
     },
-    [project.id, deleteLink],
+    [project.id, links, canvasLinks, deleteLink, deleteCanvasLink],
   );
 
   // ── New manual link from dragging a handle. addLink dedupes + blocks self-links.
   const onConnect = useCallback(
     (c: Connection) => {
-      if (c.source && c.target && c.source !== c.target) addLink(project.id, c.source, c.target);
+      if (!c.source || !c.target || c.source === c.target) return;
+      const sourceType = nodeTypeById.get(c.source);
+      const targetType = nodeTypeById.get(c.target);
+      if (!isAllowedCanvasConnection(sourceType, targetType) || !sourceType || !targetType) return;
+      if (sourceType === "scene" && targetType === "scene") addLink(project.id, c.source, c.target);
+      else addCanvasLink(project.id, c.source, c.target, sourceType, targetType);
     },
-    [project.id, addLink],
+    [project.id, nodeTypeById, isAllowedCanvasConnection, addLink, addCanvasLink],
   );
 
   const isValidConnection = useCallback(
@@ -298,9 +346,23 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
       if (!c.source || !c.target || c.source === c.target) return false;
       if ("sourceHandle" in c && c.sourceHandle && c.sourceHandle !== "out") return false;
       if ("targetHandle" in c && c.targetHandle && c.targetHandle !== "in") return false;
-      return !(links ?? []).some((l) => l.fromSceneId === c.source && l.toSceneId === c.target);
+      const sourceType = nodeTypeById.get(c.source);
+      const targetType = nodeTypeById.get(c.target);
+      if (!isAllowedCanvasConnection(sourceType, targetType) || !sourceType || !targetType) return false;
+      const hasSceneDuplicate =
+        sourceType === "scene" &&
+        targetType === "scene" &&
+        (links ?? []).some((l) => l.fromSceneId === c.source && l.toSceneId === c.target);
+      const hasCanvasDuplicate = canvasLinks.some(
+        (l) =>
+          l.fromNodeId === c.source &&
+          l.toNodeId === c.target &&
+          l.fromNodeType === sourceType &&
+          l.toNodeType === targetType,
+      );
+      return !hasSceneDuplicate && !hasCanvasDuplicate;
     },
-    [links],
+    [links, canvasLinks, nodeTypeById, isAllowedCanvasConnection],
   );
 
   // ── Selection ↔ inspector. Track whether a selection came from a canvas click

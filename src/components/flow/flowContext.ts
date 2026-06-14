@@ -50,6 +50,7 @@ export interface OrderEdgeData {
 
 export interface SceneLinkEdgeData {
   linkId: string;
+  linkKind?: "scene" | "canvas";
   label?: string;
   type?: string;
   [key: string]: unknown;

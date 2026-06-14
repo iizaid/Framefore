@@ -7,15 +7,25 @@ import {
 } from "@xyflow/react";
 import { Pencil, Trash2, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
-import type { SceneLinkType } from "@/types";
+import type { CanvasLinkType, SceneLinkType } from "@/types";
 import { useFlowCallbacks } from "./flowContext";
 import type { SceneLinkEdgeData } from "./flowContext";
 
-const LINK_TYPES: { value: SceneLinkType; label: string }[] = [
+type LinkTypeValue = CanvasLinkType | SceneLinkType;
+
+const CANVAS_LINK_TYPES: { value: CanvasLinkType; label: string }[] = [
   { value: "transition", label: "Transition" },
   { value: "continuity", label: "Continuity" },
   { value: "reference", label: "Reference" },
   { value: "alternate", label: "Alternate" },
+  { value: "todo", label: "Todo" },
+  { value: "idea", label: "Idea" },
+  { value: "fix", label: "Fix" },
+  { value: "note", label: "Note" },
+];
+
+const SCENE_LINK_TYPES: { value: LinkTypeValue; label: string }[] = [
+  ...CANVAS_LINK_TYPES,
   { value: "same-character", label: "Same character" },
   { value: "same-location", label: "Same location" },
 ];
@@ -38,12 +48,17 @@ function SceneLinkEdgeImpl({
   const { projectId } = useFlowCallbacks();
   const updateLink = useStore((s) => s.updateLink);
   const deleteLink = useStore((s) => s.deleteLink);
+  const updateCanvasLink = useStore((s) => s.updateCanvasLink);
+  const deleteCanvasLink = useStore((s) => s.deleteCanvasLink);
 
   const d = (data ?? {}) as SceneLinkEdgeData;
   const linkId = d.linkId ?? id;
-  const label = (data?.label as string | undefined) ?? "";
-  const linkType = data?.type as SceneLinkType | undefined;
-  const typeLabel = LINK_TYPES.find((t) => t.value === linkType)?.label;
+  const label = d.label ?? "";
+  const linkKind = d.linkKind ?? "scene";
+  const isCanvasLink = linkKind === "canvas";
+  const linkType = d.type as LinkTypeValue | undefined;
+  const linkTypes = isCanvasLink ? CANVAS_LINK_TYPES : SCENE_LINK_TYPES;
+  const typeLabel = linkTypes.find((t) => t.value === linkType)?.label;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(label);
@@ -77,8 +92,20 @@ function SceneLinkEdgeImpl({
   });
 
   const commitLabel = () => {
-    updateLink(projectId, linkId, { label: draft.trim() || undefined });
+    const patch = { label: draft.trim() || undefined };
+    if (isCanvasLink) updateCanvasLink(projectId, linkId, patch);
+    else updateLink(projectId, linkId, patch);
     setEditing(false);
+  };
+
+  const updateType = (type: LinkTypeValue | undefined) => {
+    if (isCanvasLink) updateCanvasLink(projectId, linkId, { type: type as CanvasLinkType | undefined });
+    else updateLink(projectId, linkId, { type: type as SceneLinkType | undefined });
+  };
+
+  const deleteCurrentLink = () => {
+    if (isCanvasLink) deleteCanvasLink(projectId, linkId);
+    else deleteLink(projectId, linkId);
   };
 
   return (
@@ -146,17 +173,13 @@ function SceneLinkEdgeImpl({
                   )}
                   <select
                     value={linkType ?? ""}
-                    onChange={(e) =>
-                      updateLink(projectId, linkId, {
-                        type: (e.target.value || undefined) as SceneLinkType | undefined,
-                      })
-                    }
+                    onChange={(e) => updateType((e.target.value || undefined) as LinkTypeValue | undefined)}
                     title="Connection type"
                     aria-label="Connection type"
                     className="nodrag nopan h-6 max-w-[118px] rounded-full border border-[var(--color-border-strong)] bg-white px-2 text-[10px] font-medium text-[var(--color-ink-soft)] outline-none hover:bg-[var(--color-surface-2)]"
                   >
                     <option value="">Type</option>
-                    {LINK_TYPES.map((t) => (
+                    {linkTypes.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
@@ -169,7 +192,7 @@ function SceneLinkEdgeImpl({
                     <Pencil size={11} />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); deleteLink(projectId, linkId); }}
+                    onClick={(e) => { e.stopPropagation(); deleteCurrentLink(); }}
                     title="Delete connection"
                     aria-label="Delete connection"
                     className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-rose-50 hover:text-rose-600"

@@ -82,11 +82,36 @@ export interface SceneLink {
   type?: SceneLinkType;
 }
 
+export type CanvasNodeType = "scene" | "note" | "section";
+
+export type CanvasLinkType =
+  | "transition"
+  | "continuity"
+  | "reference"
+  | "alternate"
+  | "todo"
+  | "idea"
+  | "fix"
+  | "note";
+
+export interface CanvasLink {
+  id: string;
+  fromNodeId: string;
+  toNodeId: string;
+  fromNodeType: CanvasNodeType;
+  toNodeType: CanvasNodeType;
+  label?: string;
+  type?: CanvasLinkType;
+}
+
+export type CanvasNoteKind = "idea" | "todo" | "fix" | "reference";
+
 export interface CanvasNote {
   id: string;
   x: number;
   y: number;
   text: string;
+  kind?: CanvasNoteKind;
   createdAt?: number;
   updatedAt?: number;
 }
@@ -179,6 +204,7 @@ export interface Project {
   narration: string; // full script for the whole video
   scenes: Scene[];
   links?: SceneLink[]; // manual canvas connections (visual only — not video order)
+  canvasLinks?: CanvasLink[]; // non-order canvas relationships across scenes/notes
   canvasNotes?: CanvasNote[]; // production notes on the canvas only — never exported as scenes
   canvasSections?: CanvasSection[]; // visual story frames on the canvas only
 

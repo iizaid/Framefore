@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
+import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 import { ProjectsPage } from "@/components/ProjectsPage";
 import { Workspace } from "@/components/Workspace";
 import { Toaster } from "@/components/ui/toast";
@@ -34,24 +35,10 @@ export default function App() {
   // Guard against a stale hash pointing at a deleted project.
   const activeExists = activeId && projects.some((p) => p.id === activeId);
 
-  if (!hydrated) {
-    return (
-      <div className="grid h-full place-items-center">
-        <div className="flex flex-col items-center gap-3 text-[var(--color-ink-faint)]">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-200 border-t-neutral-900" />
-          <span className="text-sm">Loading your board…</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      {activeExists ? (
-        <Workspace projectId={activeId!} onBack={back} />
-      ) : (
-        <ProjectsPage onOpen={open} />
-      )}
+      {hydrated && (activeExists ? <Workspace projectId={activeId!} onBack={back} /> : <ProjectsPage onOpen={open} />)}
+      <AppLoadingScreen ready={hydrated} />
       <Toaster />
     </>
   );

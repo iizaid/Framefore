@@ -2,7 +2,16 @@ import { create } from "zustand";
 import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
 import { nanoid } from "nanoid";
-import type { Project, Scene, Direction, SceneLink, CanvasNote, CanvasSection } from "@/types";
+import type {
+  Project,
+  Scene,
+  Direction,
+  SceneLink,
+  CanvasNote,
+  CanvasSection,
+  CanvasLink,
+  CanvasNodeType,
+} from "@/types";
 import { emptyGlobal } from "@/types";
 import { deleteImage } from "@/lib/images";
 
@@ -72,6 +81,7 @@ function makeProject(partial: Partial<Project>): Project {
     narration: "",
     scenes: [],
     links: [],
+    canvasLinks: [],
     canvasNotes: [],
     canvasSections: [],
     createdAt: now,
@@ -105,6 +115,15 @@ interface StoreState {
   addLink: (projectId: string, fromSceneId: string, toSceneId: string) => void;
   updateLink: (projectId: string, linkId: string, patch: Partial<SceneLink>) => void;
   deleteLink: (projectId: string, linkId: string) => void;
+  addCanvasLink: (
+    projectId: string,
+    fromNodeId: string,
+    toNodeId: string,
+    fromNodeType: CanvasNodeType,
+    toNodeType: CanvasNodeType,
+  ) => void;
+  updateCanvasLink: (projectId: string, linkId: string, patch: Partial<CanvasLink>) => void;
+  deleteCanvasLink: (projectId: string, linkId: string) => void;
 
   // Canvas production tools: notes and story sections are visual planning data.
   addCanvasNote: (projectId: string, x: number, y: number) => string | null;
@@ -168,6 +187,23 @@ export const useStore = create<StoreState>()(
           sceneIdMap.set(sc.id, newId);
           return { ...sc, id: newId };
         });
+        const noteIdMap = new Map<string, string>();
+        const canvasNotes = (original.canvasNotes ?? []).map((note) => {
+          const newId = nanoid();
+          noteIdMap.set(note.id, newId);
+          return { ...note, id: newId };
+        });
+        const sectionIdMap = new Map<string, string>();
+        const canvasSections = (original.canvasSections ?? []).map((section) => {
+          const newId = nanoid();
+          sectionIdMap.set(section.id, newId);
+          return { ...section, id: newId };
+        });
+        const mapCanvasNodeId = (type: CanvasNodeType, id: string) => {
+          if (type === "scene") return sceneIdMap.get(id);
+          if (type === "note") return noteIdMap.get(id);
+          return sectionIdMap.get(id);
+        };
         const links = (original.links ?? [])
           .map((link) => {
             const fromSceneId = sceneIdMap.get(link.fromSceneId);
@@ -177,6 +213,13 @@ export const useStore = create<StoreState>()(
               : null;
           })
           .filter((link): link is SceneLink => link !== null);
+        const canvasLinks = (original.canvasLinks ?? [])
+          .map((link) => {
+            const fromNodeId = mapCanvasNodeId(link.fromNodeType, link.fromNodeId);
+            const toNodeId = mapCanvasNodeId(link.toNodeType, link.toNodeId);
+            return fromNodeId && toNodeId ? { ...link, id: nanoid(), fromNodeId, toNodeId } : null;
+          })
+          .filter((link): link is CanvasLink => link !== null);
         const copy: Project = {
           ...structuredClone(original),
           id: nanoid(),
@@ -186,8 +229,9 @@ export const useStore = create<StoreState>()(
           // New scene ids; images are shared by reference (blobs aren't copied).
           scenes,
           links,
-          canvasNotes: (original.canvasNotes ?? []).map((note) => ({ ...note, id: nanoid() })),
-          canvasSections: (original.canvasSections ?? []).map((section) => ({ ...section, id: nanoid() })),
+          canvasLinks,
+          canvasNotes,
+          canvasSections,
         };
         set((s) => ({ projects: [copy, ...s.projects] }));
         return copy.id;
@@ -230,6 +274,11 @@ export const useStore = create<StoreState>()(
                   ...p,
                   scenes: p.scenes.filter((sc) => sc.id !== sceneId),
                   links: (p.links ?? []).filter((l) => l.fromSceneId !== sceneId && l.toSceneId !== sceneId),
+                  canvasLinks: (p.canvasLinks ?? []).filter(
+                    (l) =>
+                      !(l.fromNodeType === "scene" && l.fromNodeId === sceneId) &&
+                      !(l.toNodeType === "scene" && l.toNodeId === sceneId),
+                  ),
                 })
               : p,
           ),
@@ -353,6 +402,53 @@ export const useStore = create<StoreState>()(
           ),
         })),
 
+      addCanvasLink: (projectId, fromNodeId, toNodeId, fromNodeType, toNodeType) =>
+        set((s) => ({
+          projects: s.projects.map((p) => {
+            if (p.id !== projectId) return p;
+            if (fromNodeId === toNodeId && fromNodeType === toNodeType) return p;
+            const canvasLinks = p.canvasLinks ?? [];
+            const duplicate = canvasLinks.some(
+              (l) =>
+                l.fromNodeId === fromNodeId &&
+                l.toNodeId === toNodeId &&
+                l.fromNodeType === fromNodeType &&
+                l.toNodeType === toNodeType,
+            );
+            if (duplicate) return p;
+            const link: CanvasLink = {
+              id: nanoid(),
+              fromNodeId,
+              toNodeId,
+              fromNodeType,
+              toNodeType,
+              type: "note",
+            };
+            return touch({ ...p, canvasLinks: [...canvasLinks, link] });
+          }),
+        })),
+
+      updateCanvasLink: (projectId, linkId, patch) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  canvasLinks: (p.canvasLinks ?? []).map((l) => (l.id === linkId ? { ...l, ...patch } : l)),
+                })
+              : p,
+          ),
+        })),
+
+      deleteCanvasLink: (projectId, linkId) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({ ...p, canvasLinks: (p.canvasLinks ?? []).filter((l) => l.id !== linkId) })
+              : p,
+          ),
+        })),
+
       addCanvasNote: (projectId, x, y) => {
         const id = nanoid();
         const now = Date.now();
@@ -363,7 +459,7 @@ export const useStore = create<StoreState>()(
                   ...p,
                   canvasNotes: [
                     ...(p.canvasNotes ?? []),
-                    { id, x: Math.round(x), y: Math.round(y), text: "", createdAt: now, updatedAt: now },
+                    { id, x: Math.round(x), y: Math.round(y), text: "", kind: "idea", createdAt: now, updatedAt: now },
                   ],
                 })
               : p,
@@ -390,7 +486,15 @@ export const useStore = create<StoreState>()(
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === projectId
-              ? touch({ ...p, canvasNotes: (p.canvasNotes ?? []).filter((note) => note.id !== noteId) })
+              ? touch({
+                  ...p,
+                  canvasNotes: (p.canvasNotes ?? []).filter((note) => note.id !== noteId),
+                  canvasLinks: (p.canvasLinks ?? []).filter(
+                    (l) =>
+                      !(l.fromNodeType === "note" && l.fromNodeId === noteId) &&
+                      !(l.toNodeType === "note" && l.toNodeId === noteId),
+                  ),
+                })
               : p,
           ),
         })),
@@ -444,14 +548,22 @@ export const useStore = create<StoreState>()(
         set((s) => ({
           projects: s.projects.map((p) =>
             p.id === projectId
-              ? touch({ ...p, canvasSections: (p.canvasSections ?? []).filter((section) => section.id !== sectionId) })
+              ? touch({
+                  ...p,
+                  canvasSections: (p.canvasSections ?? []).filter((section) => section.id !== sectionId),
+                  canvasLinks: (p.canvasLinks ?? []).filter(
+                    (l) =>
+                      !(l.fromNodeType === "section" && l.fromNodeId === sectionId) &&
+                      !(l.toNodeType === "section" && l.toNodeId === sectionId),
+                  ),
+                })
               : p,
           ),
         })),
     }),
     {
       name: "framefore-state",
-      version: 7,
+      version: 8,
       storage: createJSONStorage(() => idbStorage),
       partialize: (s) => ({ projects: s.projects }) as StoreState,
       // Backfill fields added after v1 so older saved projects keep working.
@@ -468,8 +580,10 @@ export const useStore = create<StoreState>()(
             // v6: manual canvas links (visual only).
             links: p.links ?? [],
             // v7: canvas production tools (visual only).
-            canvasNotes: p.canvasNotes ?? [],
+            canvasNotes: (p.canvasNotes ?? []).map((note) => ({ ...note, kind: note.kind ?? "idea" })),
             canvasSections: p.canvasSections ?? [],
+            // v8: flexible canvas relationships across scenes and notes.
+            canvasLinks: p.canvasLinks ?? [],
             scenes: (p.scenes ?? []).map((sc) => ({
               ...sc,
               role: sc.role ?? "none",
