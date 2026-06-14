@@ -1,0 +1,270 @@
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Clapperboard,
+  Plus,
+  MoreVertical,
+  Copy,
+  Pencil,
+  Trash2,
+  Film,
+  Clock,
+  Search,
+} from "lucide-react";
+import { useStore } from "@/store/useStore";
+import type { Project } from "@/types";
+import { formatDuration, relativeTime } from "@/lib/utils";
+import { totalSceneSeconds } from "@/lib/estimate";
+import { scoreProject } from "@/lib/readiness";
+import { Button, Card, Input } from "./ui/primitives";
+import { ConfirmDialog } from "./ui/Modal";
+import { ProjectDialog, type ProjectDraft } from "./ProjectDialog";
+import { ReadinessRing } from "./ui/widgets";
+import { toast } from "./ui/toast";
+
+export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
+  const projects = useStore((s) => s.projects);
+  const createProject = useStore((s) => s.createProject);
+  const updateProject = useStore((s) => s.updateProject);
+  const deleteProject = useStore((s) => s.deleteProject);
+  const duplicateProject = useStore((s) => s.duplicateProject);
+
+  const [query, setQuery] = useState("");
+  const [dialog, setDialog] = useState<{ mode: "create" | "edit"; project?: Project } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Project | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return projects;
+    return projects.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.topic.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q),
+    );
+  }, [projects, query]);
+
+  const handleSubmit = (draft: ProjectDraft) => {
+    const patch = {
+      title: draft.title,
+      description: draft.description,
+      topic: draft.topic,
+      platform: draft.platform,
+      aspectRatio: draft.aspectRatio,
+      targetLengthSec: draft.targetMinutes * 60,
+      visualStyle: draft.visualStyle,
+      mood: draft.mood,
+    };
+    if (dialog?.mode === "edit" && dialog.project) {
+      updateProject(dialog.project.id, patch);
+      toast("Project updated");
+    } else {
+      const id = createProject(patch);
+      toast("Project created");
+      onOpen(id);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+      {/* Header */}
+      <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-3 flex items-center gap-3">
+            <img src="/black.svg" alt="Framefore" className="h-9 w-9" />
+            <h1 className="font-display text-4xl text-[var(--color-charcoal)]">Framefore</h1>
+          </div>
+          <p className="max-w-md text-sm text-[var(--color-ink-soft)]">
+            Plan AI videos scene by scene. Write prompts, attach references, balance narration,
+            and export production-ready prompt packs.
+          </p>
+        </div>
+        <Button variant="primary" size="md" onClick={() => setDialog({ mode: "create" })}>
+          <Plus size={18} /> New Project
+        </Button>
+      </header>
+
+      {projects.length > 0 && (
+        <div className="relative mb-6 max-w-sm">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-faint)]"
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search projects…"
+            className="pl-9"
+          />
+        </div>
+      )}
+
+      {projects.length === 0 ? (
+        <EmptyState onCreate={() => setDialog({ mode: "create" })} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((p, i) => (
+            <ProjectGridCard
+              key={p.id}
+              project={p}
+              index={i}
+              onOpen={() => onOpen(p.id)}
+              onEdit={() => setDialog({ mode: "edit", project: p })}
+              onDuplicate={() => {
+                const id = duplicateProject(p.id);
+                if (id) toast("Project duplicated");
+              }}
+              onDelete={() => setConfirmDelete(p)}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <p className="col-span-full py-12 text-center text-sm text-[var(--color-ink-faint)]">
+              No projects match “{query}”.
+            </p>
+          )}
+        </div>
+      )}
+
+      <ProjectDialog
+        open={!!dialog}
+        mode={dialog?.mode ?? "create"}
+        initial={dialog?.project}
+        onClose={() => setDialog(null)}
+        onSubmit={handleSubmit}
+      />
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) {
+            deleteProject(confirmDelete.id);
+            toast("Project deleted", "info");
+          }
+        }}
+        title="Delete project?"
+        message={`“${confirmDelete?.title}” and all its scenes will be permanently removed. This can't be undone.`}
+      />
+    </div>
+  );
+}
+
+function ProjectGridCard({
+  project,
+  index,
+  onOpen,
+  onEdit,
+  onDuplicate,
+  onDelete,
+}: {
+  project: Project;
+  index: number;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const [menu, setMenu] = useState(false);
+  const duration = totalSceneSeconds(project.scenes);
+  const readiness = scoreProject(project).score;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3) }}
+    >
+      <Card
+        className="card-glow group relative cursor-pointer overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5"
+        onClick={onOpen}
+      >
+        {/* aspect-ratio tag accent */}
+        <div className="mb-4 flex items-start justify-between">
+          <span className="rounded-md bg-neutral-100 px-2 py-1 text-[11px] font-medium text-[var(--color-ink-soft)]">
+            {project.platform} · {project.aspectRatio}
+          </span>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" onClick={() => setMenu((m) => !m)} aria-label="Menu">
+              <MoreVertical size={16} />
+            </Button>
+            {menu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
+                <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-elevated)] py-1 shadow-xl">
+                  <MenuItem icon={<Pencil size={14} />} label="Edit" onClick={() => { setMenu(false); onEdit(); }} />
+                  <MenuItem icon={<Copy size={14} />} label="Duplicate" onClick={() => { setMenu(false); onDuplicate(); }} />
+                  <MenuItem icon={<Trash2 size={14} />} label="Delete" danger onClick={() => { setMenu(false); onDelete(); }} />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-base font-semibold">{project.title}</h3>
+            <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-sm text-[var(--color-ink-soft)]">
+              {project.description || project.topic || "No description yet."}
+            </p>
+          </div>
+          {project.scenes.length > 0 && <ReadinessRing score={readiness} size={40} />}
+        </div>
+
+        <div className="mt-4 flex items-center gap-4 border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-ink-faint)]">
+          <span className="flex items-center gap-1.5">
+            <Film size={13} /> {project.scenes.length} scenes
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Clock size={13} /> {formatDuration(duration)}
+          </span>
+          <span className="ml-auto">{relativeTime(project.updatedAt)}</span>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-neutral-100 ${
+        danger ? "text-rose-400" : "text-[var(--color-ink)]"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function EmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]/40 px-6 py-24 text-center"
+    >
+      <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-neutral-900">
+        <Clapperboard className="text-white" size={30} />
+      </div>
+      <h2 className="text-xl font-semibold">Your production wall is empty</h2>
+      <p className="mt-2 max-w-sm text-sm text-[var(--color-ink-soft)]">
+        Create your first project to start planning a video as a sequence of scenes — prompts,
+        references, narration, and exports all in one board.
+      </p>
+      <Button variant="primary" className="mt-6" onClick={onCreate}>
+        <Plus size={18} /> Create your first project
+      </Button>
+    </motion.div>
+  );
+}
