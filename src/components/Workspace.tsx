@@ -29,7 +29,7 @@ import { totalSceneSeconds } from "@/lib/estimate";
 import { SCENE_STATUSES } from "@/lib/constants";
 import { Button, Input, Select } from "./ui/primitives";
 import { CompactSceneCard } from "./CompactSceneCard";
-import { CanvasBoard } from "./CanvasBoard";
+import { FlowCanvas } from "./flow/FlowCanvas";
 import { TimelineStrip } from "./TimelineStrip";
 import { SceneInspector } from "./SceneInspector";
 import { SceneEditorModal } from "./SceneEditorModal";
@@ -179,8 +179,9 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
           {/* Center column: storyboard wall + docked timeline */}
           <div className="flex min-w-0 flex-1 flex-col">
           {viewMode === "canvas" ? (
-            /* Whiteboard canvas — free-positioned cards, order-based connectors */
-            <CanvasBoard
+            /* Professional node-based canvas (React Flow) — free-positioned scene
+               nodes, locked order spine, editable manual links. */
+            <FlowCanvas
               project={project}
               activeId={activeId}
               onSelect={setActiveId}

@@ -101,6 +101,7 @@ interface StoreState {
 
   // Manual canvas connections (visual workflow links only).
   addLink: (projectId: string, fromSceneId: string, toSceneId: string) => void;
+  updateLink: (projectId: string, linkId: string, patch: Partial<SceneLink>) => void;
   deleteLink: (projectId: string, linkId: string) => void;
 }
 
@@ -296,6 +297,20 @@ export const useStore = create<StoreState>()(
             const link: SceneLink = { id: nanoid(), fromSceneId, toSceneId };
             return touch({ ...p, links: [...links, link] });
           }),
+        })),
+
+      // Patch a manual link's label/type. Used by the canvas edge toolbar. Never
+      // touches scene order — links are visual workflow annotations only.
+      updateLink: (projectId, linkId, patch) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  links: (p.links ?? []).map((l) => (l.id === linkId ? { ...l, ...patch } : l)),
+                })
+              : p,
+          ),
         })),
 
       deleteLink: (projectId, linkId) =>

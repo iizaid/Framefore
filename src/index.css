@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
 
 /* ShotBoard — "Family" design system.
    Warm cream canvas, graphite ink, midnight pill buttons, ember-orange as a
@@ -119,6 +120,58 @@
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ── React Flow theming — fold the node editor into the Family design system ──
+   The library ships neutral defaults; we override handles, selection, and the
+   pane background so the canvas reads as part of the app, not a bolt-on. */
+.react-flow {
+  background: var(--color-surface-2);
+}
+/* Custom scene handles: small graphite ports that fade in on hover/selection
+   (visibility driven by the node's `is-visible` class, not pure CSS hover, so
+   it also lights up when the node is the active/selected one). */
+.react-flow__handle.scene-handle {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.react-flow__handle.scene-handle.is-visible {
+  opacity: 1;
+}
+.react-flow__handle.scene-handle--in {
+  background: var(--color-neutral-400);
+}
+.react-flow__handle.scene-handle--out {
+  background: var(--color-neutral-900);
+  cursor: crosshair;
+}
+.react-flow__handle.scene-handle:hover {
+  transform: scale(1.25);
+}
+/* While a connection is being dragged, light up valid target handles. */
+.react-flow__handle-connecting,
+.react-flow__handle-valid {
+  opacity: 1 !important;
+  background: var(--color-neutral-900) !important;
+}
+/* Manual-link edges get a pointer; the order spine stays inert. */
+.react-flow__edge.react-flow__edge-sceneLink {
+  cursor: pointer;
+}
+.react-flow__edge.react-flow__edge-order {
+  pointer-events: none;
+}
+/* But the order edge's wide interaction path (for the +) must stay hittable. */
+.react-flow__edge.react-flow__edge-order .react-flow__edge-interaction {
+  pointer-events: stroke;
+}
+.react-flow__attribution {
+  display: none;
 }
 
 ::-webkit-scrollbar {
