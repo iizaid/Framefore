@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export type CanvasToolMode = "select" | "connect" | "pan";
+export type CanvasToolMode = "select" | "connect" | "pan" | "scene" | "note" | "section";
 
 // Stable, app-level handles shared with every custom node / edge. Kept out of
 // React Flow `data` on purpose: node data is compared by identity for memoized
@@ -30,6 +30,16 @@ export interface SceneNodeData {
   [key: string]: unknown;
 }
 
+export interface CanvasNoteNodeData {
+  noteId: string;
+  [key: string]: unknown;
+}
+
+export interface CanvasSectionNodeData {
+  sectionId: string;
+  [key: string]: unknown;
+}
+
 // Order connectors carry the source scene's index so the "+ add scene between"
 // affordance knows where to splice, plus an optional transition label.
 export interface OrderEdgeData {
@@ -41,5 +51,6 @@ export interface OrderEdgeData {
 export interface SceneLinkEdgeData {
   linkId: string;
   label?: string;
+  type?: string;
   [key: string]: unknown;
 }

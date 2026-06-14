@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -28,6 +28,8 @@ import {
   useStore,
 } from "@/store/useStore";
 import { SceneFlowNode } from "./SceneFlowNode";
+import { CanvasNoteNode } from "./CanvasNoteNode";
+import { CanvasSectionNode } from "./CanvasSectionNode";
 import { OrderEdge } from "./OrderEdge";
 import { SceneLinkEdge } from "./SceneLinkEdge";
 import { FlowToolbar } from "./FlowToolbar";
@@ -37,7 +39,7 @@ import { FlowCallbacksContext, type CanvasToolMode, type FlowCallbacks } from ".
 // recommends this to avoid re-instantiating custom node/edge components.
 // Future canvas entities (notes, section frames, branch nodes) can be added here
 // without changing the core rule that timeline order drives exported video order.
-const nodeTypes = { scene: SceneFlowNode };
+const nodeTypes = { scene: SceneFlowNode, note: CanvasNoteNode, section: CanvasSectionNode };
 const edgeTypes = { order: OrderEdge, sceneLink: SceneLinkEdge };
 
 const ORDER_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.38)", width: 16, height: 16 };
@@ -99,6 +101,13 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const setSceneLayout = useStore((s) => s.setSceneLayout);
   const addLink = useStore((s) => s.addLink);
   const deleteLink = useStore((s) => s.deleteLink);
+  const addScene = useStore((s) => s.addScene);
+  const addCanvasNote = useStore((s) => s.addCanvasNote);
+  const updateCanvasNote = useStore((s) => s.updateCanvasNote);
+  const deleteCanvasNote = useStore((s) => s.deleteCanvasNote);
+  const addCanvasSection = useStore((s) => s.addCanvasSection);
+  const updateCanvasSection = useStore((s) => s.updateCanvasSection);
+  const deleteCanvasSection = useStore((s) => s.deleteCanvasSection);
   const rf = useReactFlow();
 
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -107,6 +116,8 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
   const scenes = project.scenes;
   const links = project.links;
+  const notes = project.canvasNotes ?? [];
+  const sections = project.canvasSections ?? [];
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -127,6 +138,9 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
       const key = event.key.toLowerCase();
       if (key === "v") setToolMode("select");
       else if (key === "c") setToolMode("connect");
+      else if (key === "s") setToolMode("scene");
+      else if (key === "n") setToolMode("note");
+      else if (key === "g") setToolMode("section");
       else if (key === "h" || event.key === " ") {
         event.preventDefault();
         setToolMode("pan");
@@ -147,22 +161,46 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   useEffect(() => {
     setNodes((prev) => {
       const prevById = new Map(prev.map((n) => [n.id, n]));
-      return scenes.map((s, i) => {
-        const pos = s.layout ?? defaultSceneLayout(i, "vertical");
-        const ex = prevById.get(s.id);
-        if (ex) {
-          return ex.position.x === pos.x && ex.position.y === pos.y ? ex : { ...ex, position: pos };
-        }
-        return {
+      const makeNode = (node: Node): Node => {
+        const ex = prevById.get(node.id);
+        if (!ex) return node;
+        const samePosition = ex.position.x === node.position.x && ex.position.y === node.position.y;
+        return samePosition ? { ...ex, ...node, selected: ex.selected } : { ...ex, ...node };
+      };
+
+      const sectionNodes = sections.map((section) =>
+        makeNode({
+          id: section.id,
+          type: "section",
+          position: { x: section.x, y: section.y },
+          data: { sectionId: section.id },
+          style: { width: section.width, height: section.height },
+          zIndex: 0,
+        } satisfies Node),
+      );
+      const noteNodes = notes.map((note) =>
+        makeNode({
+          id: note.id,
+          type: "note",
+          position: { x: note.x, y: note.y },
+          data: { noteId: note.id },
+          zIndex: 5,
+        } satisfies Node),
+      );
+      const sceneNodes = scenes.map((s, i) =>
+        makeNode({
           id: s.id,
           type: "scene",
-          position: pos,
+          position: s.layout ?? defaultSceneLayout(i, "vertical"),
           data: { sceneId: s.id },
           deletable: false, // Delete key must never remove a scene from the canvas
-        } satisfies Node;
-      });
+          zIndex: 10,
+        } satisfies Node),
+      );
+
+      return [...sectionNodes, ...noteNodes, ...sceneNodes];
     });
-  }, [scenes]);
+  }, [scenes, notes, sections]);
 
   // ── Reconcile edges: subtle locked order spine + editable manual links.
   // Carry over `selected` so an unrelated store change doesn't drop the user's
@@ -191,7 +229,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
         sourceHandle: "out",
         targetHandle: "in",
         type: "sceneLink",
-        data: { linkId: l.id, label: l.label },
+        data: { linkId: l.id, label: l.label, type: l.type },
         markerEnd: LINK_MARKER,
       }));
 
@@ -207,13 +245,33 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setNodes((nds) => applyNodeChanges(changes, nds));
+      const sceneIds = new Set(scenes.map((s) => s.id));
+      const noteIds = new Set(notes.map((n) => n.id));
+      const sectionIds = new Set(sections.map((s) => s.id));
       for (const c of changes) {
         if (c.type === "position" && c.dragging === false && c.position) {
-          setSceneLayout(project.id, c.id, Math.round(c.position.x), Math.round(c.position.y));
+          const x = Math.round(c.position.x);
+          const y = Math.round(c.position.y);
+          if (sceneIds.has(c.id)) setSceneLayout(project.id, c.id, x, y);
+          else if (noteIds.has(c.id)) updateCanvasNote(project.id, c.id, { x, y });
+          else if (sectionIds.has(c.id)) updateCanvasSection(project.id, c.id, { x, y });
+        } else if (c.type === "remove") {
+          if (noteIds.has(c.id)) deleteCanvasNote(project.id, c.id);
+          else if (sectionIds.has(c.id)) deleteCanvasSection(project.id, c.id);
         }
       }
     },
-    [project.id, setSceneLayout],
+    [
+      project.id,
+      scenes,
+      notes,
+      sections,
+      setSceneLayout,
+      updateCanvasNote,
+      deleteCanvasNote,
+      updateCanvasSection,
+      deleteCanvasSection,
+    ],
   );
 
   // ── Edge changes. Only manual links are deletable; sync removals to the store.
@@ -250,15 +308,50 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const internalSelect = useRef(false);
   const onNodeClick = useCallback<NodeMouseHandler>(
     (_, node) => {
-      if (toolMode === "pan") return;
+      if (toolMode !== "select" && toolMode !== "connect") return;
       internalSelect.current = true;
-      onSelect(node.id);
+      if (node.type === "scene") onSelect(node.id);
     },
     [onSelect, toolMode],
   );
-  const onPaneClick = useCallback(() => {
-    if (toolMode !== "pan") onSelect(null);
-  }, [onSelect, toolMode]);
+  const onPaneClick = useCallback(
+    (event: ReactMouseEvent) => {
+      if (toolMode === "pan") return;
+
+      const position = rf.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      if (toolMode === "scene") {
+        const before = new Set(useStore.getState().projects.find((p) => p.id === project.id)?.scenes.map((s) => s.id));
+        addScene(project.id);
+        const created = useStore
+          .getState()
+          .projects.find((p) => p.id === project.id)
+          ?.scenes.find((s) => !before.has(s.id));
+        if (created) {
+          setSceneLayout(project.id, created.id, Math.round(position.x), Math.round(position.y));
+          internalSelect.current = true;
+          onSelect(created.id);
+        }
+        setToolMode("select");
+        return;
+      }
+
+      if (toolMode === "note") {
+        addCanvasNote(project.id, position.x, position.y);
+        setToolMode("select");
+        return;
+      }
+
+      if (toolMode === "section") {
+        addCanvasSection(project.id, position.x, position.y);
+        setToolMode("select");
+        return;
+      }
+
+      onSelect(null);
+    },
+    [addCanvasNote, addCanvasSection, addScene, onSelect, project.id, rf, setSceneLayout, toolMode],
+  );
 
   const prevActive = useRef<string | null>(null);
   useEffect(() => {
@@ -306,7 +399,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           defaultEdgeOptions={{ type: "sceneLink" }}
           nodesDraggable={toolMode === "select"}
           nodesConnectable={toolMode === "connect"}
-          elementsSelectable={toolMode !== "pan"}
+          elementsSelectable={toolMode === "select" || toolMode === "connect"}
           selectNodesOnDrag={toolMode === "select"}
           connectOnClick={false}
           autoPanOnConnect
@@ -325,9 +418,11 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           {toolMode !== "select" && (
             <Panel position="top-center">
               <div className="pointer-events-none rounded-full border border-[var(--color-border-strong)] bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[var(--color-ink-soft)] shadow-sm backdrop-blur">
-                {toolMode === "connect"
-                  ? "Connect mode: drag from a right port to a left port. V selects, H pans."
-                  : "Pan mode: drag the canvas to move around. V selects, C connects."}
+                {toolMode === "connect" && "Connect: drag from a right port to a left port."}
+                {toolMode === "pan" && "Pan: drag the canvas to move around."}
+                {toolMode === "scene" && "Scene tool: click empty canvas to add a scene."}
+                {toolMode === "note" && "Note tool: click empty canvas to add a note."}
+                {toolMode === "section" && "Section tool: click empty canvas to add a section."}
               </div>
             </Panel>
           )}

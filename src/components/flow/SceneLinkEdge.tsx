@@ -7,8 +7,18 @@ import {
 } from "@xyflow/react";
 import { Pencil, Trash2, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
+import type { SceneLinkType } from "@/types";
 import { useFlowCallbacks } from "./flowContext";
 import type { SceneLinkEdgeData } from "./flowContext";
+
+const LINK_TYPES: { value: SceneLinkType; label: string }[] = [
+  { value: "transition", label: "Transition" },
+  { value: "continuity", label: "Continuity" },
+  { value: "reference", label: "Reference" },
+  { value: "alternate", label: "Alternate" },
+  { value: "same-character", label: "Same character" },
+  { value: "same-location", label: "Same location" },
+];
 
 // Manual workflow link: user-drawn, stored in `project.links`. Stronger visual
 // weight than the order spine, selectable, with a compact toolbar (edit label /
@@ -32,6 +42,8 @@ function SceneLinkEdgeImpl({
   const d = (data ?? {}) as SceneLinkEdgeData;
   const linkId = d.linkId ?? id;
   const label = (data?.label as string | undefined) ?? "";
+  const linkType = data?.type as SceneLinkType | undefined;
+  const typeLabel = LINK_TYPES.find((t) => t.value === linkType)?.label;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(label);
@@ -132,6 +144,22 @@ function SceneLinkEdgeImpl({
                       {label}
                     </span>
                   )}
+                  <select
+                    value={linkType ?? ""}
+                    onChange={(e) =>
+                      updateLink(projectId, linkId, {
+                        type: (e.target.value || undefined) as SceneLinkType | undefined,
+                      })
+                    }
+                    title="Connection type"
+                    aria-label="Connection type"
+                    className="nodrag nopan h-6 max-w-[118px] rounded-full border border-[var(--color-border-strong)] bg-white px-2 text-[10px] font-medium text-[var(--color-ink-soft)] outline-none hover:bg-[var(--color-surface-2)]"
+                  >
+                    <option value="">Type</option>
+                    {LINK_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
                   <button
                     onClick={(e) => { e.stopPropagation(); setEditing(true); }}
                     title="Edit label"
@@ -152,9 +180,9 @@ function SceneLinkEdgeImpl({
               )}
             </div>
           ) : (
-            label.trim() && (
+            (label.trim() || typeLabel) && (
               <span className="inline-flex max-w-[160px] items-center rounded-full border border-[var(--color-border-strong)] bg-white px-2 py-0.5 text-[10px] font-medium text-[var(--color-ink-soft)] shadow-sm">
-                <span className="truncate">{label}</span>
+                <span className="truncate">{label || typeLabel}</span>
               </span>
             )
           )}

@@ -66,7 +66,13 @@ export interface SceneLayout {
 // These are workflow annotations ONLY — they never affect the video sequence,
 // which is governed solely by the order of `Project.scenes`. Optional + stored
 // at the project level so old projects load untouched.
-export type SceneLinkType = "transition" | "continuity" | "reference" | "alternate";
+export type SceneLinkType =
+  | "transition"
+  | "continuity"
+  | "reference"
+  | "alternate"
+  | "same-character"
+  | "same-location";
 
 export interface SceneLink {
   id: string;
@@ -74,6 +80,29 @@ export interface SceneLink {
   toSceneId: string;
   label?: string;
   type?: SceneLinkType;
+}
+
+export interface CanvasNote {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export type CanvasSectionType = "hook" | "setup" | "conflict" | "climax" | "outro" | "custom";
+
+export interface CanvasSection {
+  id: string;
+  title: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type?: CanvasSectionType;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface Scene {
@@ -150,6 +179,8 @@ export interface Project {
   narration: string; // full script for the whole video
   scenes: Scene[];
   links?: SceneLink[]; // manual canvas connections (visual only — not video order)
+  canvasNotes?: CanvasNote[]; // production notes on the canvas only — never exported as scenes
+  canvasSections?: CanvasSection[]; // visual story frames on the canvas only
 
   createdAt: number;
   updatedAt: number;

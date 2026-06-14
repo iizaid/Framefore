@@ -138,6 +138,11 @@
 .flow-canvas--pan .react-flow__pane:active {
   cursor: grabbing;
 }
+.flow-canvas--scene .react-flow__pane,
+.flow-canvas--note .react-flow__pane,
+.flow-canvas--section .react-flow__pane {
+  cursor: copy;
+}
 /* Custom scene handles: small graphite ports that fade in on hover/selection
    (visibility driven by the node's `is-visible` class, not pure CSS hover, so
    it also lights up when the node is the active/selected one). */

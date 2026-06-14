@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
 import { nanoid } from "nanoid";
-import type { Project, Scene, Direction, SceneLink } from "@/types";
+import type { Project, Scene, Direction, SceneLink, CanvasNote, CanvasSection } from "@/types";
 import { emptyGlobal } from "@/types";
 import { deleteImage } from "@/lib/images";
 
@@ -72,6 +72,8 @@ function makeProject(partial: Partial<Project>): Project {
     narration: "",
     scenes: [],
     links: [],
+    canvasNotes: [],
+    canvasSections: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -103,6 +105,14 @@ interface StoreState {
   addLink: (projectId: string, fromSceneId: string, toSceneId: string) => void;
   updateLink: (projectId: string, linkId: string, patch: Partial<SceneLink>) => void;
   deleteLink: (projectId: string, linkId: string) => void;
+
+  // Canvas production tools: notes and story sections are visual planning data.
+  addCanvasNote: (projectId: string, x: number, y: number) => string | null;
+  updateCanvasNote: (projectId: string, noteId: string, patch: Partial<CanvasNote>) => void;
+  deleteCanvasNote: (projectId: string, noteId: string) => void;
+  addCanvasSection: (projectId: string, x: number, y: number) => string | null;
+  updateCanvasSection: (projectId: string, sectionId: string, patch: Partial<CanvasSection>) => void;
+  deleteCanvasSection: (projectId: string, sectionId: string) => void;
 }
 
 // Canvas layout geometry shared by auto-arrange + the canvas fallback placement,
@@ -176,6 +186,8 @@ export const useStore = create<StoreState>()(
           // New scene ids; images are shared by reference (blobs aren't copied).
           scenes,
           links,
+          canvasNotes: (original.canvasNotes ?? []).map((note) => ({ ...note, id: nanoid() })),
+          canvasSections: (original.canvasSections ?? []).map((section) => ({ ...section, id: nanoid() })),
         };
         set((s) => ({ projects: [copy, ...s.projects] }));
         return copy.id;
@@ -340,10 +352,106 @@ export const useStore = create<StoreState>()(
             p.id === projectId ? touch({ ...p, links: (p.links ?? []).filter((l) => l.id !== linkId) }) : p,
           ),
         })),
+
+      addCanvasNote: (projectId, x, y) => {
+        const id = nanoid();
+        const now = Date.now();
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  canvasNotes: [
+                    ...(p.canvasNotes ?? []),
+                    { id, x: Math.round(x), y: Math.round(y), text: "", createdAt: now, updatedAt: now },
+                  ],
+                })
+              : p,
+          ),
+        }));
+        return id;
+      },
+
+      updateCanvasNote: (projectId, noteId, patch) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  canvasNotes: (p.canvasNotes ?? []).map((note) =>
+                    note.id === noteId ? { ...note, ...patch, updatedAt: Date.now() } : note,
+                  ),
+                })
+              : p,
+          ),
+        })),
+
+      deleteCanvasNote: (projectId, noteId) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({ ...p, canvasNotes: (p.canvasNotes ?? []).filter((note) => note.id !== noteId) })
+              : p,
+          ),
+        })),
+
+      addCanvasSection: (projectId, x, y) => {
+        const id = nanoid();
+        const now = Date.now();
+        const existingCount = getState().projects.find((p) => p.id === projectId)?.canvasSections?.length ?? 0;
+        const defaultTitles = ["Hook", "Setup", "Conflict", "Climax", "Outro"];
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  canvasSections: [
+                    ...(p.canvasSections ?? []),
+                    {
+                      id,
+                      title: defaultTitles[existingCount % defaultTitles.length],
+                      x: Math.round(x),
+                      y: Math.round(y),
+                      width: 420,
+                      height: 260,
+                      type: "custom",
+                      createdAt: now,
+                      updatedAt: now,
+                    },
+                  ],
+                })
+              : p,
+          ),
+        }));
+        return id;
+      },
+
+      updateCanvasSection: (projectId, sectionId, patch) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({
+                  ...p,
+                  canvasSections: (p.canvasSections ?? []).map((section) =>
+                    section.id === sectionId ? { ...section, ...patch, updatedAt: Date.now() } : section,
+                  ),
+                })
+              : p,
+          ),
+        })),
+
+      deleteCanvasSection: (projectId, sectionId) =>
+        set((s) => ({
+          projects: s.projects.map((p) =>
+            p.id === projectId
+              ? touch({ ...p, canvasSections: (p.canvasSections ?? []).filter((section) => section.id !== sectionId) })
+              : p,
+          ),
+        })),
     }),
     {
       name: "framefore-state",
-      version: 6,
+      version: 7,
       storage: createJSONStorage(() => idbStorage),
       partialize: (s) => ({ projects: s.projects }) as StoreState,
       // Backfill fields added after v1 so older saved projects keep working.
@@ -359,6 +467,9 @@ export const useStore = create<StoreState>()(
             defaultVideoModel: p.defaultVideoModel ?? "",
             // v6: manual canvas links (visual only).
             links: p.links ?? [],
+            // v7: canvas production tools (visual only).
+            canvasNotes: p.canvasNotes ?? [],
+            canvasSections: p.canvasSections ?? [],
             scenes: (p.scenes ?? []).map((sc) => ({
               ...sc,
               role: sc.role ?? "none",

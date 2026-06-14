@@ -3,6 +3,7 @@ import { useReactFlow } from "@xyflow/react";
 import {
   Cable,
   Columns3,
+  Frame,
   Hand,
   Maximize2,
   MoreHorizontal,
@@ -11,6 +12,7 @@ import {
   Plus,
   RotateCcw,
   Rows3,
+  StickyNote,
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
@@ -59,6 +61,18 @@ export function FlowToolbar({
         </ToolBtn>
       </div>
       <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)]" />
+      <div className="flex items-center gap-1" aria-label="Canvas create tools">
+        <ToolBtn label="Scene tool (S)" active={toolMode === "scene"} onClick={() => onToolModeChange("scene")}>
+          <Plus size={15} />
+        </ToolBtn>
+        <ToolBtn label="Note tool (N)" active={toolMode === "note"} className="max-sm:hidden" onClick={() => onToolModeChange("note")}>
+          <StickyNote size={15} />
+        </ToolBtn>
+        <ToolBtn label="Section tool (G)" active={toolMode === "section"} className="max-sm:hidden" onClick={() => onToolModeChange("section")}>
+          <Frame size={15} />
+        </ToolBtn>
+      </div>
+      <div className="mx-0.5 h-5 w-px bg-[var(--color-border-strong)] max-sm:hidden" />
       <div className="flex items-center gap-1" aria-label="Canvas view">
         <ToolBtn label="Zoom out" className="max-sm:hidden" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></ToolBtn>
         <ToolBtn label="Zoom in" className="max-sm:hidden" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></ToolBtn>
@@ -76,6 +90,9 @@ export function FlowToolbar({
         </ToolBtn>
         {moreOpen && (
           <div className="absolute bottom-full right-0 mb-2 w-44 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white py-1 text-sm shadow-xl">
+            <MenuBtn label="Note tool" onClick={() => { setMoreOpen(false); onToolModeChange("note"); }}><StickyNote size={15} /></MenuBtn>
+            <MenuBtn label="Section tool" onClick={() => { setMoreOpen(false); onToolModeChange("section"); }}><Frame size={15} /></MenuBtn>
+            <div className="my-1 h-px bg-[var(--color-border-strong)]" />
             <MenuBtn label="Arrange vertical" onClick={() => { setMoreOpen(false); arrange("vertical"); }}><Rows3 size={15} /></MenuBtn>
             <MenuBtn label="Arrange horizontal" onClick={() => { setMoreOpen(false); arrange("horizontal"); }}><Columns3 size={15} /></MenuBtn>
             <MenuBtn label="Reset layout" onClick={() => { setMoreOpen(false); reset(); }}><RotateCcw size={15} /></MenuBtn>
