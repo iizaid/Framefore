@@ -128,19 +128,48 @@
 .react-flow {
   background: var(--color-surface-2);
 }
+.flow-canvas--connect .react-flow__pane {
+  cursor: crosshair;
+}
+.flow-canvas--pan .react-flow__pane {
+  cursor: grab;
+}
+.flow-canvas--pan .react-flow__pane:active {
+  cursor: grabbing;
+}
 /* Custom scene handles: small graphite ports that fade in on hover/selection
    (visibility driven by the node's `is-visible` class, not pure CSS hover, so
    it also lights up when the node is the active/selected one). */
 .react-flow__handle.scene-handle {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   border: 2px solid #fff;
   border-radius: 9999px;
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.12s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition:
+    opacity 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+}
+.react-flow__handle.scene-handle::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 9999px;
+}
+.react-flow__handle-left.scene-handle {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+.react-flow__handle-right.scene-handle {
+  transform: translate(50%, -50%) scale(0.92);
 }
 .react-flow__handle.scene-handle.is-visible {
+  opacity: 0.92;
+}
+.flow-canvas--connect .react-flow__handle.scene-handle {
   opacity: 1;
 }
 .react-flow__handle.scene-handle--in {
@@ -150,14 +179,33 @@
   background: var(--color-neutral-900);
   cursor: crosshair;
 }
-.react-flow__handle.scene-handle:hover {
-  transform: scale(1.25);
+.react-flow__handle-left.scene-handle:hover {
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow:
+    0 0 0 4px rgba(18, 18, 18, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.2);
+}
+.react-flow__handle-right.scene-handle:hover {
+  transform: translate(50%, -50%) scale(1.18);
+  box-shadow:
+    0 0 0 4px rgba(18, 18, 18, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.2);
 }
 /* While a connection is being dragged, light up valid target handles. */
 .react-flow__handle-connecting,
 .react-flow__handle-valid {
   opacity: 1 !important;
   background: var(--color-neutral-900) !important;
+  box-shadow:
+    0 0 0 5px rgba(18, 18, 18, 0.1),
+    0 3px 8px rgba(0, 0, 0, 0.22) !important;
+}
+.react-flow__handle-connecting:not(.react-flow__handle-valid) {
+  background: var(--color-neutral-300) !important;
+  box-shadow: 0 0 0 4px rgba(18, 18, 18, 0.04) !important;
+}
+.workflow-connection-line {
+  pointer-events: none;
 }
 /* Manual-link edges get a pointer; the order spine stays inert. */
 .react-flow__edge.react-flow__edge-sceneLink {

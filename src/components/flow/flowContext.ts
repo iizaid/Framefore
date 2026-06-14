@@ -1,5 +1,7 @@
 import { createContext, useContext } from "react";
 
+export type CanvasToolMode = "select" | "connect" | "pan";
+
 // Stable, app-level handles shared with every custom node / edge. Kept out of
 // React Flow `data` on purpose: node data is compared by identity for memoized
 // re-renders, so passing fresh callbacks per render would thrash. Identifiers
@@ -8,6 +10,7 @@ import { createContext, useContext } from "react";
 export interface FlowCallbacks {
   projectId: string;
   activeId: string | null;
+  toolMode: CanvasToolMode;
   onSelect: (id: string | null) => void;
   onEdit: (id: string) => void;
 }

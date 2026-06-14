@@ -10,13 +10,16 @@ import {
   useReactFlow,
   applyNodeChanges,
   applyEdgeChanges,
+  getBezierPath,
   type Node,
   type Edge,
   type NodeChange,
   type EdgeChange,
   type Connection,
+  type ConnectionLineComponentProps,
   type NodeMouseHandler,
 } from "@xyflow/react";
+import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
 import {
   CANVAS_CARD_W,
@@ -28,15 +31,15 @@ import { SceneFlowNode } from "./SceneFlowNode";
 import { OrderEdge } from "./OrderEdge";
 import { SceneLinkEdge } from "./SceneLinkEdge";
 import { FlowToolbar } from "./FlowToolbar";
-import { FlowCallbacksContext, type FlowCallbacks } from "./flowContext";
+import { FlowCallbacksContext, type CanvasToolMode, type FlowCallbacks } from "./flowContext";
 
 // Module-level so identities never change between renders — React Flow strongly
 // recommends this to avoid re-instantiating custom node/edge components.
 const nodeTypes = { scene: SceneFlowNode };
 const edgeTypes = { order: OrderEdge, sceneLink: SceneLinkEdge };
 
-const ORDER_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.28)", width: 16, height: 16 };
-const LINK_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.6)", width: 18, height: 18 };
+const ORDER_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.38)", width: 16, height: 16 };
+const LINK_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.78)", width: 18, height: 18 };
 
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2;
@@ -48,6 +51,48 @@ type Props = {
   onEdit: (id: string) => void;
 };
 
+function WorkflowConnectionLine({
+  fromX,
+  fromY,
+  toX,
+  toY,
+  fromPosition,
+  toPosition,
+  connectionStatus,
+}: ConnectionLineComponentProps) {
+  const [path] = getBezierPath({
+    sourceX: fromX,
+    sourceY: fromY,
+    sourcePosition: fromPosition,
+    targetX: toX,
+    targetY: toY,
+    targetPosition: toPosition,
+    curvature: 0.32,
+  });
+  const isValid = connectionStatus === "valid";
+
+  return (
+    <g className="workflow-connection-line">
+      <path
+        d={path}
+        fill="none"
+        stroke={isValid ? "rgba(18,18,18,0.88)" : "rgba(18,18,18,0.38)"}
+        strokeWidth={isValid ? 2.4 : 1.8}
+        strokeLinecap="round"
+        strokeDasharray={isValid ? undefined : "6 5"}
+      />
+      <circle
+        cx={toX}
+        cy={toY}
+        r={isValid ? 4.5 : 3.5}
+        fill={isValid ? "#121212" : "#ffffff"}
+        stroke={isValid ? "#121212" : "rgba(18,18,18,0.38)"}
+        strokeWidth={1.8}
+      />
+    </g>
+  );
+}
+
 function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const setSceneLayout = useStore((s) => s.setSceneLayout);
   const addLink = useStore((s) => s.addLink);
@@ -56,6 +101,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
 
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const [toolMode, setToolMode] = useState<CanvasToolMode>("select");
 
   const scenes = project.scenes;
   const links = project.links;
@@ -156,8 +202,13 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   );
 
   const isValidConnection = useCallback(
-    (c: Connection | Edge) => !!c.source && !!c.target && c.source !== c.target,
-    [],
+    (c: Connection | Edge) => {
+      if (!c.source || !c.target || c.source === c.target) return false;
+      if ("sourceHandle" in c && c.sourceHandle && c.sourceHandle !== "out") return false;
+      if ("targetHandle" in c && c.targetHandle && c.targetHandle !== "in") return false;
+      return !(links ?? []).some((l) => l.fromSceneId === c.source && l.toSceneId === c.target);
+    },
+    [links],
   );
 
   // ── Selection ↔ inspector. Track whether a selection came from a canvas click
@@ -165,12 +216,15 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   const internalSelect = useRef(false);
   const onNodeClick = useCallback<NodeMouseHandler>(
     (_, node) => {
+      if (toolMode === "pan") return;
       internalSelect.current = true;
       onSelect(node.id);
     },
-    [onSelect],
+    [onSelect, toolMode],
   );
-  const onPaneClick = useCallback(() => onSelect(null), [onSelect]);
+  const onPaneClick = useCallback(() => {
+    if (toolMode !== "pan") onSelect(null);
+  }, [onSelect, toolMode]);
 
   const prevActive = useRef<string | null>(null);
   useEffect(() => {
@@ -190,8 +244,8 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
   }, [activeId, rf]);
 
   const callbacks = useMemo<FlowCallbacks>(
-    () => ({ projectId: project.id, activeId, onSelect, onEdit }),
-    [project.id, activeId, onSelect, onEdit],
+    () => ({ projectId: project.id, activeId, toolMode, onSelect, onEdit }),
+    [project.id, activeId, toolMode, onSelect, onEdit],
   );
 
   return (
@@ -202,6 +256,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          className={cn("flow-canvas", `flow-canvas--${toolMode}`)}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -209,7 +264,18 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           connectionLineType={ConnectionLineType.Bezier}
+          connectionLineComponent={WorkflowConnectionLine}
+          connectionLineStyle={{
+            stroke: "rgba(18,18,18,0.45)",
+            strokeWidth: 2,
+          }}
           defaultEdgeOptions={{ type: "sceneLink" }}
+          nodesDraggable={toolMode === "select"}
+          nodesConnectable={toolMode === "connect"}
+          elementsSelectable={toolMode !== "pan"}
+          selectNodesOnDrag={toolMode === "select"}
+          connectOnClick={false}
+          autoPanOnConnect
           minZoom={MIN_ZOOM}
           maxZoom={MAX_ZOOM}
           fitView
@@ -218,11 +284,21 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           deleteKeyCode={["Backspace", "Delete"]}
           multiSelectionKeyCode={["Meta", "Shift"]}
           panOnScroll
-          selectionOnDrag={false}
+          panOnDrag={toolMode === "pan"}
+          selectionOnDrag={toolMode === "select"}
         >
           <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="rgba(18,18,18,0.16)" />
-          <Panel position="top-right">
-            <FlowToolbar projectId={project.id} />
+          {toolMode !== "select" && (
+            <Panel position="top-center">
+              <div className="pointer-events-none rounded-full border border-[var(--color-border-strong)] bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[var(--color-ink-soft)] shadow-sm backdrop-blur">
+                {toolMode === "connect"
+                  ? "Connect mode: drag from a right port to a left port."
+                  : "Pan mode: drag the canvas to move around."}
+              </div>
+            </Panel>
+          )}
+          <Panel position="bottom-center">
+            <FlowToolbar projectId={project.id} toolMode={toolMode} onToolModeChange={setToolMode} />
           </Panel>
         </ReactFlow>
 

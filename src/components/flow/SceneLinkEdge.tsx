@@ -35,6 +35,7 @@ function SceneLinkEdgeImpl({
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(label);
+  const [hovered, setHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ function SceneLinkEdgeImpl({
     targetX,
     targetY,
     targetPosition,
+    curvature: 0.28,
   });
 
   const commitLabel = () => {
@@ -72,10 +74,21 @@ function SceneLinkEdgeImpl({
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={24}
         style={{
-          stroke: selected ? "rgba(18,18,18,0.95)" : "rgba(18,18,18,0.55)",
-          strokeWidth: selected ? 2.5 : 2,
+          stroke: selected ? "rgba(18,18,18,0.95)" : hovered ? "rgba(18,18,18,0.78)" : "rgba(18,18,18,0.62)",
+          strokeWidth: selected ? 2.8 : hovered ? 2.4 : 2,
+          strokeLinecap: "round",
         }}
+      />
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={24}
+        className="react-flow__edge-interaction"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       />
       <EdgeLabelRenderer>
         <div
@@ -84,9 +97,11 @@ function SceneLinkEdgeImpl({
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             pointerEvents: "all",
           }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
         >
           {selected ? (
-            <div className="flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white px-1 py-0.5 shadow-md">
+            <div className="flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-1.5 py-1 shadow-[0_10px_28px_-16px_rgba(0,0,0,0.45)]">
               {editing ? (
                 <>
                   <input
@@ -99,13 +114,13 @@ function SceneLinkEdgeImpl({
                     }}
                     onBlur={commitLabel}
                     placeholder="Label…"
-                    className="h-5 w-24 rounded border border-[var(--color-border-strong)] bg-white px-1.5 text-[11px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ash)]"
+                    className="h-6 w-28 rounded border border-[var(--color-border-strong)] bg-white px-1.5 text-[11px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ash)]"
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); commitLabel(); }}
                     title="Save label"
                     aria-label="Save label"
-                    className="grid h-5 w-5 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
                   >
                     <Check size={12} />
                   </button>
@@ -121,7 +136,7 @@ function SceneLinkEdgeImpl({
                     onClick={(e) => { e.stopPropagation(); setEditing(true); }}
                     title="Edit label"
                     aria-label="Edit label"
-                    className="grid h-5 w-5 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
                   >
                     <Pencil size={11} />
                   </button>
@@ -129,7 +144,7 @@ function SceneLinkEdgeImpl({
                     onClick={(e) => { e.stopPropagation(); deleteLink(projectId, linkId); }}
                     title="Delete connection"
                     aria-label="Delete connection"
-                    className="grid h-5 w-5 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-rose-50 hover:text-rose-600"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-rose-50 hover:text-rose-600"
                   >
                     <Trash2 size={11} />
                   </button>

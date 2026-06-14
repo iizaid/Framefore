@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getBezierPath,
+  getSmoothStepPath,
   type EdgeProps,
 } from "@xyflow/react";
 import { CornerDownRight, Plus } from "lucide-react";
@@ -31,13 +31,15 @@ function OrderEdgeImpl({
   const d = (data ?? {}) as OrderEdgeData;
   const label = data?.label as string | undefined;
 
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 14,
+    offset: 28,
   });
 
   return (
@@ -45,10 +47,12 @@ function OrderEdgeImpl({
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={18}
         style={{
-          stroke: "rgba(18,18,18,0.20)",
-          strokeWidth: 1.5,
-          strokeDasharray: "5 5",
+          stroke: "rgba(18,18,18,0.34)",
+          strokeWidth: 1.8,
+          strokeDasharray: "6 6",
+          strokeLinecap: "round",
         }}
       />
       {/* Wide transparent hit area so hover (for the + button) is easy to trigger. */}
@@ -63,7 +67,7 @@ function OrderEdgeImpl({
       />
       <EdgeLabelRenderer>
         <div
-          className="nodrag nopan absolute flex items-center gap-1"
+          className="nodrag nopan absolute flex items-center gap-1.5"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             pointerEvents: "all",
@@ -83,9 +87,9 @@ function OrderEdgeImpl({
                 e.stopPropagation();
                 addScene(projectId, d.fromIndex + 1);
               }}
-              title="Add a scene between these two"
+              title="Add scene between"
               aria-label="Add scene between"
-              className="grid h-5 w-5 place-items-center rounded-full border border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] shadow-sm transition-colors hover:bg-neutral-900 hover:text-white"
+              className="grid h-6 w-6 place-items-center rounded-full border border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] transition-colors hover:bg-neutral-900 hover:text-white"
             >
               <Plus size={12} />
             </button>
