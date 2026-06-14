@@ -6,17 +6,17 @@ import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { AdminPage } from "@/pages/AdminPage";
 
-// Top-level routing.
+// Route map:
+//   /        → public landing page
+//   /app     → Framefore workspace (local-first, no auth gate yet)
+//   /login   → split-screen login  (Phase 4.2)
+//   /signup  → split-screen signup (Phase 4.2)
+//   /admin   → admin shell placeholder
+//   /pricing → scrolls to pricing section on landing
 //
-//   /        → public marketing landing page
-//   /app     → the Framefore workspace (projects + canvas + export)
-//   /login   → placeholder auth (real auth lands in Phase 4.2)
-//   /signup  → placeholder auth
-//   /admin   → placeholder admin shell
-//   /pricing → scrolls to the pricing section on the landing page
-//
-// Phase 4.2 will wrap /app and /admin in an auth guard. The route boundaries are
-// laid out now so that change is additive, not a rewrite.
+// Phase 4.3 will add a <ProtectedRoute> wrapper around /app and /admin once
+// the cloud-sync migration is ready. For now /app remains open so local projects
+// are never disrupted during the auth rollout.
 export default function App() {
   return (
     <BrowserRouter>
@@ -26,9 +26,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        {/* /pricing is a scroll target on the landing page. */}
         <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
-        {/* Unknown paths fall back to the landing page. */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
