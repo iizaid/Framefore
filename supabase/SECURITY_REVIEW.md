@@ -47,6 +47,11 @@ payloads, bypass frontend validation, and abuse auth/rate limits.
   `anon`/`public`.
 - Client queries must always use the typed/parameterized Supabase client — never
   build SQL from user input.
+- `handle_new_user()` **sanitizes OAuth provider metadata** before insert
+  (trim, `''`→NULL, cap `full_name` to 160 / `avatar_url` to 2048, drop any
+  non-`http(s)` avatar). A hostile or malformed provider payload therefore cannot
+  fail signup by tripping the `profiles` constraints — yet those constraints stay
+  strict and still reject a bad *manual* profile write (defense in depth).
 
 ### Storage (0004)
 - Private bucket, 10 MB cap, image MIME allow-list, **SVG excluded** (script

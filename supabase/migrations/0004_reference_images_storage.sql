@@ -19,8 +19,16 @@
 --
 -- Storage path convention (drives RLS):
 --   reference-images/{user_id}/{project_id}/{scene_id}/{uuid}.{ext}
---   The FIRST path segment is always auth.uid()::text. The storage policies
---   below authorize based solely on this segment — no join needed.
+--   The FIRST path segment is always auth.uid()::text; the SECOND is project_id.
+--   The storage policies below authorize by path segment, and the two enforced
+--   segments differ by command:
+--     * SELECT / DELETE — gate on segment[1] (user_id) only. No project join, so
+--       a user can always read/clean up their own objects, even orphans left
+--       after a project row was deleted (Storage does not cascade).
+--     * INSERT / UPDATE — gate on segment[1] (user_id) AND segment[2]
+--       (project_id must be a project the caller owns). These are the paths that
+--       set a destination, so this blocks placing or moving an object into
+--       another user's folder or a project_id the caller doesn't own.
 --
 -- Signed URLs (not public): always generate signed URLs for display. Never
 --   make this bucket public. See plan/15-storage-and-reference-images-plan.md.

@@ -7,7 +7,7 @@
 --          user data.
 --
 -- HOW TO USE:
---   1. Apply migrations 0001–0005 to your Supabase project.
+--   1. Apply migrations 0001–0007 to your Supabase project.
 --   2. Create two test users via Dashboard → Authentication → Users:
 --        User A: tester-a@example.com
 --        User B: tester-b@example.com
@@ -225,6 +225,48 @@ WHERE conrelid IN ('public.profiles'::regclass, 'public.user_settings'::regclass
 ORDER BY on_table, conname;
 -- Expect: profiles_full_name_len, profiles_avatar_len, profiles_avatar_scheme,
 --         user_settings_theme_ck, user_settings_prefs_object.
+
+
+-- ---------------------------------------------------------------------------
+-- CHECK 14: handle_new_user() sanitizes OAuth metadata before insert
+-- ---------------------------------------------------------------------------
+-- handle_new_user() must normalise provider metadata so a hostile/oversized
+-- OAuth payload can never fail signup by tripping the profiles constraints:
+--   * full_name  → trimmed, '' becomes NULL, capped to 160 chars
+--   * avatar_url → trimmed, '' becomes NULL, capped to 2048, and kept ONLY if it
+--                  starts with http:// or https:// (else NULL)
+-- The table constraints themselves stay strict — they must still REJECT a bad
+-- *manual* UPDATE (see A17). This check confirms the function does the cleaning,
+-- so well-behaved and hostile signups both succeed.
+--
+-- (1) Static confirmation the function body does the sanitization:
+SELECT
+  position('left(' IN pg_get_functiondef(p.oid)) > 0 AS caps_length,
+  position('nullif(' IN pg_get_functiondef(p.oid)) > 0 AS empties_to_null,
+  position('http' IN pg_get_functiondef(p.oid)) > 0 AS checks_scheme
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public' AND p.proname = 'handle_new_user';
+-- Expect: caps_length = t, empties_to_null = t, checks_scheme = t.
+--
+-- (2) Behavioural simulation (run as service-role; mimics what the AFTER INSERT
+--     trigger receives). A real auth.users INSERT with this metadata must NOT
+--     error, and the resulting profile must be truncated + scheme-cleaned.
+/*
+-- Oversized full_name (300 chars) + javascript: avatar via a simulated signup.
+-- Insert a throwaway auth user with hostile metadata, then inspect the profile:
+--   INSERT INTO auth.users (id, email, raw_user_meta_data)
+--   VALUES (gen_random_uuid(), 'meta-test@example.com',
+--           jsonb_build_object('full_name', repeat('x', 300),
+--                              'avatar_url', 'javascript:alert(1)'));
+--   SELECT char_length(full_name) AS name_len, avatar_url
+--   FROM public.profiles
+--   WHERE id = (SELECT id FROM auth.users WHERE email = 'meta-test@example.com');
+--   -- Expect: name_len = 160 (truncated), avatar_url IS NULL (scheme rejected).
+--   -- Signup itself must succeed (no constraint error).
+-- Clean up afterwards:
+--   DELETE FROM auth.users WHERE email = 'meta-test@example.com';
+*/
 
 
 -- ---------------------------------------------------------------------------

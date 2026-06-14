@@ -60,9 +60,12 @@ against a forged `project_id`). UPDATE policies use both `USING` and `WITH CHECK
 to prevent reading *and* writing across ownership boundaries.
 
 **0004** — declares the `reference-images` private Storage bucket (10 MB limit,
-PNG/JPEG/WebP/GIF only, SVG excluded). Storage RLS on `storage.objects` gates
-access by the first path segment (`{user_id}/...`). Binary uploads are wired in
-a later phase; this migration only declares the rules.
+PNG/JPEG/WebP/GIF only, SVG excluded). Storage RLS on `storage.objects` gates by
+path segment: `SELECT`/`DELETE` check segment[1] (`{user_id}`) only — so orphan
+cleanup after a project delete still works — while `INSERT`/`UPDATE` additionally
+require segment[2] (`{project_id}`) to be a project the caller owns, blocking
+placing or moving an object into another user's folder or a foreign project.
+Binary uploads are wired in a later phase; this migration only declares the rules.
 
 **0005** — optional append-only audit table. INSERT + SELECT own; no
 UPDATE/DELETE from client. Useful for logging migration events, login anomalies,

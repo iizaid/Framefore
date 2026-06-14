@@ -104,14 +104,43 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  -- Sanitised copies of the provider metadata. We NEVER insert raw provider
+  -- values directly: an OAuth provider could return an oversized full_name, an
+  -- empty string, or a non-http(s) avatar_url, any of which would violate the
+  -- profiles CHECK constraints and make the AFTER INSERT trigger fail — which
+  -- would abort the entire signup. Normalising here keeps signup robust while
+  -- the table constraints stay strict (defense in depth, not a weakening).
+  safe_full_name  text;
+  safe_avatar_url text;
 BEGIN
+  -- full_name: trim, treat '' as NULL, cap to the 160-char column limit.
+  safe_full_name := nullif(trim(NEW.raw_user_meta_data ->> 'full_name'), '');
+  IF safe_full_name IS NOT NULL THEN
+    safe_full_name := left(safe_full_name, 160);
+  END IF;
+
+  -- avatar_url: trim, treat '' as NULL, cap to 2048, and keep ONLY if it is an
+  -- http(s) URL — anything else (javascript:/data:/file:/relative) becomes NULL
+  -- so it can never trip profiles_avatar_scheme. (We cap before the scheme check
+  -- so the LIKE still inspects the real prefix of an over-long URL.)
+  safe_avatar_url := nullif(trim(NEW.raw_user_meta_data ->> 'avatar_url'), '');
+  IF safe_avatar_url IS NOT NULL THEN
+    safe_avatar_url := left(safe_avatar_url, 2048);
+    IF safe_avatar_url NOT LIKE 'http://%'
+       AND safe_avatar_url NOT LIKE 'https://%' THEN
+      safe_avatar_url := NULL;
+    END IF;
+  END IF;
+
   -- Create a profile row. OAuth providers populate raw_user_meta_data with
-  -- full_name and avatar_url; email/password signups will have NULLs here.
+  -- full_name and avatar_url; email/password signups will have NULLs here. Both
+  -- values are now NULL-tolerant and constraint-safe.
   INSERT INTO public.profiles (id, full_name, avatar_url)
   VALUES (
     NEW.id,
-    NEW.raw_user_meta_data ->> 'full_name',
-    NEW.raw_user_meta_data ->> 'avatar_url'
+    safe_full_name,
+    safe_avatar_url
   )
   -- No-op if the row already exists (e.g., from a re-trigger or admin import).
   ON CONFLICT (id) DO NOTHING;
