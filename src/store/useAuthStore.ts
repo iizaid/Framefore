@@ -2,6 +2,11 @@ import { create } from "zustand";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
+// OAuth + password-reset both redirect the browser back here. The dedicated
+// /auth/callback route lets Supabase finish exchanging the code for a session
+// before we forward the user into /app.
+const AUTH_REDIRECT = `${window.location.origin}/auth/callback`;
+
 interface AuthState {
   user: User | null;
   session: Session | null;
@@ -16,8 +21,14 @@ interface AuthState {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithGitHub: () => Promise<{ error: string | null }>;
+  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  resendConfirmation: (email: string) => Promise<{ error: string | null }>;
   clearError: () => void;
 }
+
+// Guards against binding the onAuthStateChange listener more than once if init()
+// is ever invoked again (HMR, double render, etc.). One subscription, ever.
+let authListenerBound = false;
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -32,14 +43,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
-    // Get current session on mount
+    // Get current session on mount (restores a logged-in user across reloads).
     const { data: { session } } = await supabase.auth.getSession();
     set({ session, user: session?.user ?? null, initialized: true });
 
-    // Listen for future auth changes (login, logout, token refresh)
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null });
-    });
+    // Listen for future auth changes (login, logout, token refresh, OAuth return).
+    if (!authListenerBound) {
+      authListenerBound = true;
+      supabase.auth.onAuthStateChange((_event, session) => {
+        set({ session, user: session?.user ?? null });
+      });
+    }
   },
 
   signIn: async (email, password) => {
@@ -61,7 +75,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!supabase) return { error: "Auth is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY." };
 
     set({ loading: true, error: null });
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: AUTH_REDIRECT },
+    });
     set({ loading: false });
 
     if (error) {
@@ -71,7 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     // Supabase returns a session immediately if email confirmation is disabled.
-    // If confirmation is required, session is null and user has identities array.
+    // If confirmation is required, session is null and the user must verify first.
     const needsConfirmation = !data.session;
     return { error: null, needsConfirmation };
   },
@@ -85,21 +103,60 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithGoogle: async () => {
     if (!supabase) return { error: "Auth is not configured." };
+    set({ loading: true, error: null });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/app` },
+      options: { redirectTo: AUTH_REDIRECT },
     });
-    if (error) return { error: error.message };
+    // On success the browser navigates away, so we only reach here on error.
+    if (error) {
+      set({ loading: false, error: error.message });
+      return { error: error.message };
+    }
     return { error: null };
   },
 
   signInWithGitHub: async () => {
     if (!supabase) return { error: "Auth is not configured." };
+    set({ loading: true, error: null });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
-      options: { redirectTo: `${window.location.origin}/app` },
+      options: { redirectTo: AUTH_REDIRECT },
     });
-    if (error) return { error: error.message };
+    if (error) {
+      set({ loading: false, error: error.message });
+      return { error: error.message };
+    }
+    return { error: null };
+  },
+
+  requestPasswordReset: async (email) => {
+    if (!supabase) return { error: "Auth is not configured." };
+    set({ loading: true, error: null });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: AUTH_REDIRECT,
+    });
+    set({ loading: false });
+    if (error) {
+      set({ error: error.message });
+      return { error: error.message };
+    }
+    return { error: null };
+  },
+
+  resendConfirmation: async (email) => {
+    if (!supabase) return { error: "Auth is not configured." };
+    set({ loading: true, error: null });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: AUTH_REDIRECT },
+    });
+    set({ loading: false });
+    if (error) {
+      set({ error: error.message });
+      return { error: error.message };
+    }
     return { error: null };
   },
 

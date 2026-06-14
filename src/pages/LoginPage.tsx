@@ -1,32 +1,35 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/primitives";
-import { AuthShell, ProviderButtons } from "@/components/landing/AuthShell";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { AuthForm } from "@/components/auth/AuthForm";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+
+  // Already signed in? Skip the form and go straight to the workspace.
+  useEffect(() => {
+    if (user) navigate("/app", { replace: true });
+  }, [user, navigate]);
+
   return (
-    <AuthShell
-      title="Welcome back"
-      subtitle="Sign in to Framefore"
-      footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/signup" className="font-medium text-[var(--color-ink)] hover:underline">
-            Sign up
-          </Link>
-        </>
-      }
-    >
-      <ProviderButtons />
-      <div className="mt-5 border-t border-[var(--color-border)] pt-5 text-center">
-        <p className="mb-3 text-xs text-[var(--color-ink-soft)]">
-          You can use Framefore right now without an account.
-        </p>
-        <Link to="/app">
-          <Button variant="primary" size="md" className="w-full">
-            Open the app
-          </Button>
-        </Link>
-      </div>
-    </AuthShell>
+    <AuthLayout>
+      <AuthForm
+        mode="login"
+        heading="Welcome back"
+        subtext="Sign in to continue planning your AI video workflow."
+        submitLabel="Sign in"
+        onSuccess={() => navigate("/app", { replace: true })}
+        footer={
+          <>
+            Don't have an account?{" "}
+            <Link to="/signup" className="font-medium text-[var(--color-ink)] hover:underline">
+              Create one
+            </Link>
+          </>
+        }
+      />
+    </AuthLayout>
   );
 }

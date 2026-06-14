@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Clapperboard,
@@ -10,8 +11,11 @@ import {
   Film,
   Clock,
   Search,
+  LogOut,
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import type { Project } from "@/types";
 import { formatDuration, relativeTime } from "@/lib/utils";
 import { totalSceneSeconds } from "@/lib/estimate";
@@ -81,9 +85,12 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
             and export production-ready prompt packs.
           </p>
         </div>
-        <Button variant="primary" size="md" className="w-full sm:w-auto" onClick={() => setDialog({ mode: "create" })}>
-          <Plus size={18} /> New Project
-        </Button>
+        <div className="flex items-center gap-3 max-sm:w-full">
+          <AccountControl />
+          <Button variant="primary" size="md" className="flex-1 sm:w-auto sm:flex-none" onClick={() => setDialog({ mode: "create" })}>
+            <Plus size={18} /> New Project
+          </Button>
+        </div>
       </header>
 
       {projects.length > 0 && (
@@ -146,6 +153,37 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
         title="Delete project?"
         message={`“${confirmDelete?.title}” and all its scenes will be permanently removed. This can't be undone.`}
       />
+    </div>
+  );
+}
+
+// Minimal account area in the workspace header. Local-first stays the default:
+// when auth isn't configured we render nothing, and signing out leaves the user
+// right here in /app with their local projects intact.
+function AccountControl() {
+  const user = useAuthStore((s) => s.user);
+  const signOut = useAuthStore((s) => s.signOut);
+
+  if (!isSupabaseConfigured) return null;
+
+  if (!user) {
+    return (
+      <Link to="/login">
+        <Button variant="ghost" size="md">
+          Sign in
+        </Button>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="hidden max-w-[12rem] truncate text-sm text-[var(--color-ink-soft)] sm:inline" title={user.email ?? ""}>
+        {user.email}
+      </span>
+      <Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}>
+        <LogOut size={16} />
+      </Button>
     </div>
   );
 }

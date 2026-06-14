@@ -1,32 +1,34 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/primitives";
-import { AuthShell, ProviderButtons } from "@/components/landing/AuthShell";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { AuthForm } from "@/components/auth/AuthForm";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function SignupPage() {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (user) navigate("/app", { replace: true });
+  }, [user, navigate]);
+
   return (
-    <AuthShell
-      title="Create your account"
-      subtitle="Start planning AI videos with Framefore"
-      footer={
-        <>
-          Already have an account?{" "}
-          <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
-            Log in
-          </Link>
-        </>
-      }
-    >
-      <ProviderButtons />
-      <div className="mt-5 border-t border-[var(--color-border)] pt-5 text-center">
-        <p className="mb-3 text-xs text-[var(--color-ink-soft)]">
-          No sign-up required — projects save to your browser today.
-        </p>
-        <Link to="/app">
-          <Button variant="primary" size="md" className="w-full">
-            Start planning free
-          </Button>
-        </Link>
-      </div>
-    </AuthShell>
+    <AuthLayout>
+      <AuthForm
+        mode="signup"
+        heading="Create your Framefore account"
+        subtext="Start building your AI video plans scene by scene."
+        submitLabel="Create account"
+        onSuccess={() => navigate("/app", { replace: true })}
+        footer={
+          <>
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
+              Sign in
+            </Link>
+          </>
+        }
+      />
+    </AuthLayout>
   );
 }
