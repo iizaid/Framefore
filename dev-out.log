@@ -45,3 +45,31 @@
 [2m12:42:59 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
 [2m12:48:20 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
 [2m12:54:14 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:03:41 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ProjectsPage.tsx[22m
+[2m1:03:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ProjectsPage.tsx[22m
+[2m1:04:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\CompactSceneCard.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneInspector.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\ExportDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneEditorModal.tsx[22m
+[2m1:04:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\CompactSceneCard.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneInspector.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\ExportDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneEditorModal.tsx[22m
+[2m1:04:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css, /src/components/ProjectsPage.tsx, /src/components/Workspace.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SettingsDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\FlowCanvas.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\CompactSceneCard.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneInspector.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\ScriptDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneEditorModal.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SettingsPanel.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\CanvasSectionNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\CanvasNoteNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\SceneFlowNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\FlowToolbar.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\OrderEdge.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\SceneLinkEdge.tsx[22m
+[2m1:04:42 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css, /src/components/ProjectsPage.tsx, /src/components/Workspace.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SettingsDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\FlowCanvas.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\CompactSceneCard.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneInspector.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\ScriptDialog.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SceneEditorModal.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\SettingsPanel.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\CanvasSectionNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\CanvasNoteNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\SceneFlowNode.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\FlowToolbar.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\OrderEdge.tsx, /@fs/C:\Users\zaidh\OneDrive\Desktop\ShotBoard\src\components\flow\SceneLinkEdge.tsx[22m
+[2m1:04:53 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m1:07:52 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:07:56 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpackage.json[22m
+[2m1:08:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m1:12:19 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m1:25:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m1:25:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m1:32:48 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m1:32:57 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m1:45:00 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:49:10 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:49:11 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpackage.json[22m
+[2m1:49:41 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:51:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/ProjectsPage.tsx, /src/index.css[22m
+[2m1:51:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Workspace.tsx, /src/index.css[22m
+[2m1:51:35 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.claude/settings.local.json[22m
+[2m1:51:39 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m1:55:54 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpackage.json[22m
+[2m1:55:59 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m2:27:53 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m2:28:24 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m
+[2m2:44:53 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtsconfig.tsbuildinfo[22m

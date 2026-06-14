@@ -10,6 +10,7 @@ import type {
 import { formatDuration, wordCount } from "./utils";
 import { narrationSeconds, totalNarrationSeconds, totalSceneSeconds } from "./estimate";
 import { resolvedImageModel, resolvedVideoModel } from "./models";
+import { sceneOverlapsSection } from "./readiness";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
@@ -195,16 +196,13 @@ function storySectionsMarkdown(project: Project): string {
   return lines.join("\n").trimEnd();
 }
 
-// Scene indexes whose stored canvas position falls within the section rectangle.
-// Purely best-effort: a scene with no layout is skipped (never guessed).
+// Scene indexes whose card rectangle overlaps the section frame. Best-effort:
+// a scene with no layout is skipped (never guessed). Uses bounding-box overlap so
+// a card that merely sits partly inside the frame still counts.
 function scenesInsideSection(project: Project, section: CanvasSection): number[] {
   const out: number[] = [];
   project.scenes.forEach((s, i) => {
-    if (!s.layout) return;
-    const { x, y } = s.layout;
-    if (x >= section.x && x <= section.x + section.width && y >= section.y && y <= section.y + section.height) {
-      out.push(i);
-    }
+    if (sceneOverlapsSection(s, section)) out.push(i);
   });
   return out;
 }

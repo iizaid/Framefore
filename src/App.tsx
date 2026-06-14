@@ -1,45 +1,37 @@
-import { useEffect, useState } from "react";
-import { useStore } from "@/store/useStore";
-import { AppLoadingScreen } from "@/components/AppLoadingScreen";
-import { ProjectsPage } from "@/components/ProjectsPage";
-import { Workspace } from "@/components/Workspace";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
+import { AppWorkspacePage } from "@/pages/AppWorkspacePage";
+import { LandingPage } from "@/pages/LandingPage";
+import { LoginPage } from "@/pages/LoginPage";
+import { SignupPage } from "@/pages/SignupPage";
+import { AdminPage } from "@/pages/AdminPage";
 
-// Tiny hash-based router so a page refresh keeps you inside the open project.
-// "#/project/<id>" → workspace; anything else → projects dashboard.
-function parseHash(): string | null {
-  const m = window.location.hash.match(/^#\/project\/(.+)$/);
-  return m ? m[1] : null;
-}
-
+// Top-level routing.
+//
+//   /        → public marketing landing page
+//   /app     → the Framefore workspace (projects + canvas + export)
+//   /login   → placeholder auth (real auth lands in Phase 4.2)
+//   /signup  → placeholder auth
+//   /admin   → placeholder admin shell
+//   /pricing → scrolls to the pricing section on the landing page
+//
+// Phase 4.2 will wrap /app and /admin in an auth guard. The route boundaries are
+// laid out now so that change is additive, not a rewrite.
 export default function App() {
-  const hydrated = useStore((s) => s.hydrated);
-  const projects = useStore((s) => s.projects);
-  const [activeId, setActiveId] = useState<string | null>(parseHash());
-
-  useEffect(() => {
-    const onHash = () => setActiveId(parseHash());
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-
-  const open = (id: string) => {
-    window.location.hash = `/project/${id}`;
-    setActiveId(id);
-  };
-  const back = () => {
-    window.location.hash = "";
-    setActiveId(null);
-  };
-
-  // Guard against a stale hash pointing at a deleted project.
-  const activeExists = activeId && projects.some((p) => p.id === activeId);
-
   return (
-    <>
-      {hydrated && (activeExists ? <Workspace projectId={activeId!} onBack={back} /> : <ProjectsPage onOpen={open} />)}
-      <AppLoadingScreen ready={hydrated} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/app" element={<AppWorkspacePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        {/* /pricing is a scroll target on the landing page. */}
+        <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
+        {/* Unknown paths fall back to the landing page. */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       <Toaster />
-    </>
+    </BrowserRouter>
   );
 }

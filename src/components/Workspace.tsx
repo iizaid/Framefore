@@ -451,10 +451,10 @@ function WorkspaceRail({
     >
       {/* Brand + collapse toggle */}
       <div className={cn("mb-2 flex items-center", expanded ? "justify-between pl-1.5 pr-0.5 max-lg:justify-center max-lg:px-0" : "justify-center")}>
-        <button onClick={onBack} title="Back to projects" className="flex items-center gap-2 transition-transform hover:scale-[1.03]">
-          <img src="/black.svg" alt="Framefore" className="h-7 w-7" />
+        <a href="/" title="Go to home page" className="flex items-center gap-2 transition-transform hover:scale-[1.03]">
+          <img src="/black.svg" alt="Framefore home" className="h-7 w-7" />
           {expanded && <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)] max-lg:hidden">Framefore</span>}
-        </button>
+        </a>
         {expanded && (
           <button
             onClick={() => setExpanded(false)}

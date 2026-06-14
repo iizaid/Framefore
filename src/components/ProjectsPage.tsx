@@ -71,7 +71,9 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
       <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-3 flex items-center gap-3">
-            <img src="/black.svg" alt="Framefore" className="h-9 w-9" />
+            <a href="/" title="Back to home page" className="transition-opacity hover:opacity-75">
+              <img src="/black.svg" alt="Framefore home" className="h-9 w-9" />
+            </a>
             <h1 className="font-display text-3xl text-[var(--color-charcoal)] sm:text-4xl">Framefore</h1>
           </div>
           <p className="max-w-md text-sm text-[var(--color-ink-soft)]">

@@ -53,6 +53,22 @@
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "Tahoma", sans-serif;
   --font-display: "Fraunces", "Playfair Display", Georgia, serif;
+
+  /* ── Hero / big-title display face ──────────────────────────────────────────
+     Used only for the landing hero headline and large section titles — never for
+     body copy. Direction: editorial + a slightly technical, pixel-leaning
+     personality. We ship NO font file (no unlicensed downloads). To upgrade,
+     drop a licensed font into /public/fonts and uncomment the @font-face below,
+     then this variable picks it up automatically.
+
+     @font-face {
+       font-family: "FrameforeDisplay";
+       src: url("/fonts/your-licensed-font.woff2") format("woff2");
+       font-weight: 400 700;
+       font-display: swap;
+     }
+     …and add "FrameforeDisplay" to the front of --font-hero. */
+  --font-hero: "Fraunces", "Times New Roman", Georgia, serif;
 }
 
 @layer base {
@@ -63,6 +79,18 @@
   body,
   #root {
     height: 100%;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Anchor targets clear the fixed landing navbar. */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
   body {
     background-color: var(--color-bg);
@@ -111,6 +139,14 @@
     font-family: var(--font-display);
     font-weight: 500;
     letter-spacing: -0.03em;
+  }
+  /* Hero / large display headings. Tight tracking + optical weight for a
+     confident, editorial presence. */
+  .font-hero {
+    font-family: var(--font-hero);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    font-feature-settings: "ss01" 1;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;

@@ -1,4 +1,20 @@
-import type { Project, Scene } from "@/types";
+import type { CanvasSection, Project, Scene } from "@/types";
+import { CANVAS_CARD_W, CANVAS_CARD_H } from "@/store/useStore";
+
+// AABB overlap between a scene's card rectangle and a section frame rectangle.
+// A scene with no stored layout is treated as outside every section — we never
+// guess a position. Used by both the production checklist and the Markdown export
+// so "scenes in a section" means the same thing everywhere.
+export function sceneOverlapsSection(scene: Scene, section: CanvasSection): boolean {
+  if (!scene.layout) return false;
+  const { x, y } = scene.layout;
+  return (
+    x < section.x + section.width &&
+    x + CANVAS_CARD_W > section.x &&
+    y < section.y + section.height &&
+    y + CANVAS_CARD_H > section.y
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRODUCTION READINESS SCORING
@@ -100,25 +116,20 @@ export function productionChecklist(project: Project): ChecklistItem[] {
   const sceneLinks = project.links ?? [];
   const sections = project.canvasSections ?? [];
 
-  // A note is "connected" if any canvas link references it.
-  const linkedNoteIds = new Set<string>();
+  // A note is "connected" only when a canvas link joins it to a SCENE. A note
+  // linked solely to other notes still counts as unassigned — it has no home in
+  // the per-scene export.
+  const notesLinkedToScene = new Set<string>();
   for (const l of canvasLinks) {
-    if (l.fromNodeType === "note") linkedNoteIds.add(l.fromNodeId);
-    if (l.toNodeType === "note") linkedNoteIds.add(l.toNodeId);
+    if (l.fromNodeType === "note" && l.toNodeType === "scene") notesLinkedToScene.add(l.fromNodeId);
+    if (l.toNodeType === "note" && l.fromNodeType === "scene") notesLinkedToScene.add(l.toNodeId);
   }
-  const unconnectedNotes = notes.filter((n) => has(n.text) && !linkedNoteIds.has(n.id)).length;
+  const unconnectedNotes = notes.filter((n) => has(n.text) && !notesLinkedToScene.has(n.id)).length;
 
-  // A section with no scene geometrically inside it.
-  const emptySections = sections.filter((sec) => {
-    return !scenes.some(
-      (s) =>
-        s.layout &&
-        s.layout.x >= sec.x &&
-        s.layout.x <= sec.x + sec.width &&
-        s.layout.y >= sec.y &&
-        s.layout.y <= sec.y + sec.height,
-    );
-  }).length;
+  // A section with no scene card overlapping its frame.
+  const emptySections = sections.filter(
+    (sec) => !scenes.some((s) => sceneOverlapsSection(s, sec)),
+  ).length;
 
   const unlabeledLinks =
     sceneLinks.filter((l) => !has(l.label ?? "")).length +

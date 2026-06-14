@@ -480,17 +480,22 @@ export const useStore = create<StoreState>()(
       // Create a manual visual link. Skips self-links and exact duplicates so the
       // graph stays clean. Does NOT touch scene order or transitionToNext.
       addLink: (projectId, fromSceneId, toSceneId) =>
-        set((s) => ({
-          canvasHistory: pushCanvasHistory(s, projectId),
-          projects: s.projects.map((p) => {
-            if (p.id !== projectId) return p;
-            if (fromSceneId === toSceneId) return p;
-            const links = p.links ?? [];
-            if (links.some((l) => l.fromSceneId === fromSceneId && l.toSceneId === toSceneId)) return p;
-            const link: SceneLink = { id: nanoid(), fromSceneId, toSceneId };
-            return touch({ ...p, links: [...links, link] });
-          }),
-        })),
+        set((s) => {
+          // Bail out on no-ops (self-link or duplicate) BEFORE touching history,
+          // so undo never replays an action that changed nothing.
+          if (fromSceneId === toSceneId) return s;
+          const p = s.projects.find((pr) => pr.id === projectId);
+          if (!p) return s;
+          const links = p.links ?? [];
+          if (links.some((l) => l.fromSceneId === fromSceneId && l.toSceneId === toSceneId)) return s;
+          const link: SceneLink = { id: nanoid(), fromSceneId, toSceneId };
+          return {
+            canvasHistory: pushCanvasHistory(s, projectId),
+            projects: s.projects.map((pr) =>
+              pr.id === projectId ? touch({ ...pr, links: [...links, link] }) : pr,
+            ),
+          };
+        }),
 
       // Patch a manual link's label/type. Used by the canvas edge toolbar. Never
       // touches scene order — links are visual workflow annotations only.
@@ -516,31 +521,35 @@ export const useStore = create<StoreState>()(
         })),
 
       addCanvasLink: (projectId, fromNodeId, toNodeId, fromNodeType, toNodeType) =>
-        set((s) => ({
-          canvasHistory: pushCanvasHistory(s, projectId),
-          projects: s.projects.map((p) => {
-            if (p.id !== projectId) return p;
-            if (fromNodeId === toNodeId && fromNodeType === toNodeType) return p;
-            const canvasLinks = p.canvasLinks ?? [];
-            const duplicate = canvasLinks.some(
-              (l) =>
-                l.fromNodeId === fromNodeId &&
-                l.toNodeId === toNodeId &&
-                l.fromNodeType === fromNodeType &&
-                l.toNodeType === toNodeType,
-            );
-            if (duplicate) return p;
-            const link: CanvasLink = {
-              id: nanoid(),
-              fromNodeId,
-              toNodeId,
-              fromNodeType,
-              toNodeType,
-              type: "note",
-            };
-            return touch({ ...p, canvasLinks: [...canvasLinks, link] });
-          }),
-        })),
+        set((s) => {
+          // Bail out on no-ops (self-link or duplicate) BEFORE touching history.
+          if (fromNodeId === toNodeId && fromNodeType === toNodeType) return s;
+          const p = s.projects.find((pr) => pr.id === projectId);
+          if (!p) return s;
+          const canvasLinks = p.canvasLinks ?? [];
+          const duplicate = canvasLinks.some(
+            (l) =>
+              l.fromNodeId === fromNodeId &&
+              l.toNodeId === toNodeId &&
+              l.fromNodeType === fromNodeType &&
+              l.toNodeType === toNodeType,
+          );
+          if (duplicate) return s;
+          const link: CanvasLink = {
+            id: nanoid(),
+            fromNodeId,
+            toNodeId,
+            fromNodeType,
+            toNodeType,
+            type: "note",
+          };
+          return {
+            canvasHistory: pushCanvasHistory(s, projectId),
+            projects: s.projects.map((pr) =>
+              pr.id === projectId ? touch({ ...pr, canvasLinks: [...canvasLinks, link] }) : pr,
+            ),
+          };
+        }),
 
       updateCanvasLink: (projectId, linkId, patch) =>
         set((s) => ({
