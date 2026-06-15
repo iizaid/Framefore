@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
+import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useStore } from "@/store/useStore";
 
@@ -47,8 +48,28 @@ function useSyncProjectOwner() {
   }, [userId, initialized]);
 }
 
+// Phase B admin foundation: load only the signed-in caller's roles, and clear
+// them immediately when the identity changes. This does not protect /admin yet;
+// AdminGuard arrives in the next phase.
+function useSyncAdminRoles() {
+  const userId = useAuthStore((s) => s.user?.id ?? null);
+  const authInitialized = useAuthStore((s) => s.initialized);
+  const loadRoles = useAdminRoleStore((s) => s.loadRoles);
+  const resetRoles = useAdminRoleStore((s) => s.reset);
+
+  useEffect(() => {
+    if (!authInitialized) return;
+    if (userId) {
+      void loadRoles();
+      return;
+    }
+    resetRoles();
+  }, [authInitialized, loadRoles, resetRoles, userId]);
+}
+
 export default function App() {
   useSyncProjectOwner();
+  useSyncAdminRoles();
   return (
     <BrowserRouter>
       <Suspense fallback={<RouteFallback />}>

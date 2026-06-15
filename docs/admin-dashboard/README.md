@@ -1,12 +1,13 @@
 # Framefore Admin Dashboard — Planning Package
 
-> **Status: PLANNING ONLY.** Nothing in this folder has been implemented. No
-> admin React pages/components exist beyond the placeholder at
-> [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx). No cloud sync exists.
-> The app is still fully local-first (IndexedDB: `framefore-state` /
-> `framefore-images`, store `version 9`). These documents describe **what to
-> build later and how**, grounded in the real current codebase and the applied
-> Supabase migration design (`0001–0008`).
+> **Status: PLANNING PACKAGE + PHASE B FOUNDATION.** The Admin Dashboard itself
+> is not implemented. Phase B has added read-only current-user role helpers and
+> a Zustand role store; see [phase-b-role-helpers.md](phase-b-role-helpers.md).
+> No admin layout, guard, users table, audit UI, metrics, role-management UI, or
+> cloud sync exists. The app is still fully local-first (IndexedDB:
+> `framefore-state` / `framefore-images`, store `version 9`). These documents
+> describe **what to build later and how**, grounded in the real current codebase
+> and the applied Supabase migration design (`0001–0008`).
 
 This package is the production blueprint for Framefore's internal Admin Console:
 a serious operational tool for the `owner`, `admin`, `support`, and `reviewer`
@@ -45,6 +46,7 @@ QA/hardening → roadmap → decisions.**
 | 22 | [22-production-hardening-checklist.md](22-production-hardening-checklist.md) | Launch checklist |
 | 23 | [23-implementation-roadmap.md](23-implementation-roadmap.md) | Phased build plan A→M |
 | 24 | [24-open-questions-and-decisions.md](24-open-questions-and-decisions.md) | Decision log |
+| B | [phase-b-role-helpers.md](phase-b-role-helpers.md) | Implemented current-user role helper/store notes |
 
 ## Hard rules this package obeys
 
@@ -63,11 +65,11 @@ QA/hardening → roadmap → decisions.**
 
 ## Next recommended implementation phase
 
-After this planning is reviewed and accepted, begin **Phase B** in
-[23-implementation-roadmap.md](23-implementation-roadmap.md): add frontend role
-helpers (`useRoleStore` / `lib/roles.ts`) on top of the existing `is_admin()` /
-`has_current_user_role()` functions — *read-only, no UI yet*. This is the
-smallest safe step and unblocks the `AdminGuard` (Phase C).
+Phase B is now implemented as a read-only role-helper foundation. The next
+recommended implementation phase is **Phase C** in
+[23-implementation-roadmap.md](23-implementation-roadmap.md): add `AdminGuard`
+with the four-state no-flicker route protection from
+[05-admin-routes-and-navigation.md](05-admin-routes-and-navigation.md).
 
 > **Codex reconciliation note (updated):** Codex's pre-admin cleanup has now
 > **landed**. In place today: the Profile redesign
