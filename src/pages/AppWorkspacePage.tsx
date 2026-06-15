@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useStore, isProjectVisible } from "@/store/useStore";
-import { AppLoadingScreen } from "@/components/AppLoadingScreen";
+import { useAuthStore } from "@/store/useAuthStore";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { ProjectsPage } from "@/components/ProjectsPage";
 import { Workspace } from "@/components/Workspace";
 import { Button } from "@/components/ui/primitives";
@@ -22,7 +24,14 @@ export function AppWorkspacePage() {
   const hydrated = useStore((s) => s.hydrated);
   const projects = useStore((s) => s.projects);
   const currentOwnerUserId = useStore((s) => s.currentOwnerUserId);
+  const authInitialized = useAuthStore((s) => s.initialized);
   const [activeId, setActiveId] = useState<string | null>(parseHash());
+
+  // Local data must be rehydrated AND (when auth is configured) the session must
+  // be resolved before we render the list — otherwise a signed-in user could see
+  // a one-frame flash of guest projects before the owner filter is applied.
+  const authReady = !isSupabaseConfigured || authInitialized;
+  const booting = !hydrated || !authReady;
 
   useEffect(() => {
     const onHash = () => setActiveId(parseHash());
@@ -49,18 +58,34 @@ export function AppWorkspacePage() {
   // (distinct from a stale hash pointing at a deleted project, which just lists).
   const blocked = Boolean(activeId) && Boolean(activeProject) && !canOpen;
 
+  if (booting) return <WorkspaceBooting />;
+
+  return canOpen ? (
+    <Workspace projectId={activeId!} onBack={back} />
+  ) : blocked ? (
+    <ProjectUnavailable onBack={back} />
+  ) : (
+    <ProjectsPage onOpen={open} />
+  );
+}
+
+// Lightweight workspace boot state. A spinner only appears after ~220ms so quick
+// loads (the common case) show nothing at all — no branded full-screen splash.
+function WorkspaceBooting() {
+  const [showSpinner, setShowSpinner] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setShowSpinner(true), 220);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (!showSpinner) return <div className="min-h-screen bg-[var(--color-bg)]" />;
   return (
-    <>
-      {hydrated &&
-        (canOpen ? (
-          <Workspace projectId={activeId!} onBack={back} />
-        ) : blocked ? (
-          <ProjectUnavailable onBack={back} />
-        ) : (
-          <ProjectsPage onOpen={open} />
-        ))}
-      <AppLoadingScreen ready={hydrated} />
-    </>
+    <div className="grid min-h-screen place-items-center bg-[var(--color-bg)]">
+      <div className="flex items-center gap-2.5 text-sm text-[var(--color-ink-soft)]">
+        <Loader2 size={16} className="animate-spin" />
+        Preparing workspace…
+      </div>
+    </div>
   );
 }
 

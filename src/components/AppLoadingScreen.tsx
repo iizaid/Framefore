@@ -2,23 +2,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 const LOADING_VIDEO_SRC = "/loading%20screen/loading%20screen.mp4";
-const MIN_VISIBLE_MS = 700;
-const MAX_VISIBLE_MS = 2600;
+// Safety net only: if shell-asset warming ever stalls (e.g. fonts.ready never
+// settles) we still let the app through. There is intentionally NO minimum
+// visible time and NO wait for the intro video to finish — the splash leaves the
+// instant the app is actually ready, so fast loads feel instant.
+const MAX_VISIBLE_MS = 1200;
 
 export function AppLoadingScreen({ ready }: { ready: boolean }) {
-  const [minElapsed, setMinElapsed] = useState(false);
-  const [mediaSettled, setMediaSettled] = useState(false);
   const [assetsPrepared, setAssetsPrepared] = useState(false);
   const [maxElapsed, setMaxElapsed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const minTimer = window.setTimeout(() => setMinElapsed(true), MIN_VISIBLE_MS);
     const maxTimer = window.setTimeout(() => setMaxElapsed(true), MAX_VISIBLE_MS);
-    return () => {
-      window.clearTimeout(minTimer);
-      window.clearTimeout(maxTimer);
-    };
+    return () => window.clearTimeout(maxTimer);
   }, []);
 
   useEffect(() => {
@@ -52,10 +49,12 @@ export function AppLoadingScreen({ ready }: { ready: boolean }) {
     const video = videoRef.current;
     if (!video) return;
     video.playbackRate = 2.2;
-    void video.play().catch(() => setMediaSettled(true));
+    void video.play().catch(() => undefined);
   }, []);
 
-  const shouldExit = ready && assetsPrepared && minElapsed && (mediaSettled || maxElapsed);
+  // Leave as soon as the app is ready and shell assets are warm. The intro video
+  // plays only for as long as that takes — it never holds the app back.
+  const shouldExit = ready && (assetsPrepared || maxElapsed);
 
   return (
     <AnimatePresence>
@@ -84,8 +83,7 @@ export function AppLoadingScreen({ ready }: { ready: boolean }) {
                 preload="auto"
                 disablePictureInPicture
                 controls={false}
-                onEnded={() => setMediaSettled(true)}
-                onError={() => setMediaSettled(true)}
+                onError={() => setMaxElapsed(true)}
                 onContextMenu={(e) => e.preventDefault()}
                 className="pointer-events-none relative h-full w-full select-none object-contain mix-blend-multiply"
                 aria-hidden="true"

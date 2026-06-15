@@ -1,16 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useStore } from "@/store/useStore";
-import { AppWorkspacePage } from "@/pages/AppWorkspacePage";
-import { LandingPage } from "@/pages/LandingPage";
-import { LoginPage } from "@/pages/LoginPage";
-import { SignupPage } from "@/pages/SignupPage";
-import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
-import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
-import { ProfilePage } from "@/pages/ProfilePage";
-import { AdminPage } from "@/pages/AdminPage";
+
+// Route-level code splitting. Each page is its own chunk, so the initial load
+// only ships the route the user actually landed on (the heavy workspace/canvas
+// code no longer weighs down the landing page, etc.). Pages render their own
+// loading/skeleton states, so the Suspense fallback only covers the brief
+// chunk-fetch and stays minimal to avoid flicker.
+const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
+const AppWorkspacePage = lazy(() => import("@/pages/AppWorkspacePage").then((m) => ({ default: m.AppWorkspacePage })));
+const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import("@/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
+const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage").then((m) => ({ default: m.AuthCallbackPage })));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
+const AdminPage = lazy(() => import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })));
 
 // Route map:
 //   /              → public landing page
@@ -44,18 +50,20 @@ export default function App() {
   useSyncProjectOwner();
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<AppWorkspacePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-screen bg-[var(--color-bg)]" />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/app" element={<AppWorkspacePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
       <Toaster />
     </BrowserRouter>
   );

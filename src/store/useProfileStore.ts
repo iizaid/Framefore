@@ -44,10 +44,14 @@ async function resolveAvatar(profile: Profile | null): Promise<string | null> {
   return getAvatarDisplayUrl(profile);
 }
 
-export const useProfileStore = create<ProfileState>((set) => ({
+export const useProfileStore = create<ProfileState>((set, get) => ({
   ...initialState,
 
   loadProfile: async () => {
+    // Several components (AccountMenu, ProfilePage, workspace header) may all ask
+    // for the profile at once. Collapse those into a single in-flight request so
+    // we never fetch the row — or mint the signed avatar URL — more than needed.
+    if (get().loading) return;
     set({ loading: true, error: null });
     const { data, error } = await getCurrentProfile();
     if (error) {
