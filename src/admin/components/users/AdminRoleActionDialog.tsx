@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, ShieldAlert, CheckCircle2, Shield, Loader2 } from "lucide-react";
+import { X, ShieldAlert, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { grantUserRole, revokeUserRole } from "@/admin/lib/roleActions";
@@ -29,6 +29,7 @@ export function AdminRoleActionDialog({
   const queryClient = useQueryClient();
   const currentAuthUserId = useAuthStore((s) => s.user?.id);
   const loadRoles = useAdminRoleStore((s) => s.loadRoles);
+  const isCurrentUserOwner = useAdminRoleStore((s) => s.isOwner);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -109,16 +110,11 @@ export function AdminRoleActionDialog({
         </button>
 
         <div className="p-6">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-purple-50 text-purple-600">
-              <Shield size={20} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-[#111111]">Manage Roles</h2>
-              <p className="text-sm text-[#6b7280]">
-                {displayName ? `${displayName} (${displayEmail})` : displayEmail}
-              </p>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-[#111111]">Manage Roles</h2>
+            <p className="text-sm text-[#6b7280]">
+              {displayName ? `${displayName} (${displayEmail})` : displayEmail}
+            </p>
           </div>
 
           {errorMsg && (
@@ -167,28 +163,36 @@ export function AdminRoleActionDialog({
             <div className="flex flex-col gap-2">
               {ALL_ROLES.map((role) => {
                 const hasRole = currentRoles.includes(role);
+                const isCriticalRole = role === "owner" || role === "admin";
                 const isSelfDemoting =
-                  currentAuthUserId === userId && hasRole && (role === "owner" || role === "admin");
+                  currentAuthUserId === userId && hasRole && isCriticalRole;
+                const isOwnerOnlyBlocked = isCriticalRole && !isCurrentUserOwner;
+
+                const disableAction = isWorking || isSelfDemoting || isOwnerOnlyBlocked;
 
                 return (
                   <div
                     key={role}
-                    className="flex items-center justify-between rounded-xl border border-[#e8e8ec] p-3"
+                    className="flex flex-col gap-3 rounded-xl border border-[#e8e8ec] p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <p className="text-sm font-semibold text-[#111111] capitalize">{role}</p>
-                      {isSelfDemoting && (
-                        <p className="mt-0.5 text-xs text-red-600">
+                      {isSelfDemoting ? (
+                        <p className="mt-1 text-xs text-[#6b7280]">
                           You cannot revoke your own critical admin role from this console.
                         </p>
-                      )}
+                      ) : isOwnerOnlyBlocked ? (
+                        <p className="mt-1 text-xs text-[#6b7280]">
+                          Only owners can change owner/admin roles.
+                        </p>
+                      ) : null}
                     </div>
                     {hasRole ? (
                       <button
                         type="button"
                         onClick={() => handleActionClick(role, "revoke")}
-                        disabled={isSelfDemoting || isWorking}
-                        className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                        disabled={disableAction}
+                        className="rounded-lg border border-[#e8e8ec] bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                       >
                         Revoke
                       </button>
@@ -196,7 +200,7 @@ export function AdminRoleActionDialog({
                       <button
                         type="button"
                         onClick={() => handleActionClick(role, "grant")}
-                        disabled={isWorking}
+                        disabled={disableAction}
                         className="rounded-lg bg-[#f3f4f6] px-3 py-1.5 text-xs font-semibold text-[#374151] hover:bg-[#e5e7eb] disabled:opacity-50"
                       >
                         Grant

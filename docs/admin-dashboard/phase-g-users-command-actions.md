@@ -25,6 +25,12 @@ To ensure security, Phase G intentionally omits:
 4. **Database Last-Owner Protection**: The `revoke_app_role` RPC already ensures that the last `owner` cannot be removed from the system.
 5. **No Service Role Required**: This phase was implemented completely client-side via the standard authenticated Supabase client leveraging Row-Level Security and `SECURITY DEFINER` constraints.
 
+### Phase G Hardening Patch
+A subsequent hardening patch was applied to Phase G:
+- **Error Mapping**: `roleActions.ts` was updated to accurately catch Postgres `SQLSTATE 42501` and map it gracefully to "Permission Denied" without leaking raw SQL strings. 
+- **Owner-Only Gating**: The UI actively checks `isOwner` from `useAdminRoleStore`. If a standard `admin` attempts to open the dialog, the `owner` and `admin` action buttons are immediately disabled with the explanation: *"Only owners can change owner/admin roles."* The database RPC acts as the final security boundary.
+- **Visual Polish**: Removed the decorative purple shield icon from the role dialog header to ensure perfect alignment with the minimalist flat-black visual system.
+
 ## User Experience Polish
 - **Removed Dashboard Noise**: Eliminated the decorative "dashboard" statistic cards from `/admin/users` in favor of a clean, text-based summary strip. The table is now the unambiguous anchor of the page.
 - **Query Invalidation**: After a successful role mutation, TanStack Query immediately invalidates `adminQueryKeys.users.all` and `adminQueryKeys.overview()` to keep UI lists and role counts perfectly in sync. If a user edits their own roles, their local role store (`useAdminRoleStore`) is explicitly refreshed.
