@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 import { Reveal, RevealGroup, RevealItem } from "./Reveal";
 
 // Honest pricing — no checkout exists yet, so CTAs route to the (free) app or a
@@ -12,7 +13,7 @@ interface Tier {
   cadence?: string;
   tagline: string;
   features: string[];
-  cta: { label: string; to?: string; disabled?: boolean };
+  cta: { label: string; to?: string; disabled?: boolean; workspace?: boolean };
   featured?: boolean;
 }
 
@@ -22,7 +23,7 @@ const TIERS: Tier[] = [
     price: "$0",
     tagline: "Everything you need to plan your first videos.",
     features: ["Local projects in your browser", "Scene planning", "Canvas board", "Basic export"],
-    cta: { label: "Start free", to: "/app" },
+    cta: { label: "Start free", workspace: true },
   },
   {
     name: "Creator",
@@ -53,6 +54,8 @@ const TIERS: Tier[] = [
 ];
 
 export function PricingSection() {
+  // Resolve the free-tier CTA to an auth-aware target (signed-out → /signup).
+  const workspaceCta = useWorkspaceCta();
   return (
     <section id="pricing" className="px-6 py-20 sm:py-28">
       <div className="mx-auto max-w-5xl">
@@ -105,7 +108,7 @@ export function PricingSection() {
                     {t.cta.label}
                   </Button>
                 ) : (
-                  <Link to={t.cta.to!}>
+                  <Link to={t.cta.workspace ? workspaceCta.to : t.cta.to!}>
                     <Button variant={t.featured ? "primary" : "outline"} size="md" className="w-full">
                       {t.cta.label}
                     </Button>

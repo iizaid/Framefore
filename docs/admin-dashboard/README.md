@@ -29,6 +29,12 @@
 > TanStack Table), with URL-backed search/filter/pagination — see
 > [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md). No user management
 > actions, no user detail page, and `/app` stays local-first.
+> **Phase Auth-1 verified-account gate implemented**: `/app` is now behind
+> `AppAccessGuard` (sign-in + verified email required), a `/verify-email` page
+> exists, an owner/admin-only "Admin console" entry was added to the account
+> menu (UX only — `AdminGuard` is still the boundary), and signed-out landing
+> CTAs route to `/signup` instead of `/app`. `/app` stays local-first after
+> access is granted; no cloud sync. See [auth-access-gate.md](../auth-access-gate.md).
 > Audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:

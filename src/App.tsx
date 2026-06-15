@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
 import { AdminGuard } from "@/admin/components/AdminGuard";
+import { AppAccessGuard } from "@/components/auth/AppAccessGuard";
 import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useStore } from "@/store/useStore";
@@ -18,21 +19,27 @@ const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default:
 const SignupPage = lazy(() => import("@/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
 const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage").then((m) => ({ default: m.AuthCallbackPage })));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage").then((m) => ({ default: m.VerifyEmailPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const AdminPage = lazy(() => import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })));
 const AdminUsersPage = lazy(() => import("@/admin/pages/AdminUsersPage").then((m) => ({ default: m.AdminUsersPage })));
 
 // Route map:
 //   /              → public landing page
-//   /app           → Framefore workspace (local-first, no auth gate yet)
+//   /app           → Framefore workspace, behind AppAccessGuard (signed-in +
+//                    verified-email only). Still fully local-first *after* access
+//                    is granted — no cloud sync is implemented.
 //   /login         → login
 //   /signup        → signup
+//   /verify-email  → verify-account screen (resend / re-check confirmation)
 //   /auth/callback → OAuth / signup-confirmation return target
 //   /reset-password→ set a new password from a reset email link
-//   /admin         → guarded admin placeholder
+//   /admin         → admin console, behind AdminGuard (owner/admin only)
 //   /pricing       → scrolls to pricing section on landing
 //
-// /app remains open so local projects are never disrupted before cloud sync.
+// /app is no longer public: AppAccessGuard requires a signed-in, email-verified
+// account before the workspace renders. Local projects are never deleted or
+// auto-migrated by this gate — they simply require sign-in to open.
 // Keeps the project store's owner filter in sync with the auth session. New
 // projects are tagged with this id and the projects list is filtered by it.
 // Lives at the app root so it applies everywhere (landing, /app, /profile) and
@@ -74,9 +81,10 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<AppWorkspacePage />} />
+          <Route path="/app" element={<AppAccessGuard><AppWorkspacePage /></AppAccessGuard>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />

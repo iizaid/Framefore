@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
+import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { cn } from "@/lib/utils";
 
 // Shared signed-in account control: an avatar button that opens a small menu
@@ -17,6 +18,13 @@ export function AccountMenu({ variant = "light" }: { variant?: "light" | "dark" 
   const avatarUrl = useProfileStore((s) => s.avatarUrl);
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
+
+  // Admin Console link is UX only — it appears once the role store has
+  // confirmed access, and AdminGuard is still the real protection on /admin.
+  // While roles load (or for non-admins) the link stays hidden.
+  const rolesInitialized = useAdminRoleStore((s) => s.initialized);
+  const canAccessAdmin = useAdminRoleStore((s) => s.canAccessAdmin);
+  const showAdminLink = rolesInitialized && canAccessAdmin;
 
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -100,6 +108,14 @@ export function AccountMenu({ variant = "light" }: { variant?: "light" | "dark" 
             </div>
 
             <div className="flex flex-col p-1.5">
+              {showAdminLink && (
+                <MenuLink
+                  to="/admin"
+                  icon={<ShieldCheck size={16} />}
+                  label="Admin console"
+                  onClick={() => setOpen(false)}
+                />
+              )}
               <MenuLink to="/profile" icon={<User size={16} />} label="Profile" onClick={() => setOpen(false)} />
               <button
                 type="button"

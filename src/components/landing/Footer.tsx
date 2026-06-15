@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Twitter, Github, MessageSquare, Youtube, ArrowRight, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 import { Reveal } from "./Reveal";
 
 const FAQS = [
@@ -21,6 +22,8 @@ const FAQS = [
 
 export function Footer() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  // Auth-aware workspace link (signed-out → /signup, never /app directly).
+  const cta = useWorkspaceCta();
 
   return (
     <>
@@ -118,7 +121,7 @@ export function Footer() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Workspace</span>
                 <Link to="/login" className="text-sm text-white/60 transition-colors hover:text-white">Log in</Link>
                 <Link to="/signup" className="text-sm text-white/60 transition-colors hover:text-white">Sign up</Link>
-                <Link to="/app" className="text-sm text-white/60 transition-colors hover:text-white">Open app</Link>
+                <Link to={cta.to} className="text-sm text-white/60 transition-colors hover:text-white">{cta.label}</Link>
               </div>
               <div className="flex flex-col gap-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Resources</span>

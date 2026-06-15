@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/primitives";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,8 @@ export function LandingNav() {
   // in hides it and shows the avatar/account menu.
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  // Auth-aware workspace CTA target (signed-out → /signup, never /app).
+  const cta = useWorkspaceCta();
 
   // Track scroll in React state so logo src (JSX attr) updates correctly
   const [scrolled, setScrolled] = useState(false);
@@ -152,7 +155,7 @@ export function LandingNav() {
           <div className="hidden items-center gap-2.5 md:flex">
             {user ? (
               <>
-                <Link to="/app">
+                <Link to={cta.to}>
                   <Button
                     variant="primary"
                     size="sm"
@@ -161,7 +164,7 @@ export function LandingNav() {
                       !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
                     )}
                   >
-                    Open app
+                    {cta.label}
                   </Button>
                 </Link>
                 <AccountMenu variant={isLight ? "light" : "dark"} />
@@ -179,7 +182,7 @@ export function LandingNav() {
                 >
                   Log in
                 </Link>
-                <Link to="/app">
+                <Link to={cta.to}>
                   <Button
                     variant="primary"
                     size="sm"
@@ -188,7 +191,7 @@ export function LandingNav() {
                       !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
                     )}
                   >
-                    Start planning
+                    {cta.label}
                   </Button>
                 </Link>
               </>
@@ -331,9 +334,9 @@ export function LandingNav() {
                   animate="visible"
                   className="px-1 pb-1"
                 >
-                  <Link to="/app" onClick={close}>
+                  <Link to={cta.to} onClick={close}>
                     <Button variant="primary" size="md" className="w-full">
-                      {user ? "Open app" : "Start planning"}
+                      {cta.label}
                     </Button>
                   </Link>
                 </motion.div>

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
+import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 
 const HEADLINE = ["Build AI videos", "before you generate them."];
 
@@ -9,6 +10,8 @@ const HEADLINE = ["Build AI videos", "before you generate them."];
 
 export function HeroSection() {
   const reduce = useReducedMotion();
+  // Auth-aware primary CTA: signed-out visitors go to /signup (never /app).
+  const cta = useWorkspaceCta();
 
   return (
     <section className="relative z-0 flex min-h-[85vh] flex-col items-center justify-center overflow-hidden px-6 pb-32 pt-36 text-center sm:pt-44">
@@ -61,9 +64,9 @@ export function HeroSection() {
         transition={{ delay: 0.85, duration: 0.6 }}
         className="mt-9 flex flex-col items-center gap-3 sm:flex-row"
       >
-        <Link to="/app" className="w-full sm:w-auto">
+        <Link to={cta.to} className="w-full sm:w-auto">
           <Button variant="primary" size="md" className="w-full sm:w-auto">
-            Start planning <ArrowRight size={16} />
+            {cta.label} <ArrowRight size={16} />
           </Button>
         </Link>
         <a href="#canvas" className="w-full sm:w-auto">

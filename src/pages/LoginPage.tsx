@@ -1,17 +1,27 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { getPostAuthRedirectTarget, isEmailVerified } from "@/lib/authAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
 
-  // Already signed in? Skip the form and go straight to the workspace.
+  // Navigation is driven by the user becoming set (after sign-in or if already
+  // signed in), so an unverified user is never sent to /app for a frame: a
+  // verified user goes to the intended destination (or /app); an unverified one
+  // goes to /verify-email.
   useEffect(() => {
-    if (user) navigate("/app", { replace: true });
-  }, [user, navigate]);
+    if (!user) return;
+    if (isEmailVerified(user)) {
+      navigate(getPostAuthRedirectTarget(location.state), { replace: true });
+    } else {
+      navigate("/verify-email", { replace: true, state: location.state });
+    }
+  }, [user, navigate, location.state]);
 
   return (
     <AuthLayout>
@@ -20,7 +30,7 @@ export function LoginPage() {
         heading="Welcome back"
         subtext="Sign in to continue planning your AI video workflow."
         submitLabel="Sign in"
-        onSuccess={() => navigate("/app", { replace: true })}
+        onSuccess={() => {/* navigation handled by the user-watching effect */}}
         footer={
           <>
             Don't have an account?{" "}

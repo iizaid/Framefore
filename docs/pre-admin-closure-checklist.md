@@ -12,7 +12,10 @@ and handoff gaps before any real Admin Dashboard work begins.
 - [x] `/profile` exists and loads the current user's profile row.
 - [x] Avatar display priority is implemented: uploaded `avatar_path` -> OAuth `avatar_url` -> initials.
 - [x] Avatar upload/remove uses the private `avatars` bucket and signed display URLs.
-- [x] `/app` remains local-first and is not auth-gated.
+- [x] `/app` is local-first. **Update (Phase Auth-1):** `/app` is now gated by
+      `AppAccessGuard` — sign-in + verified email required. It remains fully
+      local-first *after* access is granted (no cloud sync). See
+      [auth-access-gate.md](auth-access-gate.md).
 - [x] Local projects are account-scoped in IndexedDB using `ownerUserId` / store version 9.
 - [x] Guest project import into an account is explicit and non-destructive.
 - [x] Timeline order remains `project.scenes` order.
@@ -52,7 +55,10 @@ and handoff gaps before any real Admin Dashboard work begins.
 
 ## Risks And Constraints
 
-- [ ] Do not protect `/app` until cloud sync and migration UX are ready.
+- [x] ~~Do not protect `/app` until cloud sync and migration UX are ready.~~
+      **Superseded by Phase Auth-1:** `/app` is intentionally gated now (verified
+      account required) as a product/security decision. Local projects are still
+      never deleted or auto-migrated by the gate.
 - [ ] Do not delete or migrate local projects without an explicit user action.
 - [ ] Do not modify already-applied migrations; add a new migration if a database change is required.
 - [ ] Do not place provider secrets, service-role keys, or client secret JSON files in `public/`.
@@ -72,7 +78,7 @@ and handoff gaps before any real Admin Dashboard work begins.
 - [ ] Avatar crop drag, zoom, reset, cancel, and save work on desktop and mobile.
 - [ ] Avatar remove clears uploaded avatar and falls back to OAuth avatar or initials.
 - [ ] AccountMenu shows account identity, Profile, and Sign out only.
-- [ ] `/app` opens without requiring sign-in.
+- [ ] `/app` requires a signed-in, verified account (Phase Auth-1); signed-out → `/login`, unverified → `/verify-email`.
 - [ ] Project list respects guest/account local isolation.
 - [ ] Import local projects banner still works when signed in with guest projects present.
 - [ ] Direct `/app#/project/<id>` guard blocks projects outside the current owner context.

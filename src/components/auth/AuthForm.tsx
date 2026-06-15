@@ -88,10 +88,16 @@ interface AuthFormProps {
   subtext: string;
   submitLabel: string;
   onSuccess: () => void;
+  /**
+   * Signup-only: called when Supabase requires email confirmation (no session
+   * yet). The page uses this to route to /verify-email instead of showing an
+   * inline banner. Falls back to the inline banner when not provided.
+   */
+  onNeedsConfirmation?: (email: string) => void;
   footer: React.ReactNode;
 }
 
-export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, footer }: AuthFormProps) {
+export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, onNeedsConfirmation, footer }: AuthFormProps) {
   const { signIn, signUp, requestPasswordReset, loading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -136,7 +142,13 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
     const { error, needsConfirmation } = await signUp(email.trim(), password);
     if (!error) {
       if (needsConfirmation) {
-        setSuccessMsg("Check your email to confirm your account, then sign in.");
+        // Hand off to the page (→ /verify-email). Fall back to an inline banner
+        // if no handler was provided.
+        if (onNeedsConfirmation) {
+          onNeedsConfirmation(email.trim());
+        } else {
+          setSuccessMsg("Check your email to confirm your account, then sign in.");
+        }
       } else {
         onSuccess();
       }

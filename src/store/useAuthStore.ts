@@ -28,6 +28,7 @@ interface AuthState {
   requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
   resendConfirmation: (email: string) => Promise<{ error: string | null }>;
+  reloadUser: () => Promise<User | null>;
   clearError: () => void;
 }
 
@@ -176,6 +177,25 @@ export const useAuthStore = create<AuthState>((set) => ({
       return { error: error.message };
     }
     return { error: null };
+  },
+
+  // Re-fetch the current user from Supabase. Used by the verify-email screen:
+  // after a user confirms in another tab, their *current* session JWT still has
+  // the old (unverified) claims, so we refresh the session to mint a token that
+  // reflects email_confirmed_at. Falls back to getUser() if there is no session
+  // to refresh. The store's user is updated so guards re-evaluate immediately.
+  reloadUser: async () => {
+    if (!supabase) return null;
+
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (!refreshError && refreshed.session) {
+      set({ session: refreshed.session, user: refreshed.session.user });
+      return refreshed.session.user;
+    }
+
+    const { data: fetched } = await supabase.auth.getUser();
+    if (fetched.user) set({ user: fetched.user });
+    return fetched.user ?? null;
   },
 
   clearError: () => set({ error: null }),

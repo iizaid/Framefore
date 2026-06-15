@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { isEmailVerified } from "@/lib/authAccess";
 
-// Landing spot for OAuth (Google/GitHub) and password-reset redirects.
+// Landing spot for OAuth (Google/GitHub) and signup-confirmation redirects.
 // supabase-js auto-detects the session in the URL (detectSessionInUrl), so we
-// just wait for it to settle, then forward into the workspace.
+// just wait for it to settle, then forward the user based on verification:
+// verified → /app, signed-in-but-unverified → /verify-email. OAuth providers
+// that return a confirmed email satisfy isEmailVerified and pass straight to /app.
 export function AuthCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +33,13 @@ export function AuthCallbackPage() {
       return;
     }
 
+    // A confirmed user goes to the workspace; a signed-in-but-unverified user is
+    // routed to the verify-email screen rather than into /app.
+    const forward = (user: Parameters<typeof isEmailVerified>[0]) => {
+      if (!mounted) return;
+      navigate(isEmailVerified(user) ? "/app" : "/verify-email", { replace: true });
+    };
+
     (async () => {
       const { data, error } = await client.auth.getSession();
       if (!mounted) return;
@@ -38,13 +48,13 @@ export function AuthCallbackPage() {
         return;
       }
       if (data.session) {
-        navigate("/app", { replace: true });
+        forward(data.session.user);
         return;
       }
 
       // Session may still be exchanging — wait for the auth state to flip.
       subscription = client.auth.onAuthStateChange((_e, session) => {
-        if (mounted && session) navigate("/app", { replace: true });
+        if (mounted && session) forward(session.user);
       }).data.subscription;
 
       // Safety net: if nothing arrives, send the user back to sign in.
