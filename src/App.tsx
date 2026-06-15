@@ -1,5 +1,8 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useStore } from "@/store/useStore";
 import { AppWorkspacePage } from "@/pages/AppWorkspacePage";
 import { LandingPage } from "@/pages/LandingPage";
 import { LoginPage } from "@/pages/LoginPage";
@@ -22,7 +25,23 @@ import { AdminPage } from "@/pages/AdminPage";
 // Phase 4.3 will add a <ProtectedRoute> wrapper around /app and /admin once
 // the cloud-sync migration is ready. For now /app remains open so local projects
 // are never disrupted during the auth rollout.
+// Keeps the project store's owner filter in sync with the auth session. New
+// projects are tagged with this id and the projects list is filtered by it.
+// Lives at the app root so it applies everywhere (landing, /app, /profile) and
+// keeps useStore free of any auth import (no circular dependency).
+function useSyncProjectOwner() {
+  const userId = useAuthStore((s) => s.user?.id ?? null);
+  const initialized = useAuthStore((s) => s.initialized);
+  useEffect(() => {
+    // Wait until auth has settled so a signed-in user isn't briefly treated as a
+    // guest on first paint. When Supabase is unconfigured, init() flips
+    // `initialized` immediately with a null user → guest context, as intended.
+    if (initialized) useStore.getState().setCurrentOwnerUserId(userId);
+  }, [userId, initialized]);
+}
+
 export default function App() {
+  useSyncProjectOwner();
   return (
     <BrowserRouter>
       <Routes>

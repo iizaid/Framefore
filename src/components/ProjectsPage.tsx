@@ -12,8 +12,10 @@ import {
   Clock,
   Search,
   LogOut,
+  Download,
+  X,
 } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { useStore, isProjectVisible } from "@/store/useStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import { AvatarCircle, deriveInitials } from "@/components/account/AccountMenu";
@@ -30,25 +32,58 @@ import { toast } from "./ui/toast";
 
 export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
   const projects = useStore((s) => s.projects);
+  const currentOwnerUserId = useStore((s) => s.currentOwnerUserId);
+  const importGuestProjectsToUser = useStore((s) => s.importGuestProjectsToUser);
   const createProject = useStore((s) => s.createProject);
   const updateProject = useStore((s) => s.updateProject);
   const deleteProject = useStore((s) => s.deleteProject);
   const duplicateProject = useStore((s) => s.duplicateProject);
+  const user = useAuthStore((s) => s.user);
 
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<{ mode: "create" | "edit"; project?: Project } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Project | null>(null);
+  // "Not now" hides the import banner for this session only — it never deletes
+  // anything, and the banner returns next session if guest projects still exist.
+  const [importDismissed, setImportDismissed] = useState(
+    () => sessionStorage.getItem("framefore-import-dismissed") === "1",
+  );
+
+  // Only show projects that belong to the active context (signed-in account, or
+  // guest when signed out). Guest projects are never auto-shown to an account.
+  const visibleProjects = useMemo(
+    () => projects.filter((p) => isProjectVisible(p, currentOwnerUserId)),
+    [projects, currentOwnerUserId],
+  );
+
+  // Guest projects only matter for the import banner when a user is signed in.
+  const guestCount = useMemo(
+    () => projects.filter((p) => (p.ownerUserId ?? null) === null).length,
+    [projects],
+  );
+  const showImportBanner = Boolean(user) && guestCount > 0 && !importDismissed;
+
+  const dismissImport = () => {
+    sessionStorage.setItem("framefore-import-dismissed", "1");
+    setImportDismissed(true);
+  };
+
+  const handleImport = () => {
+    if (!user) return;
+    const n = importGuestProjectsToUser(user.id);
+    toast(n === 1 ? "1 project imported to your account" : `${n} projects imported to your account`);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter(
+    if (!q) return visibleProjects;
+    return visibleProjects.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.topic.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q),
     );
-  }, [projects, query]);
+  }, [visibleProjects, query]);
 
   const handleSubmit = (draft: ProjectDraft) => {
     const patch = {
@@ -95,7 +130,11 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
         </div>
       </header>
 
-      {projects.length > 0 && (
+      {showImportBanner && (
+        <ImportBanner count={guestCount} onImport={handleImport} onDismiss={dismissImport} />
+      )}
+
+      {visibleProjects.length > 0 && (
         <div className="relative mb-6 max-w-sm max-sm:max-w-none">
           <Search
             size={16}
@@ -110,7 +149,7 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
         </div>
       )}
 
-      {projects.length === 0 ? (
+      {visibleProjects.length === 0 ? (
         <EmptyState onCreate={() => setDialog({ mode: "create" })} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -205,6 +244,43 @@ function AccountControl() {
       <Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}>
         <LogOut size={16} />
       </Button>
+    </div>
+  );
+}
+
+// Shown to a signed-in user when guest (pre-account) local projects exist on
+// this browser. Importing claims them for the current account; "Not now" hides
+// the banner for the session. Neither action ever deletes a project.
+function ImportBanner({
+  count,
+  onImport,
+  onDismiss,
+}: {
+  count: number;
+  onImport: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[var(--color-border-strong)] bg-white p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ink-soft)]">
+        <Download size={18} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-[var(--color-ink)]">Local projects found</p>
+        <p className="mt-0.5 text-sm text-[var(--color-ink-soft)]">
+          {count === 1 ? "1 project was" : `${count} projects were`} created before this account was
+          connected. Import {count === 1 ? "it" : "them"} to keep {count === 1 ? "it" : "them"} with
+          this account.
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onDismiss}>
+          <X size={14} /> Not now
+        </Button>
+        <Button variant="primary" size="sm" onClick={onImport}>
+          <Download size={14} /> Import to this account
+        </Button>
+      </div>
     </div>
   );
 }

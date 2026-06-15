@@ -210,6 +210,13 @@ export interface Project {
 
   createdAt: number;
   updatedAt: number;
+
+  // Account-scoped local ownership (Phase 4.4.1). Local-first only — these never
+  // sync to Supabase. A project with no ownerUserId is a guest/anonymous local
+  // project; a project owned by a signed-in account carries that account's id.
+  ownerUserId?: string | null; // null/undefined = guest; auth user id = account-owned
+  localOrigin?: "guest" | "account"; // how the project started (informational)
+  importedAt?: number; // set when a guest project is imported into an account
 }
 
 export const emptyGlobal = (): GlobalSettings => ({

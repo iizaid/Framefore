@@ -63,10 +63,23 @@ export function makeScene(index: number): Scene {
   };
 }
 
-function makeProject(partial: Partial<Project>): Project {
+// Account-scoped local visibility (Phase 4.4.1). A project is visible to the
+// active context when ownership matches:
+//   * signed out (ownerId == null) → only guest projects (no ownerUserId)
+//   * signed in  (ownerId set)     → only projects owned by that account
+// Guest projects are NEVER auto-shown to a signed-in account; they must be
+// explicitly imported. This is local isolation only — not a Supabase RLS rule.
+export function isProjectVisible(p: Project, ownerId: string | null): boolean {
+  const owner = p.ownerUserId ?? null;
+  return ownerId == null ? owner == null : owner === ownerId;
+}
+
+function makeProject(partial: Partial<Project>, ownerUserId: string | null): Project {
   const now = Date.now();
   return {
     id: nanoid(),
+    ownerUserId,
+    localOrigin: ownerUserId ? "account" : "guest",
     title: partial.title?.trim() || "Untitled Project",
     description: partial.description ?? "",
     topic: partial.topic ?? "",
@@ -93,6 +106,14 @@ interface StoreState {
   projects: Project[];
   hydrated: boolean;
   canvasHistory: CanvasHistory;
+  // The signed-in account id new projects are tagged with and the projects list
+  // is filtered by. null = signed out / guest context. Session-only (not persisted).
+  currentOwnerUserId: string | null;
+
+  setCurrentOwnerUserId: (userId: string | null) => void;
+  getVisibleProjects: (currentUserId?: string | null) => Project[];
+  hasGuestProjects: () => boolean;
+  importGuestProjectsToUser: (userId: string) => number;
 
   createProject: (partial: Partial<Project>) => string;
   updateProject: (id: string, patch: Partial<Project>) => void;
@@ -208,9 +229,36 @@ export const useStore = create<StoreState>()(
       projects: [],
       hydrated: false,
       canvasHistory: {},
+      currentOwnerUserId: null,
+
+      setCurrentOwnerUserId: (userId) => set({ currentOwnerUserId: userId }),
+
+      getVisibleProjects: (currentUserId) => {
+        const ownerId = currentUserId === undefined ? getState().currentOwnerUserId : currentUserId;
+        return getState().projects.filter((p) => isProjectVisible(p, ownerId ?? null));
+      },
+
+      hasGuestProjects: () => getState().projects.some((p) => (p.ownerUserId ?? null) === null),
+
+      // Claim every guest project for the given account. Preserves ids, scenes,
+      // images (by reference), canvas data, and order — only ownership metadata
+      // changes, so nothing is duplicated or lost.
+      importGuestProjectsToUser: (userId) => {
+        if (!userId) return 0;
+        const now = Date.now();
+        let imported = 0;
+        set((s) => ({
+          projects: s.projects.map((p) => {
+            if ((p.ownerUserId ?? null) !== null) return p;
+            imported += 1;
+            return { ...p, ownerUserId: userId, localOrigin: "account", importedAt: now };
+          }),
+        }));
+        return imported;
+      },
 
       createProject: (partial) => {
-        const project = makeProject(partial);
+        const project = makeProject(partial, getState().currentOwnerUserId);
         set((s) => ({ projects: [project, ...s.projects] }));
         return project.id;
       },
@@ -694,7 +742,7 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: "framefore-state",
-      version: 8,
+      version: 9,
       storage: createJSONStorage(() => idbStorage),
       partialize: (s) => ({ projects: s.projects }) as StoreState,
       // Backfill fields added after v1 so older saved projects keep working.
@@ -705,6 +753,11 @@ export const useStore = create<StoreState>()(
           // them in at runtime while keeping any value that already exists.
           state.projects = state.projects.map((p) => ({
             ...p,
+            // v9: account-scoped local ownership. Pre-auth projects have no owner
+            // — keep them as GUEST projects. Never auto-assign them to the first
+            // user who happens to sign in; they stay guest until explicitly imported.
+            ownerUserId: p.ownerUserId ?? null,
+            localOrigin: p.localOrigin ?? "guest",
             // v5: project-level default models (scenes inherit when empty).
             defaultImageModel: p.defaultImageModel ?? "",
             defaultVideoModel: p.defaultVideoModel ?? "",

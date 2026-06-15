@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useStore, isProjectVisible } from "@/store/useStore";
 import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 import { ProjectsPage } from "@/components/ProjectsPage";
 import { Workspace } from "@/components/Workspace";
+import { Button } from "@/components/ui/primitives";
 
 // The Framefore workspace, mounted at /app.
 //
@@ -20,6 +21,7 @@ function parseHash(): string | null {
 export function AppWorkspacePage() {
   const hydrated = useStore((s) => s.hydrated);
   const projects = useStore((s) => s.projects);
+  const currentOwnerUserId = useStore((s) => s.currentOwnerUserId);
   const [activeId, setActiveId] = useState<string | null>(parseHash());
 
   useEffect(() => {
@@ -37,13 +39,45 @@ export function AppWorkspacePage() {
     setActiveId(null);
   };
 
-  // Guard against a stale hash pointing at a deleted project.
-  const activeExists = activeId && projects.some((p) => p.id === activeId);
+  // Resolve the hash target against the active account context. A project is
+  // openable only if it exists AND is visible to the current owner — so a signed-in
+  // user can't open another account's (or an un-imported guest) project via a
+  // direct /app#/project/<id> link. Project contents are never rendered otherwise.
+  const activeProject = activeId ? projects.find((p) => p.id === activeId) : undefined;
+  const canOpen = activeProject && isProjectVisible(activeProject, currentOwnerUserId);
+  // The hash points at a real project that simply isn't ours → clean blocked state
+  // (distinct from a stale hash pointing at a deleted project, which just lists).
+  const blocked = Boolean(activeId) && Boolean(activeProject) && !canOpen;
 
   return (
     <>
-      {hydrated && (activeExists ? <Workspace projectId={activeId!} onBack={back} /> : <ProjectsPage onOpen={open} />)}
+      {hydrated &&
+        (canOpen ? (
+          <Workspace projectId={activeId!} onBack={back} />
+        ) : blocked ? (
+          <ProjectUnavailable onBack={back} />
+        ) : (
+          <ProjectsPage onOpen={open} />
+        ))}
       <AppLoadingScreen ready={hydrated} />
     </>
+  );
+}
+
+// Shown when a direct project link resolves to a project the current account may
+// not see. No project data is rendered — just a clean exit back to the list.
+function ProjectUnavailable({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6">
+      <div className="max-w-sm text-center">
+        <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Project not available</h1>
+        <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
+          This project isn't available for the account you're signed in with.
+        </p>
+        <Button variant="primary" size="md" className="mt-6" onClick={onBack}>
+          Back to projects
+        </Button>
+      </div>
+    </div>
   );
 }
