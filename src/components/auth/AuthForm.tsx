@@ -156,9 +156,9 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
   return (
     <div className="flex flex-col gap-8">
       {/* Heading */}
-      <div>
+      <div className="text-center">
         <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">{heading}</h1>
-        <p className="mt-2 text-sm text-[var(--color-ink-soft)]">{subtext}</p>
+        <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtext}</p>
       </div>
 
       {successMsg && <SuccessBanner message={successMsg} />}
@@ -217,11 +217,13 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
         <>
           <OAuthButtons mode={mode} />
 
-          <div className="flex items-center gap-3">
-            <span className="h-px flex-1 bg-[var(--color-border-strong)]" />
-            <span className="text-xs text-[var(--color-ink-faint)]">or continue with email</span>
-            <span className="h-px flex-1 bg-[var(--color-border-strong)]" />
-          </div>
+          {isSupabaseConfigured && (
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-[var(--color-border-strong)]" />
+              <span className="text-xs text-[var(--color-ink-faint)]">or continue with email</span>
+              <span className="h-px flex-1 bg-[var(--color-border-strong)]" />
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             <AuthInput
@@ -282,9 +284,9 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
             )}
 
             {!isSupabaseConfigured && (
-              <p className="text-xs text-[var(--color-ink-faint)]">
-                Authentication is not configured yet — email sign in is disabled.
-              </p>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm font-medium text-red-600">
+                Sign in is temporarily unavailable.
+              </div>
             )}
 
             <button

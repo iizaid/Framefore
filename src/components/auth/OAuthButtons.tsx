@@ -8,13 +8,7 @@ export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
   const label = mode === "login" ? "Continue" : "Sign up";
 
   if (!isSupabaseConfigured) {
-    return (
-      <div className="rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-stone-surface)] px-4 py-3 text-center text-xs text-[var(--color-ink-soft)]">
-        Authentication is not configured yet. Add{" "}
-        <code className="font-mono text-[var(--color-ink)]">VITE_SUPABASE_URL</code> and{" "}
-        <code className="font-mono text-[var(--color-ink)]">VITE_SUPABASE_ANON_KEY</code> to enable sign in.
-      </div>
-    );
+    return null;
   }
 
   return (

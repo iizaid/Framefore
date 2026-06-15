@@ -8,3 +8,7 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 export const supabase = url && key ? createClient(url, key) : null;
 
 export const isSupabaseConfigured = Boolean(url && key);
+
+if (!isSupabaseConfigured && import.meta.env.DEV) {
+  console.warn("VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are missing. Authentication is disabled.");
+}
