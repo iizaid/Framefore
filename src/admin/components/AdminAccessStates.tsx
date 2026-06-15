@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ShieldAlert } from "lucide-react";
 
 type AdminAccessStateProps = {
   message?: string;
@@ -8,8 +8,8 @@ type AdminAccessStateProps = {
 
 function AdminAccessShell({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-[#f7f7f5] px-6 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-[#e6e4de] bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="grid min-h-screen place-items-center bg-white px-6 py-10">
+      <div className="w-full max-w-md text-center">
         {children}
       </div>
     </div>
@@ -18,20 +18,23 @@ function AdminAccessShell({ children }: { children: ReactNode }) {
 
 export function AdminAccessLoading() {
   return (
-    <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
-        <Loader2 size={18} className="animate-spin" />
+    <div className="grid min-h-screen place-items-center bg-[#080808] px-6 text-center text-white">
+      <div className="flex flex-col items-center">
+        <img src="/white.svg" alt="Framefore" className="h-10 w-10" />
+        <p className="mt-4 text-sm font-medium text-white">Checking admin access</p>
+        <p className="mt-1 text-xs text-white/45">Verifying your session and role.</p>
+        <div className="mt-5 h-[2px] w-36 overflow-hidden rounded-full bg-white/15">
+          <div className="h-full w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-white" />
+        </div>
       </div>
-      <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Checking admin access</h1>
-      <p className="mt-2 text-sm text-[#6b6b66]">Please wait while your session is verified.</p>
-    </AdminAccessShell>
+    </div>
   );
 }
 
 export function AdminForbidden() {
   return (
     <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
+      <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#f1f1ef] text-[#333333]">
         <ShieldAlert size={18} />
       </div>
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Access denied</h1>
@@ -57,7 +60,7 @@ export function AdminForbidden() {
 export function AdminUnavailable({ message = "Admin access is temporarily unavailable." }: AdminAccessStateProps) {
   return (
     <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
+      <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-[#f1f1ef] text-[#333333]">
         <AlertTriangle size={18} />
       </div>
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Admin unavailable</h1>

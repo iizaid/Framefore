@@ -15,76 +15,75 @@ type AdminUsersTableProps = {
   users: AdminUsersListItem[];
 };
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
 const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function formatDate(value: string | null, withTime = false): string {
   if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return (withTime ? dateTimeFormatter : dateFormatter).format(date);
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return (withTime ? dateTimeFormatter : dateFormatter).format(d);
 }
 
-const columnHelper = createColumnHelper<AdminUsersListItem>();
+const ch = createColumnHelper<AdminUsersListItem>();
 
 export function AdminUsersTable({ users }: AdminUsersTableProps) {
   const columns = useMemo(
     () => [
-      columnHelper.display({
+      ch.display({
         id: "user",
         header: "User",
         cell: ({ row }) => <AdminUserIdentityCell user={row.original} />,
       }),
-      columnHelper.accessor("roles", {
+      ch.accessor("roles", {
         id: "roles",
         header: "Roles",
         cell: ({ getValue }) => <AdminUserRoleBadges roles={getValue()} />,
       }),
-      columnHelper.display({
+      ch.display({
         id: "profile",
         header: "Profile",
         cell: ({ row }) => <AdminProfileCompletedBadge completed={row.original.profileCompleted} />,
       }),
-      columnHelper.accessor("createdAt", {
+      ch.accessor("createdAt", {
         id: "createdAt",
         header: "Created",
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap text-sm text-[#6b6b66]">{formatDate(getValue())}</span>
+          <span className="whitespace-nowrap text-[13px] text-[#9ca3af]">{formatDate(getValue())}</span>
         ),
       }),
-      columnHelper.accessor("lastSignInAt", {
+      ch.accessor("lastSignInAt", {
         id: "lastSignInAt",
         header: "Last sign-in",
         cell: ({ getValue }) => {
-          const value = getValue();
+          const v = getValue();
           return (
-            <span className="whitespace-nowrap text-sm text-[#6b6b66]">
-              {value ? formatDate(value, true) : "Never"}
+            <span className="whitespace-nowrap text-[13px] text-[#9ca3af]">
+              {v ? formatDate(v, true) : <span className="text-[#d1d5db]">Never</span>}
             </span>
           );
         },
       }),
-      columnHelper.display({
+      ch.display({
         id: "access",
-        header: "Console access",
+        header: "Access",
         cell: ({ row }) => {
-          const hasConsole = row.original.isOwner || row.original.isAdmin;
-          return hasConsole ? (
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-[#333333]">
-              <ShieldCheck size={13} />
-              Admin console
+          const has = row.original.isOwner || row.original.isAdmin;
+          return has ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+              <ShieldCheck size={11} />
+              Console
             </span>
           ) : (
-            <span
-              className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[#6b6b66]"
-              title="Support and reviewer roles do not grant Admin Console access in the MVP."
-            >
-              <ShieldOff size={13} />
-              No access (MVP)
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-400">
+              <ShieldOff size={11} />
+              No access
             </span>
           );
         },
@@ -97,10 +96,6 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
     data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // Server-side pagination: the RPC already returns one page. TanStack Table
-    // is purely the headless column/render model here — it must not pretend to
-    // sort or paginate data the server controls. Sorting stays disabled until a
-    // server-backed sort exists.
     manualPagination: true,
     manualSorting: true,
     enableSorting: false,
@@ -108,37 +103,38 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
   });
 
   return (
-    <div className="overflow-hidden bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[840px] border-collapse text-left">
-          <thead className="border-b border-[#e6e4de] bg-[#fbfbfa]">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    scope="col"
-                    className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b6b66]"
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-[#eeece7]">
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[#f7f7f5]">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2.5 align-middle">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px] border-collapse text-left">
+        <thead>
+          {table.getHeaderGroups().map((hg) => (
+            <tr key={hg.id} className="border-b border-[#f3f4f6] bg-[#fafafa]">
+              {hg.headers.map((h) => (
+                <th
+                  key={h.id}
+                  scope="col"
+                  className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9ca3af]"
+                >
+                  {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row, i) => (
+            <tr
+              key={row.id}
+              className={`border-b border-[#f9fafb] transition-colors hover:bg-[#f9fafb] ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id} className="px-5 py-3.5 align-middle">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

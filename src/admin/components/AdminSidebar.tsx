@@ -1,6 +1,8 @@
 import {
   Activity,
   Archive,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   Gauge,
   HardDrive,
@@ -10,16 +12,16 @@ import {
   ShieldAlert,
   UserCog,
   Users,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AdminNavItem } from "@/admin/components/AdminNavItem";
+import { cn } from "@/lib/utils";
 
 type AdminSidebarItem = {
   label: string;
   icon: LucideIcon;
-  /** Real link target. Omit for planned/disabled modules. */
   to?: string;
-  /** Exact-match the route (used for /admin so it isn't active on /admin/users). */
   end?: boolean;
 };
 
@@ -36,7 +38,7 @@ const NAV_GROUPS: Array<{ title: string; items: AdminSidebarItem[] }> = [
     ],
   },
   {
-    title: "Trust and safety",
+    title: "Trust & Safety",
     items: [
       { label: "Audit Logs", icon: ClipboardList },
       { label: "Security Events", icon: LockKeyhole },
@@ -54,42 +56,106 @@ const NAV_GROUPS: Array<{ title: string; items: AdminSidebarItem[] }> = [
   },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  open: boolean;
+  collapsed: boolean;
+  onClose: () => void;
+  onToggleCollapse: () => void;
+}
+
+export function AdminSidebar({ open, collapsed, onClose, onToggleCollapse }: AdminSidebarProps) {
+  const width = collapsed ? "w-[68px]" : "w-[240px]";
+
   return (
-    <aside className="border-b border-[#deded8] bg-[#e8e8e5] lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:border-b-0 lg:border-r">
-      <div className="flex h-full flex-col gap-4 px-3 py-3 lg:px-3.5 lg:py-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#111111] text-white">
-              <Gauge size={15} />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight text-[#111111]">Framefore Admin</p>
-              <p className="text-xs text-[#6b6b66]">Operations console</p>
+    <>
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col bg-[#0f0f10] transition-all duration-300 lg:flex",
+          "sticky top-0 h-screen overflow-hidden",
+          width
+        )}
+      >
+        <SidebarContent collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
+      </aside>
+
+      {/* Mobile drawer */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col bg-[#0f0f10] transition-transform duration-300 lg:hidden",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
+        >
+          <X size={16} />
+        </button>
+        <SidebarContent collapsed={false} onToggleCollapse={onToggleCollapse} />
+      </aside>
+    </>
+  );
+}
+
+function SidebarContent({
+  collapsed,
+  onToggleCollapse,
+}: {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Brand */}
+      <div className={cn("flex h-[60px] items-center border-b border-white/[0.06] px-4", collapsed ? "justify-center" : "gap-3")}>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#0f0f10]">
+          <Gauge size={15} />
+        </span>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">Framefore</p>
+            <p className="text-[10px] text-white/40">Admin Console</p>
+          </div>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title} className="mb-4">
+            {!collapsed && (
+              <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                {group.title}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <AdminNavItem
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.to}
+                  end={item.end}
+                  collapsed={collapsed}
+                />
+              ))}
             </div>
           </div>
-        </div>
+        ))}
+      </nav>
 
-        <nav className="flex min-w-0 gap-3 overflow-x-auto pb-1 lg:flex-col lg:gap-3.5 lg:overflow-visible lg:pb-0">
-          {NAV_GROUPS.map((group) => (
-            <section key={group.title} className="min-w-[220px] lg:min-w-0">
-              <h2 className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#77756f]">
-                {group.title}
-              </h2>
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <AdminNavItem key={item.label} icon={item.icon} label={item.label} to={item.to} end={item.end} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </nav>
-
-        <div className="mt-auto hidden rounded-xl border border-dashed border-[#d4d2ca] bg-white/45 p-2.5 text-[11px] leading-4 text-[#6b6b66] lg:block">
-          Future modules are intentionally disabled until their data producers and
-          server-side checks exist.
-        </div>
+      {/* Collapse toggle — desktop only, icon only */}
+      <div className="hidden border-t border-white/[0.06] px-2 py-3 lg:block">
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-9 w-full items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
-    </aside>
+    </div>
   );
 }

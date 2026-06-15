@@ -5,28 +5,37 @@ import { cn } from "@/lib/utils";
 type AdminNavItemProps = {
   icon: LucideIcon;
   label: string;
-  /** When set, the item renders as a real navigation link. Omit for planned/disabled items. */
   to?: string;
-  /** Match the route exactly (use for parent routes like /admin so children don't keep it active). */
   end?: boolean;
-  status?: string;
+  collapsed?: boolean;
 };
 
-const BASE_CLASS = "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px]";
+const BASE_CLASS =
+  "relative flex min-w-0 items-center rounded-lg px-2.5 py-2 text-[13px] transition-colors";
 
-export function AdminNavItem({ icon: Icon, label, to, end = false, status = "Planned" }: AdminNavItemProps) {
-  // Planned modules render as a non-interactive, clearly disabled row.
+export function AdminNavItem({ icon: Icon, label, to, end = false, collapsed = false }: AdminNavItemProps) {
+  const iconOnly = collapsed;
+
   if (!to) {
     return (
       <div
         aria-disabled
-        className={cn(BASE_CLASS, "border-transparent text-[#8a8983]")}
+        title={collapsed ? label : undefined}
+        className={cn(
+          BASE_CLASS,
+          "text-white/30 cursor-default",
+          iconOnly ? "justify-center" : "gap-2.5"
+        )}
       >
-        <Icon size={14} className="shrink-0 text-[#8a8983]" />
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        <span className="shrink-0 rounded-full border border-[#d8d6cf] bg-[#f7f7f5] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#77756f]">
-          {status}
-        </span>
+        <Icon size={15} className="shrink-0" />
+        {!iconOnly && (
+          <>
+            <span className="min-w-0 flex-1 truncate">{label}</span>
+            <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-white/25">
+              Soon
+            </span>
+          </>
+        )}
       </div>
     );
   }
@@ -35,21 +44,25 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, status = "Pla
     <NavLink
       to={to}
       end={end}
+      title={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
           BASE_CLASS,
+          iconOnly ? "justify-center" : "gap-2.5",
           isActive
-            ? "border-[#e1ded6] bg-white text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            : "border-transparent text-[#4f4e49] hover:bg-white/70 hover:text-[#111111]",
+            ? "bg-white text-[#0f0f10] font-medium"
+            : "text-white/60 hover:bg-white/[0.07] hover:text-white"
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon size={14} className="shrink-0" />
-          <span className="min-w-0 flex-1 truncate" aria-current={isActive ? "page" : undefined}>
-            {label}
-          </span>
+          <Icon size={15} className="shrink-0" />
+          {!iconOnly && (
+            <span className="min-w-0 flex-1 truncate" aria-current={isActive ? "page" : undefined}>
+              {label}
+            </span>
+          )}
         </>
       )}
     </NavLink>

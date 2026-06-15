@@ -1,55 +1,70 @@
-import { ArrowLeft, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { AdminRoleBadge } from "@/admin/components/AdminRoleBadge";
 import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
+import { useAdminOverviewStore } from "@/admin/store/useAdminOverviewStore";
 
-export function AdminTopbar() {
+interface AdminTopbarProps {
+  onOpenSidebar: () => void;
+}
+
+const SECTION_TITLES: Record<string, string> = {
+  "/admin/users": "Users",
+  "/admin": "Overview",
+};
+
+export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
   const location = useLocation();
   const roles = useAdminRoleStore((s) => s.roles);
-  const sectionTitle = location.pathname.startsWith("/admin/users") ? "Users" : "Overview";
+  const loading = useAdminOverviewStore((s) => s.loading);
+
+  const sectionTitle =
+    SECTION_TITLES[location.pathname] ??
+    Object.entries(SECTION_TITLES).find(([path]) => location.pathname.startsWith(path))?.[1] ??
+    "Admin";
+
+  // Highest role to show
+  const topRole = roles[0];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[#deded8] bg-white px-4 py-2.5 sm:px-5 lg:px-6">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <p className="text-xs font-medium text-[#6b6b66]">Admin / {sectionTitle}</p>
-            <h1 className="text-base font-semibold tracking-tight text-[#111111]">Admin console</h1>
-          </div>
-        </div>
+    <header className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b border-[#e8e8ec] bg-white/90 px-4 backdrop-blur-sm sm:px-6">
+      {/* Mobile hamburger */}
+      <button
+        onClick={onOpenSidebar}
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] lg:hidden"
+        aria-label="Open navigation"
+      >
+        <Menu size={18} />
+      </button>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#e1ded6] bg-[#f7f7f5] px-2 py-0.5 text-[11px] font-medium text-[#333333]">
-              <ShieldCheck size={13} />
-              MVP access
-            </span>
-            {roles.length > 0 ? (
-              roles.map((role) => <AdminRoleBadge key={role} role={role} />)
-            ) : (
-              <span className="rounded-full border border-[#e1ded6] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b6b66]">
-                Roles verified
-              </span>
-            )}
-          </div>
+      {/* Breadcrumb */}
+      <div className="min-w-0 flex-1">
+        <span className="text-xs text-[#9ca3af]">Admin</span>
+        <span className="mx-1.5 text-xs text-[#d1d5db]">/</span>
+        <span className="text-xs font-medium text-[#374151]">{sectionTitle}</span>
+      </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/app"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#111111] px-2.5 py-1.5 text-xs font-medium text-white hover:bg-black"
-            >
-              <ArrowLeft size={15} />
-              Back to app
-            </Link>
-            <Link
-              to="/profile"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dedbd3] bg-white px-2.5 py-1.5 text-xs font-medium text-[#333333] hover:bg-[#f7f7f5]"
-            >
-              <UserRound size={15} />
-              Profile
-            </Link>
-          </div>
-        </div>
+      {/* Right actions */}
+      <div className="flex shrink-0 items-center gap-2">
+        {/* Role pill — only on larger screens */}
+        {topRole && (
+          <span className="hidden items-center rounded-full bg-[#f3f4f6] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#374151] sm:flex">
+            {topRole}
+          </span>
+        )}
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
+        )}
+
+        {/* Back to app */}
+        <Link
+          to="/app"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#111111] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-black"
+        >
+          <ArrowLeft size={13} />
+          <span>Back to app</span>
+        </Link>
       </div>
     </header>
   );

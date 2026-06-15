@@ -10,10 +10,10 @@ export function AdminProfileCompletedBadge({ completed }: AdminProfileCompletedB
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]",
+        "inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.1em]",
         completed
-          ? "bg-[#f1f1ef] text-[#333333]"
-          : "border border-[#dedbd3] text-[#6b6b66]",
+          ? "text-[#14532d]"
+          : "text-[#77736d]",
       )}
     >
       <Icon size={12} />

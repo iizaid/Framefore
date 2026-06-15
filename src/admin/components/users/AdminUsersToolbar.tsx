@@ -32,11 +32,11 @@ const ROLE_LABELS: Record<AdminRole, string> = {
 };
 
 const SELECT_CLASS =
-  "rounded-lg border border-[#dedbd3] bg-white px-3 py-2 text-sm text-[#333333] shadow-[0_1px_1px_rgba(0,0,0,0.02)] disabled:cursor-not-allowed disabled:opacity-60";
+  "rounded-md border border-[#dedbd3] bg-white px-2.5 py-1.5 text-sm text-[#333333] disabled:cursor-not-allowed disabled:opacity-60";
 const TAB_CLASS =
-  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-[#4f4e49] hover:bg-[#f3f3f1] disabled:cursor-not-allowed disabled:opacity-60";
+  "shrink-0 border-b-2 border-transparent px-2.5 py-1.5 text-sm font-medium text-[#4f4e49] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-60";
 const ACTIVE_TAB_CLASS =
-  "shrink-0 rounded-lg bg-[#111111] px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60";
+  "shrink-0 border-b-2 border-[#111111] px-2.5 py-1.5 text-sm font-semibold text-[#111111] disabled:cursor-not-allowed disabled:opacity-60";
 
 export function AdminUsersToolbar({
   search,
@@ -79,8 +79,8 @@ export function AdminUsersToolbar({
   }, [searchInput, tooLong, onSearchChange]);
 
   return (
-    <div className="space-y-3 border-b border-[#e4e3dd] bg-white px-3 py-3 sm:px-4">
-      <div className="flex gap-1 overflow-x-auto pb-1">
+    <div className="space-y-2 border-b border-[#eeeeea] bg-white px-3 py-2.5 sm:px-4">
+      <div className="flex gap-2 overflow-x-auto">
         <button
           type="button"
           onClick={() => onRoleChange(null)}
@@ -123,7 +123,7 @@ export function AdminUsersToolbar({
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search email or display name"
               aria-invalid={tooLong}
-              className="w-full rounded-lg border border-[#dedbd3] bg-white py-2 pl-9 pr-3 text-sm text-[#333333] shadow-[0_1px_1px_rgba(0,0,0,0.02)] placeholder:text-[#8a8983] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-md border border-[#dedbd3] bg-white py-1.5 pl-8 pr-3 text-sm text-[#333333] placeholder:text-[#8a8983] disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
           {tooLong && (
@@ -176,7 +176,7 @@ export function AdminUsersToolbar({
             type="button"
             onClick={onReset}
             disabled={disabled || !isFiltered}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dedbd3] bg-[#f7f7f5] px-3 py-2 text-sm font-medium text-[#333333] hover:bg-[#eeeeea] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[#dedbd3] bg-white px-2.5 py-1.5 text-sm font-medium text-[#333333] hover:bg-[#f7f7f5] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RotateCcw size={14} />
             Reset
