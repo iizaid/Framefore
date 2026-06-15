@@ -19,6 +19,11 @@ type JsonRecord = Record<string, unknown>;
 
 const ROLE_SET = new Set<string>(ADMIN_ROLES);
 
+// Keep these in sync with the server-side guards in
+// supabase/migrations/0011_admin_users_list_hardening.sql.
+export const MAX_USERS_SEARCH_LENGTH = 100;
+export const MAX_USERS_OFFSET = 10000;
+
 function logUsersError(context: string, error: unknown) {
   if (import.meta.env.DEV) {
     console.warn(`[admin users] ${context}`, error);
@@ -112,21 +117,27 @@ function parseUsersList(value: unknown): AdminUsersListResult | null {
       role: asNullableRole(filters.role),
       profileCompleted: asNullableBoolean(filters.profileCompleted),
     },
-    users: users.filter(isRecord).map((user) => {
-      const roles = asRoleArray(user.roles);
-      return {
-        userId: asString(user.userId),
-        email: asNullableString(user.email),
-        displayName: asNullableString(user.displayName),
-        createdAt: asString(user.createdAt),
-        lastSignInAt: asNullableString(user.lastSignInAt),
-        profileCompleted: asBoolean(user.profileCompleted),
-        hasUploadedAvatar: asBoolean(user.hasUploadedAvatar),
-        roles,
-        isOwner: asBoolean(user.isOwner) || roles.includes("owner"),
-        isAdmin: asBoolean(user.isAdmin) || roles.includes("owner") || roles.includes("admin"),
-      };
-    }),
+    users: users
+      .filter(isRecord)
+      .map((user) => {
+        const userId = asString(user.userId).trim();
+        if (userId === "") return null;
+
+        const roles = asRoleArray(user.roles);
+        return {
+          userId,
+          email: asNullableString(user.email),
+          displayName: asNullableString(user.displayName),
+          createdAt: asString(user.createdAt),
+          lastSignInAt: asNullableString(user.lastSignInAt),
+          profileCompleted: asBoolean(user.profileCompleted),
+          hasUploadedAvatar: asBoolean(user.hasUploadedAvatar),
+          roles,
+          isOwner: asBoolean(user.isOwner) || roles.includes("owner"),
+          isAdmin: asBoolean(user.isAdmin) || roles.includes("owner") || roles.includes("admin"),
+        };
+      })
+      .filter((user): user is AdminUsersListResult["users"][number] => user !== null),
   };
 }
 
@@ -164,12 +175,22 @@ export async function loadAdminUsers(options: LoadAdminUsersOptions = {}): Promi
     return { data: null, error: "Invalid users filter.", unavailable: true };
   }
 
+  const search = normalizeSearch(options.search);
+  if (search !== null && search.length > MAX_USERS_SEARCH_LENGTH) {
+    return { data: null, error: "Search is too long.", unavailable: true };
+  }
+
+  const offset = normalizeOffset(options.offset);
+  if (offset > MAX_USERS_OFFSET) {
+    return { data: null, error: "You have paged too far. Refine your filters.", unavailable: true };
+  }
+
   const { data, error } = await supabase.rpc("admin_list_users", {
-    p_search: normalizeSearch(options.search),
+    p_search: search,
     p_role: role,
     p_profile_completed: typeof options.profileCompleted === "boolean" ? options.profileCompleted : null,
     p_limit: normalizeLimit(options.limit),
-    p_offset: normalizeOffset(options.offset),
+    p_offset: offset,
   });
 
   if (error) {

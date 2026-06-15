@@ -15,12 +15,15 @@
 > [phase-e2-overview-dashboard-ui.md](phase-e2-overview-dashboard-ui.md). Phase
 > F1 added the Users list data contract and safe `admin_list_users()` RPC; see
 > [phase-f1-users-list-data-contract.md](phase-f1-users-list-data-contract.md).
+> **Phase F1 hardening applied** (`0011_admin_users_list_hardening.sql`): search
+> length cap (100), `LIKE` wildcard escaping, lowercase role normalization,
+> offset cap (10000), and supporting `public` indexes — still no Users UI.
 > Users table, audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:
 > `framefore-state` / `framefore-images`, store `version 9`). These documents
 > describe **what to build later and how**, grounded in the real current codebase
-> and the applied Supabase migration design (`0001–0010`).
+> and the applied Supabase migration design (`0001–0011`).
 
 This package is the production blueprint for Framefore's internal Admin Console:
 a serious operational tool for the `owner`, `admin`, `support`, and `reviewer`

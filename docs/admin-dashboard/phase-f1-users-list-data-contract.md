@@ -59,6 +59,42 @@ The RPC validates:
 - `p_role` is `null` or one of `owner`, `admin`, `support`, `reviewer`.
 - invalid roles raise a validation error.
 
+## Hardening (applied in 0011)
+
+`0011_admin_users_list_hardening.sql` re-creates `admin_list_users` with the same
+shape plus scale/search/pagination safety. `0010` was already applied, so it is
+left untouched and `0011` is a forward-only migration.
+
+- **Search max length:** `100` characters. Longer searches raise a validation
+  error (`22023`) instead of running an expensive scan. Enforced server-side and
+  also client-side via `MAX_USERS_SEARCH_LENGTH`.
+- **Wildcard escaping:** user-supplied `%`, `_`, and `\` are escaped (backslash
+  first) and the `ILIKE` clauses use `ESCAPE '\'`, so those characters match
+  literally. This was never SQL injection (no dynamic SQL); it prevents
+  surprising matches and heavier scans.
+- **Role normalization:** `p_role` is lowercased with
+  `lower(nullif(btrim(p_role), ''))` before validation. Valid roles remain
+  `owner`, `admin`, `support`, `reviewer`.
+- **Offset cap:** `p_offset` is capped at `10000`. Larger offsets raise a
+  validation error (`22023`). Enforced server-side and client-side via
+  `MAX_USERS_OFFSET`. `limit` is still clamped to `1..100`.
+- **Pagination model:** this is still OFFSET pagination for the MVP. Cursor
+  (keyset) pagination should be considered later if the user base grows large
+  enough that deep offsets become a problem.
+- **Indexes added (public schema only):**
+  - `user_roles_role_user_id_idx` on `public.user_roles(role, user_id)` for the
+    role filter and the role aggregation join.
+  - `profiles_profile_completed_id_idx` on
+    `public.profiles(profile_completed, id)` for the profile-completed filter and
+    the profiles join.
+- **No `auth.users` index added:** the `auth` schema is Supabase-managed, so
+  adding indexes there can conflict with platform migrations and is not
+  guaranteed safe on hosted projects. Email search stays an `ILIKE` scan for the
+  MVP; if email-search volume grows, revisit with a `pg_trgm` index on a public
+  mirror column rather than touching `auth.users`.
+- **Still no Users UI:** this phase remains a backend/frontend contract only. No
+  Users page, `/admin/users` route, table, or user actions were added.
+
 ## Filters
 
 - Search checks `auth.users.email` and display name only.
@@ -149,7 +185,10 @@ the private storage path itself is never returned.
 - does not query `auth.users` directly from the browser;
 - maps the RPC result into `AdminUsersListResult`;
 - clamps `limit` and `offset` client-side before calling the RPC;
+- rejects searches longer than `MAX_USERS_SEARCH_LENGTH` (100) before the RPC;
+- rejects offsets beyond `MAX_USERS_OFFSET` (10000) before the RPC;
 - trims empty search strings to `null`;
+- drops rows with an empty `userId` so invalid shapes never reach the UI;
 - validates the role filter before the RPC call;
 - returns a safe unavailable state when Supabase is unconfigured;
 - returns friendly errors for forbidden, invalid-filter, or missing-RPC cases;
@@ -182,6 +221,10 @@ or apply the SQL through the Supabase SQL editor for the target project.
 - Owner/admin user receives paginated users JSON.
 - Invalid role filter fails with a validation error.
 - Empty search string is returned as `filters.search: null`.
+- Search longer than 100 chars fails with a validation error (server and client).
+- Search containing `%`, `_`, or `\` matches those characters literally.
+- Role filter accepts upper/mixed case input (normalized lowercase server-side).
+- Offset above 10000 fails with a validation error (server and client).
 - Negative offset is clamped to `0`.
 - Limit below `1` is clamped to `1`.
 - Limit above `100` is clamped to `100`.
