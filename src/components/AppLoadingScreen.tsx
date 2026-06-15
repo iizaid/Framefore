@@ -30,11 +30,11 @@ function markBootSeen(): void {
   }
 }
 
-export function AppLoadingScreen({ ready }: { ready: boolean }) {
+export function AppLoadingScreen({ ready, forceActive = false }: { ready: boolean; forceActive?: boolean }) {
   // Decide at mount-time whether to show at all. If this session already ran
   // the boot screen, skip immediately — navigating back to "/" should never
-  // re-trigger the splash.
-  const [active] = useState<boolean>(() => !wasBootSeen());
+  // re-trigger the splash, unless forceActive is true (e.g. for admin access check).
+  const [active] = useState<boolean>(() => forceActive || !wasBootSeen());
 
   const [assetsPrepared, setAssetsPrepared] = useState(false);
   const [maxElapsed, setMaxElapsed] = useState(false);
@@ -101,8 +101,8 @@ export function AppLoadingScreen({ ready }: { ready: boolean }) {
 
   // Mark seen the moment we decide to exit so subsequent renders never show it.
   useEffect(() => {
-    if (shouldExit && active) markBootSeen();
-  }, [shouldExit, active]);
+    if (shouldExit && active && !forceActive) markBootSeen();
+  }, [shouldExit, active, forceActive]);
 
   return (
     <AnimatePresence>

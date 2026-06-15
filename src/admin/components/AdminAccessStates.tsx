@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, ShieldAlert } from "lucide-react";
+import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 
 type AdminAccessStateProps = {
   message?: string;
@@ -17,18 +18,10 @@ function AdminAccessShell({ children }: { children: ReactNode }) {
 }
 
 export function AdminAccessLoading() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-[#080808] px-6 text-center text-white">
-      <div className="flex flex-col items-center">
-        <img src="/white.svg" alt="Framefore" className="h-10 w-10" />
-        <p className="mt-4 text-sm font-medium text-white">Checking admin access</p>
-        <p className="mt-1 text-xs text-white/45">Verifying your session and role.</p>
-        <div className="mt-5 h-[2px] w-36 overflow-hidden rounded-full bg-white/15">
-          <div className="h-full w-1/3 animate-[pulse_1.1s_ease-in-out_infinite] rounded-full bg-white" />
-        </div>
-      </div>
-    </div>
-  );
+  // Reuse the same branded video loading screen that appears on first site load.
+  // ready={false} keeps it visible until AdminGuard replaces this component.
+  // forceActive={true} ensures it shows even if the boot sequence was already seen.
+  return <AppLoadingScreen ready={false} forceActive={true} />;
 }
 
 export function AdminForbidden() {

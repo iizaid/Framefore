@@ -58,4 +58,9 @@ export const adminQueryKeys = {
     list: (params: AdminUsersListKeyParams = {}) =>
       ["admin", "users", "list", normalizeAdminUsersListFilters(params)] as const,
   },
+  charts: {
+    all: ["admin", "charts"] as const,
+    overviewSeries: (params: { days: 7 | 30 | 90 }) => 
+      ["admin", "charts", "overviewSeries", params.days] as const,
+  },
 } as const;

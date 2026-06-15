@@ -102,3 +102,14 @@ export interface AdminUsersListResult {
   filters: AdminUsersListFilters;
   users: AdminUsersListItem[];
 }
+
+// -----------------------------------------------------------------------------
+// Charts
+// -----------------------------------------------------------------------------
+export type { AdminChartPoint, AdminOverviewChartSeries } from "./lib/charts.schema";
+
+export type AdminOverviewChartSeriesResult = {
+  data: import("./lib/charts.schema").AdminOverviewChartSeries | null;
+  error: string | null;
+  unavailable?: boolean;
+};

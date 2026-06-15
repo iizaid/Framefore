@@ -71,7 +71,7 @@ export function AdminSidebar({ open, collapsed, onClose, onToggleCollapse }: Adm
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col bg-[#0f0f10] transition-all duration-300 lg:flex",
+          "hidden shrink-0 flex-col bg-[#0b0b0b] transition-all duration-300 lg:flex",
           "sticky top-0 h-screen overflow-hidden",
           width
         )}
@@ -82,7 +82,7 @@ export function AdminSidebar({ open, collapsed, onClose, onToggleCollapse }: Adm
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col bg-[#0f0f10] transition-transform duration-300 lg:hidden",
+          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col bg-[#0b0b0b] transition-transform duration-300 lg:hidden",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -109,7 +109,7 @@ function SidebarContent({
     <div className="flex h-full flex-col overflow-hidden">
       {/* Brand */}
       <div className={cn("flex h-[60px] items-center border-b border-white/[0.06] px-4", collapsed ? "justify-center" : "gap-3")}>
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#0f0f10]">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#0b0b0b]">
           <Gauge size={15} />
         </span>
         {!collapsed && (
