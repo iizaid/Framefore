@@ -67,3 +67,38 @@ export interface AdminOverviewMetrics extends AdminOverviewCapabilityFlags {
   cloudRows: AdminOverviewCloudRowsMetrics;
   storage: AdminOverviewStorageMetrics;
 }
+
+export interface AdminUsersListItem {
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: string;
+  lastSignInAt: string | null;
+  profileCompleted: boolean;
+  hasUploadedAvatar: boolean;
+  roles: AdminRole[];
+  isOwner: boolean;
+  isAdmin: boolean;
+}
+
+export interface AdminUsersListPage {
+  limit: number;
+  offset: number;
+  returned: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface AdminUsersListFilters {
+  search: string | null;
+  role: AdminRole | null;
+  profileCompleted: boolean | null;
+}
+
+export interface AdminUsersListResult {
+  generatedAt: string;
+  sourceVersion: "phase-f1";
+  page: AdminUsersListPage;
+  filters: AdminUsersListFilters;
+  users: AdminUsersListItem[];
+}
