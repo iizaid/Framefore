@@ -18,14 +18,13 @@ export function AdminPage() {
           </span>
           <div>
             <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Admin</h1>
-            <p className="text-sm text-[var(--color-ink-soft)]">Admin access foundation is being prepared.</p>
+            <p className="text-sm text-[var(--color-ink-soft)]">Admin access is now protected.</p>
           </div>
         </div>
 
         <div className="mt-8 rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]/60 px-4 py-3 text-sm text-[var(--color-ink-soft)]">
-          Phase B only adds read-only role helpers for the current signed-in user.
-          AdminGuard, navigation, users, audit logs, and dashboard panels are not
-          implemented yet.
+          Dashboard modules will be implemented in later phases. Navigation,
+          users, audit logs, metrics, and role-management tools are not built yet.
         </div>
       </div>
     </div>

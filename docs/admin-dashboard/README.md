@@ -1,13 +1,15 @@
 # Framefore Admin Dashboard — Planning Package
 
-> **Status: PLANNING PACKAGE + PHASE B FOUNDATION.** The Admin Dashboard itself
-> is not implemented. Phase B has added read-only current-user role helpers and
-> a Zustand role store; see [phase-b-role-helpers.md](phase-b-role-helpers.md).
-> No admin layout, guard, users table, audit UI, metrics, role-management UI, or
-> cloud sync exists. The app is still fully local-first (IndexedDB:
-> `framefore-state` / `framefore-images`, store `version 9`). These documents
-> describe **what to build later and how**, grounded in the real current codebase
-> and the applied Supabase migration design (`0001–0008`).
+> **Status: PLANNING PACKAGE + PHASE B/C FOUNDATION.** The Admin Dashboard itself
+> is not implemented. Phase B added read-only current-user role helpers and a
+> Zustand role store; see [phase-b-role-helpers.md](phase-b-role-helpers.md).
+> Phase C added `AdminGuard` for `/admin`; see
+> [phase-c-admin-guard.md](phase-c-admin-guard.md). No admin layout, users table,
+> audit UI, metrics, role-management UI, or cloud sync exists. The app is still
+> fully local-first (IndexedDB: `framefore-state` / `framefore-images`, store
+> `version 9`). These documents describe **what to build later and how**,
+> grounded in the real current codebase and the applied Supabase migration
+> design (`0001–0008`).
 
 This package is the production blueprint for Framefore's internal Admin Console:
 a serious operational tool for the `owner`, `admin`, `support`, and `reviewer`
@@ -47,6 +49,7 @@ QA/hardening → roadmap → decisions.**
 | 23 | [23-implementation-roadmap.md](23-implementation-roadmap.md) | Phased build plan A→M |
 | 24 | [24-open-questions-and-decisions.md](24-open-questions-and-decisions.md) | Decision log |
 | B | [phase-b-role-helpers.md](phase-b-role-helpers.md) | Implemented current-user role helper/store notes |
+| C | [phase-c-admin-guard.md](phase-c-admin-guard.md) | Implemented `/admin` guard and access states |
 
 ## Hard rules this package obeys
 
@@ -65,11 +68,10 @@ QA/hardening → roadmap → decisions.**
 
 ## Next recommended implementation phase
 
-Phase B is now implemented as a read-only role-helper foundation. The next
-recommended implementation phase is **Phase C** in
-[23-implementation-roadmap.md](23-implementation-roadmap.md): add `AdminGuard`
-with the four-state no-flicker route protection from
-[05-admin-routes-and-navigation.md](05-admin-routes-and-navigation.md).
+Phase C is now implemented for the existing `/admin` placeholder route. The next
+recommended implementation phase is **Phase D** in
+[23-implementation-roadmap.md](23-implementation-roadmap.md): add the Admin
+layout shell with honest empty states only.
 
 > **Codex reconciliation note (updated):** Codex's pre-admin cleanup has now
 > **landed**. In place today: the Profile redesign
@@ -81,6 +83,6 @@ with the four-state no-flicker route protection from
 > ([AppLoadingScreen.tsx](../../src/components/AppLoadingScreen.tsx)), and the
 > closure checklist ([docs/pre-admin-closure-checklist.md](../pre-admin-closure-checklist.md)).
 > This planning package has been reconciled against that branch. **The Admin
-> Dashboard itself is still not implemented** — `/admin` remains the placeholder
-> at [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx), and these documents
-> remain planning-only.
+> Dashboard itself is still not implemented** — `/admin` remains the protected
+> placeholder at [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx), and
+> these documents remain the implementation blueprint.

@@ -1,7 +1,8 @@
-import { useEffect, lazy, Suspense, useState } from "react";
+import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
+import { AdminGuard } from "@/admin/components/AdminGuard";
 import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useStore } from "@/store/useStore";
@@ -23,16 +24,14 @@ const AdminPage = lazy(() => import("@/pages/AdminPage").then((m) => ({ default:
 // Route map:
 //   /              → public landing page
 //   /app           → Framefore workspace (local-first, no auth gate yet)
-//   /login         → split-screen login  (Phase 4.2)
-//   /signup        → split-screen signup (Phase 4.2)
-//   /auth/callback → OAuth / signup-confirmation return target (Phase 4.2)
-//   /reset-password→ set a new password from a reset email link (Phase 4.2)
-//   /admin         → admin shell placeholder
+//   /login         → login
+//   /signup        → signup
+//   /auth/callback → OAuth / signup-confirmation return target
+//   /reset-password→ set a new password from a reset email link
+//   /admin         → guarded admin placeholder
 //   /pricing       → scrolls to pricing section on landing
 //
-// Phase 4.3 will add a <ProtectedRoute> wrapper around /app and /admin once
-// the cloud-sync migration is ready. For now /app remains open so local projects
-// are never disrupted during the auth rollout.
+// /app remains open so local projects are never disrupted before cloud sync.
 // Keeps the project store's owner filter in sync with the auth session. New
 // projects are tagged with this id and the projects list is filtered by it.
 // Lives at the app root so it applies everywhere (landing, /app, /profile) and
@@ -48,16 +47,15 @@ function useSyncProjectOwner() {
   }, [userId, initialized]);
 }
 
-// Phase B admin foundation: load only the signed-in caller's roles, and clear
-// them immediately when the identity changes. This does not protect /admin yet;
-// AdminGuard arrives in the next phase.
+// Admin access uses the signed-in caller's roles only. Layout effect lets an
+// account switch clear stale admin state before the browser paints /admin.
 function useSyncAdminRoles() {
   const userId = useAuthStore((s) => s.user?.id ?? null);
   const authInitialized = useAuthStore((s) => s.initialized);
   const loadRoles = useAdminRoleStore((s) => s.loadRoles);
   const resetRoles = useAdminRoleStore((s) => s.reset);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!authInitialized) return;
     if (userId) {
       void loadRoles();
@@ -81,7 +79,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
