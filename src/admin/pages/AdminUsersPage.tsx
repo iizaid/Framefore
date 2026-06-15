@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, RefreshCw, Users, Filter, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { AdminLayout } from "@/admin/components/AdminLayout";
 import { AdminUsersEmptyState } from "@/admin/components/users/AdminUsersEmptyState";
 import { AdminUsersErrorState } from "@/admin/components/users/AdminUsersErrorState";
@@ -54,35 +54,19 @@ export function AdminUsersPage() {
           </button>
         </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard
-            icon={Users}
-            label="Rows on this page"
-            value={data ? String(data.page.returned) : showSkeleton ? "…" : "0"}
-            iconColor="bg-indigo-50 text-indigo-600"
-          />
-          <StatCard
-            icon={Filter}
-            label="Filtered total"
-            value={data ? String(data.page.total) : showSkeleton ? "…" : "0"}
-            iconColor="bg-sky-50 text-sky-600"
-          />
-          <StatCard
-            icon={activeFiltersCount > 0 ? CheckCircle2 : XCircle}
-            label="Active filters"
-            value={String(activeFiltersCount)}
-            iconColor={activeFiltersCount > 0 ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400"}
-          />
-        </div>
-
         {/* Main card */}
         <div className="overflow-hidden rounded-2xl border border-[#e8e8ec] bg-white shadow-sm">
           {/* Card header */}
-          <div className="flex items-center justify-between border-b border-[#f3f4f6] px-5 py-4">
+          <div className="flex flex-col gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-[#111111]">Accounts</h2>
-              <p className="mt-0.5 text-xs text-[#9ca3af]">Read-only list.</p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6b7280]">
+                <span>{data ? data.page.total.toLocaleString() : "0"} users</span>
+                <span className="hidden h-1 w-1 rounded-full bg-[#d1d5db] sm:block"></span>
+                <span>{activeFiltersCount} active filter{activeFiltersCount === 1 ? "" : "s"}</span>
+                <span className="hidden h-1 w-1 rounded-full bg-[#d1d5db] sm:block"></span>
+                <span>Actions audited</span>
+              </div>
             </div>
             {isRefreshing && (
               <span className="flex items-center gap-1.5 text-xs text-[#9ca3af]" aria-live="polite">
@@ -143,27 +127,3 @@ export function AdminUsersPage() {
   );
 }
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  iconColor,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  iconColor: string;
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-[#e8e8ec] bg-white p-5 shadow-sm">
-      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${iconColor}`}>
-        <Icon size={20} />
-      </div>
-      <div>
-        <p className="text-xs font-medium text-[#9ca3af]">{label}</p>
-        <p className="mt-0.5 text-2xl font-bold tracking-tight text-[#111111]">{value}</p>
-      </div>
-    </div>
-  );
-}

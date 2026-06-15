@@ -2,6 +2,13 @@ export const ADMIN_ROLES = ["owner", "admin", "support", "reviewer"] as const;
 
 export type AdminRole = (typeof ADMIN_ROLES)[number];
 
+export type AdminRoleActionMode = "grant" | "revoke";
+
+export interface AdminRoleActionResult {
+  ok: boolean;
+  error: string | null;
+}
+
 export interface CurrentAdminRoles {
   roles: AdminRole[];
   isOwner: boolean;

@@ -9,6 +9,7 @@ import { ShieldCheck, ShieldOff } from "lucide-react";
 import { AdminProfileCompletedBadge } from "@/admin/components/users/AdminProfileCompletedBadge";
 import { AdminUserIdentityCell } from "@/admin/components/users/AdminUserIdentityCell";
 import { AdminUserRoleBadges } from "@/admin/components/users/AdminUserRoleBadges";
+import { AdminUserRoleActions } from "@/admin/components/users/AdminUserRoleActions";
 import type { AdminUsersListItem } from "@/admin/types";
 
 type AdminUsersTableProps = {
@@ -87,6 +88,18 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
             </span>
           );
         },
+      }),
+      ch.display({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <AdminUserRoleActions
+            userId={row.original.userId}
+            email={row.original.email}
+            displayName={row.original.displayName}
+            currentRoles={row.original.roles}
+          />
+        ),
       }),
     ],
     [],

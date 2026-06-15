@@ -101,6 +101,7 @@ QA/hardening → roadmap → decisions.**
 | Cleanup | [admin-metrics-charts-cleanup.md](admin-metrics-charts-cleanup.md) | Applied admin cleanup and metrics refactoring |
 | Visual V2 | [admin-visual-system-refresh-v2.md](admin-visual-system-refresh-v2.md) | Applied Shopify-like full-width table-first admin redesign |
 | Hard reset | [admin-visual-hard-reset.md](admin-visual-hard-reset.md) | Applied black-sidebar flat production admin hard reset |
+| G | [phase-g-users-command-actions.md](phase-g-users-command-actions.md) | Implemented safe audited role management actions (Grant/Revoke) on the Users page |
 
 ## Hard rules this package obeys
 
