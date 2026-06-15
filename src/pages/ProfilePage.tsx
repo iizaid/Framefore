@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
-import { validateAvatarFile, validateNickname, normalizeNickname } from "@/lib/profile";
+import { validateNickname, normalizeNickname } from "@/lib/profile";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { Button, Input, Textarea, Badge } from "@/components/ui/primitives";
+import { Button, Input, Textarea } from "@/components/ui/primitives";
 import { AvatarCircle, deriveInitials } from "@/components/account/AccountMenu";
+import { AvatarCropDialog } from "@/components/account/AvatarCropDialog";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -132,7 +133,6 @@ export function ProfilePage() {
   }, [user]);
 
   const emailConfirmed = Boolean(user?.email_confirmed_at);
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Your account";
   const initials = useMemo(() => deriveInitials(profile?.full_name, user?.email), [profile?.full_name, user?.email]);
 
   // ── Submit handlers ───────────────────────────────────────────────────────
@@ -166,26 +166,11 @@ export function ProfilePage() {
 
   // ── Render guards ─────────────────────────────────────────────────────────
   if (!isSupabaseConfigured) return <UnavailableState />;
-  if (!authInitialized || !user) return <PageChrome><HeroSkeleton /><CardsSkeleton /></PageChrome>;
+  if (!authInitialized || !user) return <PageChrome><ProfileHeader /><CardsSkeleton /></PageChrome>;
 
   return (
     <PageChrome>
-      {/* ── Account hero — the ONLY large identity block on the page ── */}
-      <section className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <AvatarCircle url={avatarUrl} initials={initials} size={72} />
-        <div className="min-w-0">
-          <h1 className="truncate font-display text-2xl text-[var(--color-charcoal)] sm:text-3xl">{displayName}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm text-[var(--color-ink-soft)]">{user.email}</span>
-            {providers.map((p) => (
-              <Badge key={p} className="bg-[var(--color-stone-surface)] text-[var(--color-ink-soft)] ring-[var(--color-border-strong)]">
-                {PROVIDER_LABELS[p] ?? p}
-              </Badge>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-[var(--color-ink-faint)]">Manage your Framefore account.</p>
-        </div>
-      </section>
+      <ProfileHeader />
 
       {error && (
         <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -195,10 +180,9 @@ export function ProfilePage() {
         <CardsSkeleton />
       ) : (
         <div className="flex flex-col gap-5">
-          {/* ── Personal details ── */}
-          <Card title="Personal details">
+          {/* ── Avatar and identity ── */}
+          <Card title="Avatar and identity">
             <form onSubmit={savePersonal} className="flex flex-col gap-5" noValidate>
-              {/* Compact avatar row — NOT a second identity block */}
               <AvatarRow
                 url={avatarUrl}
                 initials={initials}
@@ -207,6 +191,7 @@ export function ProfilePage() {
                 onUpload={async (file) => {
                   const { error: upErr } = await uploadAvatar(file);
                   if (!upErr) toast("Avatar updated");
+                  return { error: upErr };
                 }}
                 onRemove={async () => {
                   const { error: rmErr } = await removeAvatar();
@@ -232,7 +217,7 @@ export function ProfilePage() {
           </Card>
 
           {/* ── Contact ── */}
-          <Card title="Contact">
+          <Card title="Contact and location">
             <form onSubmit={saveContact} className="flex flex-col gap-5" noValidate>
               <label className="flex flex-col gap-1.5">
                 <FieldLabel label="Email" />
@@ -261,7 +246,7 @@ export function ProfilePage() {
           </Card>
 
           {/* ── Security ── */}
-          <Card title="Security">
+          <Card title="Sign-in and security">
             <div className="flex flex-col divide-y divide-[var(--color-border-strong)]">
               <Row
                 icon={<KeyRound size={16} />}
@@ -318,6 +303,17 @@ function PageChrome({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ProfileHeader() {
+  return (
+    <header className="mb-8">
+      <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">Profile settings</h1>
+      <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+        Manage your personal details, avatar, contact information, and sign-in options.
+      </p>
+    </header>
+  );
+}
+
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-[var(--color-border-strong)] bg-white p-5 sm:p-6">
@@ -343,18 +339,20 @@ function AvatarRow({
   initials: string;
   uploading: boolean;
   hasUploaded: boolean;
-  onUpload: (file: File) => void;
+  onUpload: (file: File) => Promise<{ error: string | null }>;
   onRemove: () => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
 
-  const handleFile = (file: File | undefined) => {
-    if (!file) return;
-    const err = validateAvatarFile(file);
-    if (err) return setLocalError(err);
+  const handleCropSave = async (croppedFile: File) => {
     setLocalError(null);
-    onUpload(file);
+    const result = await onUpload(croppedFile);
+    if (result?.error) {
+      setLocalError(result.error);
+      return result;
+    }
+    return { error: null };
   };
 
   return (
@@ -373,7 +371,7 @@ function AvatarRow({
           <p className="text-xs text-[var(--color-ink-faint)]">PNG, JPEG, WebP or GIF · up to 2 MB.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCropOpen(true)} disabled={uploading}>
             <Camera size={14} /> Change
           </Button>
           {hasUploaded && (
@@ -384,16 +382,8 @@ function AvatarRow({
         </div>
       </div>
       {localError && <p className="text-sm text-red-600">{localError}</p>}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
-        className="hidden"
-        onChange={(e) => {
-          handleFile(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
+
+      {cropOpen && <AvatarCropDialog onClose={() => setCropOpen(false)} onSave={handleCropSave} />}
     </div>
   );
 }
@@ -478,20 +468,6 @@ function Row({
   );
 }
 
-// ── Skeletons (render instantly; no full-screen blocker) ──────────────────────
-
-function HeroSkeleton() {
-  return (
-    <div className="mb-8 flex items-center gap-4">
-      <div className="h-[72px] w-[72px] shrink-0 animate-pulse rounded-full bg-[var(--color-stone-surface)]" />
-      <div className="flex flex-col gap-2">
-        <div className="h-6 w-44 animate-pulse rounded bg-[var(--color-stone-surface)]" />
-        <div className="h-4 w-56 animate-pulse rounded bg-[var(--color-stone-surface)]" />
-      </div>
-    </div>
-  );
-}
-
 function CardsSkeleton() {
   return (
     <div className="flex flex-col gap-5">
@@ -514,7 +490,7 @@ function UnavailableState() {
       <div className="max-w-md text-center">
         <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Account unavailable</h1>
         <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
-          Profile and account features need Supabase to be configured. You can keep using Framefore locally in the meantime.
+          Profile and account features are temporarily unavailable. You can keep using Framefore locally in the meantime.
         </p>
         <Link to="/app" className="mt-6 inline-block">
           <Button variant="primary" size="md">

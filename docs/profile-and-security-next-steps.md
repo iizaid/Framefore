@@ -16,8 +16,11 @@ no one accidentally ships a fake/placeholder security control.
 - **`src/pages/ProfilePage.tsx`** (`/profile`) — production account settings page:
   profile, contact, and security sections. Redirects unauthenticated users to
   `/login`; shows a friendly message when Supabase is not configured.
+- **`src/components/account/AvatarCropDialog.tsx`** — avatar editor with image
+  selection, drag positioning, zoom, circular preview, reset, cancel, and
+  processed WebP upload. The original source image is never uploaded.
 - **Account menu** in the landing navbar and workspace header (avatar → Profile /
-  Open app / Sign out). The "Log in" button is hidden when signed in.
+  Sign out). The "Log in" button is hidden when signed in.
 - **Password reset** from the profile page reuses
   `useAuthStore.requestPasswordReset(email)` and the existing `/reset-password`
   route. No in-page direct password-change form was added (it would only be added
@@ -56,7 +59,6 @@ any future verified-phone state visually and structurally distinct.
 
 ## Other deferred items (for later phases)
 
-- Avatar cropping (only add a crop control once cropping is fully implemented).
 - Cloud project sync and protecting `/app` behind auth — explicitly out of scope
   here; `/app` remains local-first and untouched.
 - Account deletion / data export (GDPR) self-service flow.

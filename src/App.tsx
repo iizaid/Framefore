@@ -1,4 +1,5 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -50,7 +51,7 @@ export default function App() {
   useSyncProjectOwner();
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="min-h-screen bg-[var(--color-bg)]" />}>
+      <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/app" element={<AppWorkspacePage />} />
@@ -66,5 +67,23 @@ export default function App() {
       </Suspense>
       <Toaster />
     </BrowserRouter>
+  );
+}
+
+function RouteFallback() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setShow(true), 180);
+    return () => window.clearTimeout(t);
+  }, []);
+  return (
+    <div className="grid min-h-screen place-items-center bg-[var(--color-bg)]">
+      {show && (
+        <div className="flex items-center gap-2.5 text-sm text-[var(--color-ink-soft)]">
+          <Loader2 size={16} className="animate-spin" />
+          Loading…
+        </div>
+      )}
+    </div>
   );
 }

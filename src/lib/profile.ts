@@ -45,6 +45,7 @@ export type Result<T> = { data: T; error: null } | { data: null; error: string }
 const AVATAR_BUCKET = "avatars";
 const SIGNED_URL_TTL = 60 * 60; // 1 hour
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB (matches bucket limit)
+const MAX_AVATAR_SOURCE_BYTES = 8 * 1024 * 1024; // cropped before upload
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 const PROFILE_COLUMNS =
@@ -54,7 +55,7 @@ const PROFILE_COLUMNS =
 // are missing rather than dereferencing a null client.
 function requireClient() {
   if (!isSupabaseConfigured || !supabase) {
-    return { client: null, error: "Account features are unavailable — Supabase is not configured." as const };
+    return { client: null, error: "Account features are temporarily unavailable." as const };
   }
   return { client: supabase, error: null };
 }
@@ -105,6 +106,17 @@ export function validateAvatarFile(file: File): string | null {
   return null;
 }
 
+/** Validate the original image before opening the crop editor. */
+export function validateAvatarSourceFile(file: File): string | null {
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    return "Choose a PNG, JPEG, WebP or GIF image.";
+  }
+  if (file.size > MAX_AVATAR_SOURCE_BYTES) {
+    return "Choose an image 8 MB or smaller.";
+  }
+  return null;
+}
+
 // Cleans the field set the user submits into a constraint-safe payload:
 //   * trims strings, converts "" to null (so empty fields clear, not error),
 //   * normalises nickname,
@@ -112,20 +124,20 @@ export function validateAvatarFile(file: File): string | null {
 function sanitizeInput(input: ProfileInput): { payload: Record<string, string | null>; error: string | null } {
   const payload: Record<string, string | null> = {};
 
-  const cleanText = (v: string | null | undefined): string | null => {
-    if (v == null) return null;
+  const cleanText = (v: string | null): string | null => {
+    if (v === null) return null;
     const t = v.trim();
     return t === "" ? null : t;
   };
 
-  if ("full_name" in input) payload.full_name = cleanText(input.full_name);
-  if ("bio" in input) payload.bio = cleanText(input.bio);
-  if ("phone_number" in input) payload.phone_number = cleanText(input.phone_number);
-  if ("country" in input) payload.country = cleanText(input.country);
-  if ("city" in input) payload.city = cleanText(input.city);
-  if ("timezone" in input) payload.timezone = cleanText(input.timezone);
+  if (input.full_name !== undefined) payload.full_name = cleanText(input.full_name);
+  if (input.bio !== undefined) payload.bio = cleanText(input.bio);
+  if (input.phone_number !== undefined) payload.phone_number = cleanText(input.phone_number);
+  if (input.country !== undefined) payload.country = cleanText(input.country);
+  if (input.city !== undefined) payload.city = cleanText(input.city);
+  if (input.timezone !== undefined) payload.timezone = cleanText(input.timezone);
 
-  if ("nickname" in input) {
+  if (input.nickname !== undefined) {
     const cleaned = cleanText(input.nickname);
     if (cleaned == null) {
       payload.nickname = null;

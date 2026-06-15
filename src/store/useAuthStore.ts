@@ -62,7 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signIn: async (email, password) => {
-    if (!supabase) return { error: "Auth is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY." };
+    if (!supabase) return { error: "Sign in is temporarily unavailable." };
 
     set({ loading: true, error: null });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signUp: async (email, password) => {
-    if (!supabase) return { error: "Auth is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY." };
+    if (!supabase) return { error: "Sign up is temporarily unavailable." };
 
     set({ loading: true, error: null });
     const { data, error } = await supabase.auth.signUp({
@@ -107,7 +107,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signInWithGoogle: async () => {
-    if (!supabase) return { error: "Auth is not configured." };
+    if (!supabase) return { error: "Google sign in is temporarily unavailable." };
     set({ loading: true, error: null });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -122,7 +122,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signInWithGitHub: async () => {
-    if (!supabase) return { error: "Auth is not configured." };
+    if (!supabase) return { error: "GitHub sign in is temporarily unavailable." };
     set({ loading: true, error: null });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   requestPasswordReset: async (email) => {
-    if (!supabase) return { error: "Auth is not configured." };
+    if (!supabase) return { error: "Password reset is temporarily unavailable." };
     set({ loading: true, error: null });
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_REDIRECT,
@@ -150,7 +150,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   updatePassword: async (newPassword) => {
-    if (!supabase) return { error: "Auth is not configured." };
+    if (!supabase) return { error: "Password update is temporarily unavailable." };
     set({ loading: true, error: null });
     // Relies on the temporary session Supabase establishes from the reset link.
     const { error } = await supabase.auth.updateUser({ password: newPassword });
@@ -163,7 +163,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   resendConfirmation: async (email) => {
-    if (!supabase) return { error: "Auth is not configured." };
+    if (!supabase) return { error: "Confirmation email is temporarily unavailable." };
     set({ loading: true, error: null });
     const { error } = await supabase.auth.resend({
       type: "signup",

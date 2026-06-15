@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LayoutGrid, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import { cn } from "@/lib/utils";
 
 // Shared signed-in account control: an avatar button that opens a small menu
-// with Profile / Open app / Sign out. Used by the landing navbar and (optionally)
+// with Profile / Sign out. Used by the landing navbar and (optionally)
 // elsewhere. Renders nothing when there is no signed-in user — callers decide
 // what to show for signed-out visitors.
 export function AccountMenu({ variant = "light" }: { variant?: "light" | "dark" }) {
@@ -101,7 +101,6 @@ export function AccountMenu({ variant = "light" }: { variant?: "light" | "dark" 
 
             <div className="flex flex-col p-1.5">
               <MenuLink to="/profile" icon={<User size={16} />} label="Profile" onClick={() => setOpen(false)} />
-              <MenuLink to="/app" icon={<LayoutGrid size={16} />} label="Open app" onClick={() => setOpen(false)} />
               <button
                 type="button"
                 role="menuitem"

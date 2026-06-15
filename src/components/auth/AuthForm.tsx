@@ -285,7 +285,7 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, foote
 
             {!isSupabaseConfigured && (
               <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm font-medium text-red-600">
-                Sign in is temporarily unavailable.
+                Accounts are temporarily unavailable.
               </div>
             )}
 

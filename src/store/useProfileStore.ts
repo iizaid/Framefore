@@ -63,6 +63,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   saveProfile: async (input) => {
+    if (get().saving) return { error: "Save already in progress." };
     set({ saving: true, error: null });
     const { data, error } = await updateCurrentProfile(input);
     if (error) {
@@ -74,6 +75,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   uploadAvatar: async (file) => {
+    if (get().uploading) return { error: "Avatar update already in progress." };
     set({ uploading: true, error: null });
     const { data, error } = await uploadAvatarApi(file);
     if (error) {
@@ -86,6 +88,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   removeAvatar: async () => {
+    if (get().uploading) return { error: "Avatar update already in progress." };
     set({ uploading: true, error: null });
     const { data, error } = await removeAvatarApi();
     if (error) {

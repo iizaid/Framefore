@@ -11,7 +11,7 @@ export function AuthCallbackPage() {
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
-      setError("Authentication is not configured.");
+      setError("Sign in is temporarily unavailable.");
       return;
     }
 

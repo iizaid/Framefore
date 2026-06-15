@@ -2,5 +2,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.local-secrets/
+public/client_secret*.json
 .DS_Store
 .vite
