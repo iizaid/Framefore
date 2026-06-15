@@ -15,6 +15,7 @@ interface AdminRoleState extends CurrentAdminRoles {
 let inFlight: Promise<void> | null = null;
 let inFlightUserId: string | null = null;
 let loadedUserId: string | null = null;
+let loadRequestId = 0;
 
 function emptyState() {
   return {
@@ -33,8 +34,11 @@ export const useAdminRoleStore = create<AdminRoleState>((set, get) => ({
     const userId = useAuthStore.getState().user?.id ?? null;
 
     if (!userId) {
+      loadRequestId += 1;
+      inFlight = null;
+      inFlightUserId = null;
       loadedUserId = null;
-      set({ ...emptyState(), loading: false, initialized: true, error: null });
+      set({ ...emptyState(), loading: false, initialized: false, error: null });
       return;
     }
 
@@ -42,11 +46,20 @@ export const useAdminRoleStore = create<AdminRoleState>((set, get) => ({
     if (state.initialized && !state.error && loadedUserId === userId) return;
     if (inFlight && inFlightUserId === userId) return inFlight;
 
+    const isSwitchingUser = loadedUserId !== userId;
+    const requestId = ++loadRequestId;
     inFlightUserId = userId;
     inFlight = (async () => {
-      set({ loading: true, error: null });
+      if (isSwitchingUser) {
+        set({ ...emptyState(), loading: true, initialized: false, error: null });
+      } else {
+        set({ loading: true, error: null });
+      }
+
       const result = await getCurrentAdminRoles();
       const currentUserId = useAuthStore.getState().user?.id ?? null;
+
+      if (requestId !== loadRequestId) return;
 
       if (currentUserId !== userId) {
         loadedUserId = null;
@@ -72,6 +85,7 @@ export const useAdminRoleStore = create<AdminRoleState>((set, get) => ({
   },
 
   reset: () => {
+    loadRequestId += 1;
     inFlight = null;
     inFlightUserId = null;
     loadedUserId = null;
