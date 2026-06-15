@@ -1,6 +1,7 @@
 # Framefore Admin Dashboard — Planning Package
 
-> **Status: PLANNING PACKAGE + PHASE B/C/D/E1 FOUNDATION.** The Admin Dashboard
+> **Status: PLANNING PACKAGE + PHASE B/C/D/E1/E2 FOUNDATION.** The Admin
+> Overview is implemented with real aggregate metrics only; other Admin Dashboard
 > UI data modules are not implemented. Phase B added read-only current-user role
 > helpers and a Zustand role store; see
 > [phase-b-role-helpers.md](phase-b-role-helpers.md). Phase C added `AdminGuard`
@@ -9,8 +10,10 @@
 > [phase-d-admin-layout-shell.md](phase-d-admin-layout-shell.md). Phase E1 added
 > the safe Overview metrics data contract and aggregate RPC; see
 > [phase-e1-overview-data-contract.md](phase-e1-overview-data-contract.md).
-> Users table, audit UI, metric cards, role-management UI, and cloud sync still
-> do not exist. The app is still fully local-first (IndexedDB:
+> Phase E2 added the Overview UI using `admin_get_overview_metrics()` only; see
+> [phase-e2-overview-dashboard-ui.md](phase-e2-overview-dashboard-ui.md). Users
+> table, audit UI, role-management UI, and cloud sync still do not exist. The app
+> is still fully local-first (IndexedDB:
 > `framefore-state` / `framefore-images`, store `version 9`). These documents
 > describe **what to build later and how**, grounded in the real current codebase
 > and the applied Supabase migration design (`0001–0009`).
@@ -56,6 +59,7 @@ QA/hardening → roadmap → decisions.**
 | C | [phase-c-admin-guard.md](phase-c-admin-guard.md) | Implemented `/admin` guard and access states |
 | D | [phase-d-admin-layout-shell.md](phase-d-admin-layout-shell.md) | Implemented protected admin layout shell |
 | E1 | [phase-e1-overview-data-contract.md](phase-e1-overview-data-contract.md) | Implemented safe aggregate Overview metrics contract |
+| E2 | [phase-e2-overview-dashboard-ui.md](phase-e2-overview-dashboard-ui.md) | Implemented Overview UI using real aggregate metrics only |
 
 ## Hard rules this package obeys
 
@@ -74,9 +78,9 @@ QA/hardening → roadmap → decisions.**
 
 ## Next recommended implementation phase
 
-Phase E1 is now implemented as a safe aggregate data contract. The next
-recommended implementation phase is **Phase E2**: build the Overview Dashboard UI
-using real metrics from `admin_get_overview_metrics()` only.
+Phase E2 is now implemented using real aggregate metrics only. The next
+recommended implementation phase is a focused data contract for the next module
+before building more UI.
 
 > **Codex reconciliation note (updated):** Codex's pre-admin cleanup has now
 > **landed**. In place today: the Profile redesign
@@ -88,6 +92,7 @@ using real metrics from `admin_get_overview_metrics()` only.
 > ([AppLoadingScreen.tsx](../../src/components/AppLoadingScreen.tsx)), and the
 > closure checklist ([docs/pre-admin-closure-checklist.md](../pre-admin-closure-checklist.md)).
 > This planning package has been reconciled against that branch. **The Admin
-> Dashboard UI data modules are still not implemented** — `/admin` now has a
-> protected shell at [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx),
-> and the safe aggregate Overview contract exists for Phase E2.
+> Dashboard modules beyond Overview are still not implemented** — `/admin` now
+> has a protected shell and real aggregate Overview at
+> [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx). Future modules still
+> need their own secure data contracts before UI work.
