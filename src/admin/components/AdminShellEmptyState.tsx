@@ -1,0 +1,41 @@
+import { ClipboardCheck } from "lucide-react";
+
+type AdminShellEmptyStateProps = {
+  title: string;
+  description: string;
+  statusLabel?: string;
+  bullets?: string[];
+};
+
+export function AdminShellEmptyState({ title, description, statusLabel, bullets = [] }: AdminShellEmptyStateProps) {
+  return (
+    <section className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]/70 p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-stone-surface)] text-[var(--color-ink)]">
+          <ClipboardCheck size={18} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-lg text-[var(--color-charcoal)]">{title}</h2>
+            {statusLabel && (
+              <span className="rounded-full border border-[var(--color-border-strong)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-soft)]">
+                {statusLabel}
+              </span>
+            )}
+          </div>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-ink-soft)]">{description}</p>
+          {bullets.length > 0 && (
+            <ul className="mt-4 grid gap-2 text-sm text-[var(--color-ink)] sm:grid-cols-2">
+              {bullets.map((bullet) => (
+                <li key={bullet} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-midnight)]" />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
