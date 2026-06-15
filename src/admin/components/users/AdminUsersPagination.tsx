@@ -24,7 +24,7 @@ export function AdminUsersPagination({ page, disabled = false, onOffsetChange }:
   const canGoNext = hasMore && nextOffset <= MAX_USERS_OFFSET;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-[#e6e4de] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-[#e4e3dd] bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-[#6b6b66]" aria-live="polite">
         {total === 0 ? "No users to show" : `Showing ${start}–${end} of ${total}`}
       </p>

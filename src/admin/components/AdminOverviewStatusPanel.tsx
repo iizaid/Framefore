@@ -16,7 +16,7 @@ function formatDateTime(value: string) {
 
 export function AdminOverviewStatusPanel({ metrics }: AdminOverviewStatusPanelProps) {
   return (
-    <section className="grid gap-3 lg:grid-cols-2">
+    <section className="grid gap-3">
       <div className="rounded-xl border border-[#e6e4de] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-2">
           <ShieldCheck size={16} className="text-[#333333]" />

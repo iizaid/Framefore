@@ -16,7 +16,7 @@ export function AdminRoleBadge({ role }: AdminRoleBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
+        "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]",
         role === "owner" && "bg-[#111111] text-white",
         role === "admin" && "border border-[#111111] bg-white text-[#333333]",
         role === "support" && "bg-[#f1f1ef] text-[#333333]",

@@ -108,9 +108,9 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
   });
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e6e4de] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="overflow-hidden bg-white">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-left">
+        <table className="w-full min-w-[840px] border-collapse text-left">
           <thead className="border-b border-[#e6e4de] bg-[#fbfbfa]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -118,7 +118,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
                   <th
                     key={header.id}
                     scope="col"
-                    className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b6b66]"
+                    className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b6b66]"
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
@@ -130,7 +130,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} className="hover:bg-[#f7f7f5]">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3.5 align-middle">
+                  <td key={cell.id} className="px-3 py-2.5 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

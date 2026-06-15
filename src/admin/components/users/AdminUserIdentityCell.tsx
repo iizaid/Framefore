@@ -27,7 +27,7 @@ export function AdminUserIdentityCell({ user }: AdminUserIdentityCellProps) {
     <div className="flex min-w-0 items-center gap-3">
       <span
         aria-hidden
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f1f1ef] text-xs font-semibold text-[#333333]"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f1f1ef] text-[11px] font-semibold text-[#333333]"
       >
         {initialsFor(user)}
       </span>

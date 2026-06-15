@@ -5,7 +5,7 @@ type AdminUsersSkeletonProps = {
 export function AdminUsersSkeleton({ rows = 8 }: AdminUsersSkeletonProps) {
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-[#e6e4de] bg-white"
+      className="overflow-hidden bg-white"
       aria-label="Loading users"
     >
       <div className="border-b border-[#e6e4de] px-4 py-3">

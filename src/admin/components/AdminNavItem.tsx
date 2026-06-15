@@ -12,7 +12,7 @@ type AdminNavItemProps = {
   status?: string;
 };
 
-const BASE_CLASS = "flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm";
+const BASE_CLASS = "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px]";
 
 export function AdminNavItem({ icon: Icon, label, to, end = false, status = "Planned" }: AdminNavItemProps) {
   // Planned modules render as a non-interactive, clearly disabled row.
@@ -22,9 +22,9 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, status = "Pla
         aria-disabled
         className={cn(BASE_CLASS, "border-transparent text-[#8a8983]")}
       >
-        <Icon size={15} className="shrink-0 text-[#9a9993]" />
+        <Icon size={14} className="shrink-0 text-[#8a8983]" />
         <span className="min-w-0 flex-1 truncate">{label}</span>
-        <span className="shrink-0 rounded-full border border-[#dedbd3] bg-[#f7f7f5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#77756f]">
+        <span className="shrink-0 rounded-full border border-[#d8d6cf] bg-[#f7f7f5] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#77756f]">
           {status}
         </span>
       </div>
@@ -40,13 +40,13 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, status = "Pla
           BASE_CLASS,
           isActive
             ? "border-[#e1ded6] bg-white text-[#111111] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            : "border-transparent text-[#5f5d58] hover:bg-white/70 hover:text-[#111111]",
+            : "border-transparent text-[#4f4e49] hover:bg-white/70 hover:text-[#111111]",
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon size={15} className="shrink-0" />
+          <Icon size={14} className="shrink-0" />
           <span className="min-w-0 flex-1 truncate" aria-current={isActive ? "page" : undefined}>
             {label}
           </span>

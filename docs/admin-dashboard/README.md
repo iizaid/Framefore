@@ -39,10 +39,13 @@
 > callback, `/verify-email` can resend with only a pending email, the footer FAQ
 > reflects the verified-account gate, and the mobile landing drawer shows Admin
 > Console only for initialized owner/admin access.
-> **Admin visual system refresh applied**: the admin shell now uses a clean
-> production backoffice style with light neutral surfaces, white cards/tables,
-> black primary accents, and no grid/canvas/pattern background; see
-> [admin-visual-system-refresh.md](admin-visual-system-refresh.md).
+> **Admin visual system refresh V2 applied**: the admin shell now uses a
+> Shopify-like full-width production backoffice direction: slim light sidebar,
+> compact topbar, full-width workspace, integrated Users table shell, Overview
+> summary strip, white panels, black primary accents, and no
+> grid/canvas/pattern background; see
+> [admin-visual-system-refresh-v2.md](admin-visual-system-refresh-v2.md).
+> V2 did not add new data features or admin actions.
 > Audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:
@@ -97,6 +100,7 @@ QA/hardening → roadmap → decisions.**
 | F2 | [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md) | Implemented Users List UI (+ strict page schema) using `admin_list_users` only |
 | Auth-1.1 | [../auth-access-gate.md](../auth-access-gate.md) | Applied safe OAuth intent, verify-email resend polish, and mobile admin link |
 | Visual | [admin-visual-system-refresh.md](admin-visual-system-refresh.md) | Applied clean production backoffice visual refresh |
+| Visual V2 | [admin-visual-system-refresh-v2.md](admin-visual-system-refresh-v2.md) | Applied Shopify-like full-width table-first admin redesign |
 
 ## Hard rules this package obeys
 
@@ -115,7 +119,7 @@ QA/hardening → roadmap → decisions.**
 
 ## Next recommended implementation phase
 
-Auth-1.1 and the Admin visual refresh are now applied. The next feature phase
+Auth-1.1 and Admin Visual Refresh V2 are now applied. The next feature phase
 should stay narrow and contract-first: either a read-only user detail contract
 or a role-management design pass with audited server-side mutation boundaries.
 

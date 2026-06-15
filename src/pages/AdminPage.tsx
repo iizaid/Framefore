@@ -1,30 +1,12 @@
-import { useEffect } from "react";
-import { RefreshCw, ShieldCheck } from "lucide-react";
+import { useEffect, type ReactNode } from "react";
+import { RefreshCw } from "lucide-react";
 import { AdminLayout } from "@/admin/components/AdminLayout";
-import { AdminMetricCard } from "@/admin/components/AdminMetricCard";
-import { AdminMetricGrid } from "@/admin/components/AdminMetricGrid";
 import { AdminOverviewErrorState } from "@/admin/components/AdminOverviewErrorState";
 import { AdminOverviewSkeleton } from "@/admin/components/AdminOverviewSkeleton";
 import { AdminOverviewStatusPanel } from "@/admin/components/AdminOverviewStatusPanel";
-import { AdminShellEmptyState } from "@/admin/components/AdminShellEmptyState";
 import { useAdminOverviewStore } from "@/admin/store/useAdminOverviewStore";
 
-const PLANNED_MODULES = [
-  "Roles - planned",
-  "Audit log table - planned",
-  "Security events table - planned",
-  "Storage moderation - planned",
-  "System health - planned",
-];
-
-const GUARDRAILS = [
-  "No fake metrics, charts, users, or audit rows.",
-  "All visible numbers come from admin_get_overview_metrics().",
-  "No direct browser reads from auth.users or admin tables.",
-  "No service-role key in the browser.",
-  "/app remains local-first.",
-  "Cloud sync is not implemented.",
-];
+const numberFormatter = new Intl.NumberFormat("en", { maximumFractionDigits: 0 });
 
 function formatDateTime(value: string | null) {
   if (!value) return null;
@@ -34,6 +16,62 @@ function formatDateTime(value: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatMetric(value: number | string | null) {
+  if (value == null) return "Deferred";
+  return typeof value === "number" ? numberFormatter.format(value) : value;
+}
+
+function SummaryItem({ label, value, helper }: { label: string; value: number | string | null; helper: string }) {
+  return (
+    <div className="min-w-0 px-4 py-3">
+      <p className="text-xs font-medium text-[#6b6b66]">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight text-[#111111]">{formatMetric(value)}</p>
+      <p className="mt-1 truncate text-xs text-[#6b6b66]">{helper}</p>
+    </div>
+  );
+}
+
+function Panel({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-[#deded8] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div className="border-b border-[#e4e3dd] px-4 py-3">
+        <h3 className="text-sm font-semibold text-[#111111]">{title}</h3>
+        {description && <p className="mt-0.5 text-xs leading-5 text-[#6b6b66]">{description}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function CompactMetric({
+  label,
+  value,
+  helper,
+  badge,
+}: {
+  label: string;
+  value: number | string | null;
+  helper?: string;
+  badge?: string;
+}) {
+  return (
+    <div className="min-w-0 border-b border-[#eeece7] px-4 py-3 last:border-b-0">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[#6b6b66]">{label}</p>
+          <p className="mt-1 text-lg font-semibold tracking-tight text-[#111111]">{formatMetric(value)}</p>
+          {helper && <p className="mt-1 text-xs leading-5 text-[#6b6b66]">{helper}</p>}
+        </div>
+        {badge && (
+          <span className="shrink-0 rounded-full border border-[#dedbd3] bg-[#f7f7f5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#6b6b66]">
+            {badge}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function AdminPage() {
@@ -59,32 +97,24 @@ export function AdminPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <section className="rounded-2xl border border-[#e6e4de] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b6b66]">
-                Real aggregate overview
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#111111]">Admin overview</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6b66]">
-                Metrics are loaded from the admin-only aggregate RPC. No user
-                rows, creative content, event details, or storage paths are shown.
-              </p>
-              {formattedLastLoadedAt && (
-                <p className="mt-2 text-xs text-[#6b6b66]">Last updated: {formattedLastLoadedAt}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              disabled={loading}
-              className="inline-flex w-fit items-center justify-center gap-1.5 rounded-lg bg-[#111111] px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw size={15} className={loading ? "animate-spin" : undefined} />
-              Refresh
-            </button>
+      <div className="space-y-4">
+        <section className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-semibold tracking-tight text-[#111111]">Overview</h2>
+            <p className="mt-1 text-sm leading-6 text-[#6b6b66]">
+              Aggregate operational metrics from admin-only RPCs.
+              {formattedLastLoadedAt ? ` Last updated: ${formattedLastLoadedAt}.` : ""}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            disabled={loading}
+            className="inline-flex w-fit items-center justify-center gap-1.5 rounded-lg bg-[#111111] px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : undefined} />
+            Refresh
+          </button>
         </section>
 
         {showSkeleton && <AdminOverviewSkeleton />}
@@ -94,101 +124,80 @@ export function AdminPage() {
         )}
 
         {data && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {error && (
               <AdminOverviewErrorState error={error} unavailable={unavailable} loading={loading} onRetry={() => void refresh()} />
             )}
 
-            <AdminOverviewStatusPanel metrics={data} />
-
-            <AdminMetricGrid title="Platform" description="Aggregate user counts from the admin-only RPC.">
-              <AdminMetricCard label="Total users" value={data.users.total} helperText="Aggregate auth user count only." />
-              <AdminMetricCard label="New users - 7 days" value={data.users.new7d} helperText="Accounts created in the last 7 days." />
-              <AdminMetricCard label="New users - 30 days" value={data.users.new30d} helperText="Accounts created in the last 30 days." />
-            </AdminMetricGrid>
-
-            <AdminMetricGrid title="Profiles" description="Profile counts are aggregate-only; no profile rows are exposed.">
-              <AdminMetricCard label="Total profiles" value={data.profiles.total} helperText="Rows in profiles." />
-              <AdminMetricCard label="Completed profiles" value={data.profiles.completed} helperText="Profiles marked complete." />
-              <AdminMetricCard label="Uploaded avatars" value={data.profiles.withUploadedAvatar} helperText="Profiles with an uploaded avatar path, counted only." />
-              <AdminMetricCard
-                label="Profile completion rate"
-                value={completionRate}
-                helperText="Computed from completed profiles divided by total profiles."
-                secondaryValue={data.profiles.total > 0 ? `${data.profiles.completed} of ${data.profiles.total}` : undefined}
-                unavailable={data.profiles.total === 0}
-                unavailableLabel="No profiles yet"
-              />
-            </AdminMetricGrid>
-
-            <AdminMetricGrid title="Roles" description="Support and reviewer roles exist, but they remain forbidden from the Admin Console in MVP.">
-              <AdminMetricCard label="Owners" value={data.roles.owners} helperText="Owner role rows." />
-              <AdminMetricCard label="Admins" value={data.roles.admins} helperText="Admin role rows." />
-              <AdminMetricCard label="Support" value={data.roles.support} helperText="Future staff role. Forbidden in MVP." />
-              <AdminMetricCard label="Reviewers" value={data.roles.reviewers} helperText="Future review role. Forbidden in MVP." />
-            </AdminMetricGrid>
-
-            <AdminMetricGrid title="Events" description="Counts only. Event rows, metadata, IP hashes, and details are not rendered.">
-              <AdminMetricCard label="Admin audit - 24h" value={data.events.adminAudit24h} helperText="Privileged action audit count." />
-              <AdminMetricCard label="Admin audit - 7d" value={data.events.adminAudit7d} helperText="Privileged action audit count." />
-              <AdminMetricCard label="Security events - 24h" value={data.events.security24h} helperText="Aggregate security event count." />
-              <AdminMetricCard label="Security events - 7d" value={data.events.security7d} helperText="Aggregate security event count." />
-              <AdminMetricCard label="Rate-limit events - 24h" value={data.events.rateLimit24h} helperText="Aggregate custom rate-limit event count." />
-              <AdminMetricCard label="Rate-limit events - 7d" value={data.events.rateLimit7d} helperText="Aggregate custom rate-limit event count." />
-            </AdminMetricGrid>
-
-            <AdminMetricGrid title="Cloud database rows" description="Database rows only. Local-first browser projects are not counted.">
-              <AdminMetricCard label="Cloud project rows" value={data.cloudRows.projects} helperText="Database rows only, not total local projects." />
-              <AdminMetricCard label="Cloud scene rows" value={data.cloudRows.scenes} helperText="Database rows only, not local IndexedDB scenes." />
-              <AdminMetricCard label="Cloud scene asset rows" value={data.cloudRows.sceneAssets} helperText="Database rows only, not local image blobs." />
-            </AdminMetricGrid>
-
-            <AdminMetricGrid title="Storage" description="Storage object counts are deferred until the storage moderation path is designed.">
-              <AdminMetricCard
-                label="Avatar objects"
-                value={data.storage.avatars}
-                helperText="Bucket object counting is not connected in Phase E2."
-                statusLabel="Deferred"
-                unavailableLabel="Deferred"
-              />
-              <AdminMetricCard
-                label="Reference image objects"
-                value={data.storage.referenceImages}
-                helperText="Reference-image object counting waits for cloud sync/storage moderation."
-                statusLabel="Deferred"
-                unavailableLabel="Deferred"
-              />
-            </AdminMetricGrid>
-
-            <AdminShellEmptyState
-              title="Future admin modules remain planned"
-              description="Overview and Users now use real RPC-backed data. Other modules stay disabled until their secure data producers and UI contracts exist."
-              statusLabel="Planned"
-              bullets={PLANNED_MODULES}
-            />
-
-            <AdminShellEmptyState
-              title="Production guardrails"
-              description="The dashboard stays intentionally narrow until privileged data access is designed and audited."
-              statusLabel="Active"
-              bullets={GUARDRAILS}
-            />
-
-            <section className="rounded-xl border border-[#e6e4de] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#111111] text-white">
-                  <ShieldCheck size={16} />
-                </span>
-                <div>
-                  <h2 className="text-base font-semibold tracking-tight text-[#111111]">AdminGuard remains the gate</h2>
-                  <p className="mt-1 text-sm leading-6 text-[#6b6b66]">
-                    Non-admin, support, and reviewer accounts are stopped before
-                    this overview store loads. Owner/admin access is still the
-                    only MVP path into the shell.
-                  </p>
-                </div>
+            <section className="grid overflow-hidden rounded-2xl border border-[#deded8] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:grid-cols-2 xl:grid-cols-4">
+              <SummaryItem label="Total users" value={data.users.total} helper="Aggregate auth count" />
+              <div className="border-t border-[#e4e3dd] sm:border-l sm:border-t-0">
+                <SummaryItem label="New users 7d" value={data.users.new7d} helper="Accounts created recently" />
+              </div>
+              <div className="border-t border-[#e4e3dd] xl:border-l xl:border-t-0">
+                <SummaryItem label="Completed profiles" value={data.profiles.completed} helper="Profiles marked complete" />
+              </div>
+              <div className="border-t border-[#e4e3dd] sm:border-l xl:border-t-0">
+                <SummaryItem label="Admin audit 24h" value={data.events.adminAudit24h} helper="Privileged action count" />
               </div>
             </section>
+
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="grid gap-4 lg:grid-cols-3">
+                <Panel title="Platform" description="User growth from aggregate auth counts only.">
+                  <CompactMetric label="Total users" value={data.users.total} />
+                  <CompactMetric label="New users - 7 days" value={data.users.new7d} />
+                  <CompactMetric label="New users - 30 days" value={data.users.new30d} />
+                </Panel>
+
+                <Panel title="Profiles" description="Profile totals without exposing profile rows.">
+                  <CompactMetric label="Total profiles" value={data.profiles.total} />
+                  <CompactMetric label="Completed profiles" value={data.profiles.completed} />
+                  <CompactMetric label="Uploaded avatars" value={data.profiles.withUploadedAvatar} helper="Count only; no avatar paths." />
+                  <CompactMetric
+                    label="Completion rate"
+                    value={data.profiles.total === 0 ? null : completionRate}
+                    helper={data.profiles.total > 0 ? `${data.profiles.completed} of ${data.profiles.total}` : "No profiles yet"}
+                  />
+                </Panel>
+
+                <Panel title="Roles" description="Support/reviewer roles remain forbidden from console access in MVP.">
+                  <CompactMetric label="Owners" value={data.roles.owners} />
+                  <CompactMetric label="Admins" value={data.roles.admins} />
+                  <CompactMetric label="Support" value={data.roles.support} />
+                  <CompactMetric label="Reviewers" value={data.roles.reviewers} />
+                </Panel>
+              </div>
+
+              <AdminOverviewStatusPanel metrics={data} />
+            </div>
+
+            <Panel title="Events" description="Counts only. Event rows, metadata, IP hashes, and details are not rendered.">
+              <div className="grid sm:grid-cols-2 xl:grid-cols-6">
+                <CompactMetric label="Admin audit - 24h" value={data.events.adminAudit24h} />
+                <CompactMetric label="Admin audit - 7d" value={data.events.adminAudit7d} />
+                <CompactMetric label="Security - 24h" value={data.events.security24h} />
+                <CompactMetric label="Security - 7d" value={data.events.security7d} />
+                <CompactMetric label="Rate-limit - 24h" value={data.events.rateLimit24h} />
+                <CompactMetric label="Rate-limit - 7d" value={data.events.rateLimit7d} />
+              </div>
+            </Panel>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <Panel
+                title="Cloud database rows"
+                description="Database rows only. Local browser projects are not counted."
+              >
+                <CompactMetric label="Cloud project rows" value={data.cloudRows.projects} />
+                <CompactMetric label="Cloud scene rows" value={data.cloudRows.scenes} />
+                <CompactMetric label="Cloud scene asset rows" value={data.cloudRows.sceneAssets} />
+              </Panel>
+
+              <Panel title="Storage" description="Object counts are deferred until storage moderation is designed.">
+                <CompactMetric label="Avatar objects" value={data.storage.avatars} badge="Deferred" />
+                <CompactMetric label="Reference image objects" value={data.storage.referenceImages} badge="Deferred" />
+              </Panel>
+            </div>
           </div>
         )}
       </div>

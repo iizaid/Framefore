@@ -33,6 +33,10 @@ const ROLE_LABELS: Record<AdminRole, string> = {
 
 const SELECT_CLASS =
   "rounded-lg border border-[#dedbd3] bg-white px-3 py-2 text-sm text-[#333333] shadow-[0_1px_1px_rgba(0,0,0,0.02)] disabled:cursor-not-allowed disabled:opacity-60";
+const TAB_CLASS =
+  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-[#4f4e49] hover:bg-[#f3f3f1] disabled:cursor-not-allowed disabled:opacity-60";
+const ACTIVE_TAB_CLASS =
+  "shrink-0 rounded-lg bg-[#111111] px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60";
 
 export function AdminUsersToolbar({
   search,
@@ -75,8 +79,30 @@ export function AdminUsersToolbar({
   }, [searchInput, tooLong, onSearchChange]);
 
   return (
-    <div className="rounded-2xl border border-[#e6e4de] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-3 border-b border-[#e4e3dd] bg-white px-3 py-3 sm:px-4">
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => onRoleChange(null)}
+          disabled={disabled}
+          className={role === null ? ACTIVE_TAB_CLASS : TAB_CLASS}
+        >
+          All
+        </button>
+        {ADMIN_ROLES.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onRoleChange(option)}
+            disabled={disabled}
+            className={role === option ? ACTIVE_TAB_CLASS : TAB_CLASS}
+          >
+            {ROLE_LABELS[option]}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 flex-1">
           <label htmlFor="admin-users-search" className="sr-only">
             Search users by email or display name
@@ -107,30 +133,7 @@ export function AdminUsersToolbar({
           )}
         </div>
 
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="admin-users-role" className="text-xs font-medium text-[#6b6b66]">
-              Role
-            </label>
-            <select
-              id="admin-users-role"
-              className={SELECT_CLASS}
-              value={role ?? "all"}
-              disabled={disabled}
-              onChange={(event) => {
-                const value = event.target.value;
-                onRoleChange(value === "all" ? null : (value as AdminRole));
-              }}
-            >
-              <option value="all">All roles</option>
-              {ADMIN_ROLES.map((option) => (
-                <option key={option} value={option}>
-                  {ROLE_LABELS[option]}
-                </option>
-              ))}
-            </select>
-          </div>
-
+        <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="admin-users-profile" className="text-xs font-medium text-[#6b6b66]">
               Profile
@@ -173,7 +176,7 @@ export function AdminUsersToolbar({
             type="button"
             onClick={onReset}
             disabled={disabled || !isFiltered}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dedbd3] bg-white px-3 py-2 text-sm font-medium text-[#333333] hover:bg-[#f7f7f5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dedbd3] bg-[#f7f7f5] px-3 py-2 text-sm font-medium text-[#333333] hover:bg-[#eeeeea] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RotateCcw size={14} />
             Reset
