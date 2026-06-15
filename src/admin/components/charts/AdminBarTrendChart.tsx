@@ -48,22 +48,12 @@ export function AdminBarTrendChart({ data, color = "#111111" }: AdminBarTrendCha
             dataKey="date"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
-            tickMargin={10}
-            minTickGap={30}
-            tickFormatter={(val: string) => {
-              const d = new Date(val);
-              return isNaN(d.getTime())
-                ? val
-                : new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(d);
-            }}
+            tick={false}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
-            tickMargin={10}
-            allowDecimals={false}
+            tick={false}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f9fafb" }} />
           <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={40} />

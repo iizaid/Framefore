@@ -61,22 +61,12 @@ export function AdminAreaTrendChart({
             dataKey="date"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
-            tickMargin={10}
-            minTickGap={30}
-            tickFormatter={(val: string) => {
-              const d = new Date(val);
-              return isNaN(d.getTime())
-                ? val
-                : new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(d);
-            }}
+            tick={false}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
-            tickMargin={10}
-            allowDecimals={false}
+            tick={false}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }} />
           <Area

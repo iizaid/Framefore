@@ -98,7 +98,7 @@ QA/hardening → roadmap → decisions.**
 | P1 | [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md) | Implemented admin server-state foundation (TanStack Query/Table, Zod) |
 | F2 | [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md) | Implemented Users List UI (+ strict page schema) using `admin_list_users` only |
 | Auth-1.1 | [../auth-access-gate.md](../auth-access-gate.md) | Applied safe OAuth intent, verify-email resend polish, and mobile admin link |
-| Visual | [admin-visual-system-refresh.md](admin-visual-system-refresh.md) | Applied clean production backoffice visual refresh |
+| Cleanup | [admin-metrics-charts-cleanup.md](admin-metrics-charts-cleanup.md) | Applied admin cleanup and metrics refactoring |
 | Visual V2 | [admin-visual-system-refresh-v2.md](admin-visual-system-refresh-v2.md) | Applied Shopify-like full-width table-first admin redesign |
 | Hard reset | [admin-visual-hard-reset.md](admin-visual-hard-reset.md) | Applied black-sidebar flat production admin hard reset |
 

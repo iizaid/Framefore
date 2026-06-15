@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  RefreshCw,
-  Users,
-  UserCheck,
-  Activity,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AdminLayout } from "@/admin/components/AdminLayout";
 import { AdminOverviewErrorState } from "@/admin/components/AdminOverviewErrorState";
@@ -36,48 +28,26 @@ function fmtDate(iso: string | null) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(d);
 }
 
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-function MetricCard({
-  icon: Icon,
+// ─── Stat Item (replaces MetricCard) ──────────────────────────────────────────
+function StatItem({
   label,
   value,
   sub,
-  trend,
-  iconColor = "bg-indigo-50 text-indigo-600",
 }: {
-  icon: React.ElementType;
   label: string;
   value: string;
   sub?: string;
-  trend?: "up" | "down" | "flat";
-  iconColor?: string;
 }) {
-  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const trendColor =
-    trend === "up" ? "text-emerald-500" : trend === "down" ? "text-red-400" : "text-gray-400";
-
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-[#e8e8ec] bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div className={`grid h-10 w-10 place-items-center rounded-xl ${iconColor}`}>
-          <Icon size={18} />
-        </div>
-      </div>
-      <div className="mt-4">
-        <p className="text-[13px] font-medium text-[#6b7280]">{label}</p>
-        <p className="mt-1 text-3xl font-bold tracking-tight text-[#111111]">{value}</p>
-        {sub && (
-          <div className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${trendColor}`}>
-            {trend && <TrendIcon size={12} />}
-            <span className="text-[#9ca3af]">{sub}</span>
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col px-4 py-4 sm:px-6">
+      <p className="text-sm font-medium text-[#6b7280]">{label}</p>
+      <p className="mt-1 text-3xl font-bold tracking-tight text-[#111111] tabular-nums">{value}</p>
+      {sub && <p className="mt-1 text-xs text-[#9ca3af]">{sub}</p>}
     </div>
   );
 }
 
-// ─── Section Card ─────────────────────────────────────────────────────────────
+// ─── Section Card (Simplified, flat) ─────────────────────────────────────────
 function SectionCard({
   title,
   subtitle,
@@ -90,20 +60,23 @@ function SectionCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#e8e8ec] bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between">
+    <div className="flex flex-col">
+      <div className="mb-3 flex items-start justify-between px-1">
         <div>
-          <h3 className="text-base font-semibold text-[#111111]">{title}</h3>
+          <h3 className="text-sm font-semibold text-[#111111]">{title}</h3>
           {subtitle && <p className="mt-0.5 text-xs text-[#9ca3af]">{subtitle}</p>}
         </div>
         {action}
       </div>
-      {children}
+      <div className="rounded-xl border border-[#e8e8ec] bg-white">
+        <div className="flex flex-col divide-y divide-[#f3f4f6] px-4 py-1">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── Row item inside a section card ──────────────────────────────────────────
 function DataRow({
   label,
   value,
@@ -114,11 +87,11 @@ function DataRow({
   badge?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-[#f3f4f6] py-2.5 last:border-b-0">
-      <span className="text-sm text-[#374151]">{label}</span>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-6 py-2.5">
+      <span className="min-w-0 text-sm text-[#6b7280]">{label}</span>
+      <div className="flex shrink-0 items-center gap-2">
         {badge}
-        <span className="text-sm font-semibold text-[#111111]">{value}</span>
+        <span className="min-w-[3rem] text-right text-sm font-semibold tabular-nums text-[#111111]">{value}</span>
       </div>
     </div>
   );
@@ -243,39 +216,30 @@ function DashboardContent({
         />
       )}
 
-      {/* ── Top metric cards ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Users}
-          label="Total Users"
-          value={n(data.users.total)}
-          sub={`+${n(data.users.new7d)} last 7 days`}
-          trend="up"
-          iconColor="bg-indigo-50 text-indigo-600"
-        />
-        <MetricCard
-          icon={TrendingUp}
-          label="New Users (30d)"
-          value={n(data.users.new30d)}
-          sub="Recent sign-ups"
-          trend="up"
-          iconColor="bg-emerald-50 text-emerald-600"
-        />
-        <MetricCard
-          icon={UserCheck}
-          label="Completed Profiles"
-          value={n(data.profiles.completed)}
-          sub={`${completionRate}% completion rate`}
-          trend={completionRate > 50 ? "up" : "flat"}
-          iconColor="bg-sky-50 text-sky-600"
-        />
-        <MetricCard
-          icon={Activity}
-          label="Admin Events (24h)"
-          value={n(data.events.adminAudit24h)}
-          sub="Privileged actions"
-          iconColor="bg-amber-50 text-amber-600"
-        />
+      {/* ── Top metric summary strip ── */}
+      <div className="overflow-hidden rounded-2xl border border-[#e8e8ec] bg-white shadow-sm">
+        <div className="grid grid-cols-1 divide-y divide-[#e8e8ec] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-y-0">
+          <StatItem
+            label="Total Users"
+            value={n(data.users.total)}
+            sub={`+${n(data.users.new7d)} last 7 days`}
+          />
+          <StatItem
+            label="New Users (30d)"
+            value={n(data.users.new30d)}
+            sub="Recent sign-ups"
+          />
+          <StatItem
+            label="Completed Profiles"
+            value={n(data.profiles.completed)}
+            sub={`${completionRate}% completion rate`}
+          />
+          <StatItem
+            label="Admin Events (24h)"
+            value={n(data.events.adminAudit24h)}
+            sub="Privileged actions"
+          />
+        </div>
       </div>
 
       {/* ── Charts Section ── */}
