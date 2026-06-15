@@ -32,12 +32,12 @@ export function SignupPage() {
         submitLabel="Create account"
         onSuccess={() => {/* navigation handled by the user-watching effect */}}
         onNeedsConfirmation={(email) =>
-          navigate("/verify-email", { replace: true, state: { email } })
+          navigate("/verify-email", { replace: true, state: { email, from: getPostAuthRedirectTarget(location.state) } })
         }
         footer={
           <>
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
+            <Link to="/login" state={location.state} className="font-medium text-[var(--color-ink)] hover:underline">
               Sign in
             </Link>
           </>

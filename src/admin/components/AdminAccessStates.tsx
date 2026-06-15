@@ -8,8 +8,8 @@ type AdminAccessStateProps = {
 
 function AdminAccessShell({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6 py-10">
-      <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-sm">
+    <div className="grid min-h-screen place-items-center bg-[#f7f7f5] px-6 py-10">
+      <div className="w-full max-w-md rounded-2xl border border-[#e6e4de] bg-white p-6 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         {children}
       </div>
     </div>
@@ -19,11 +19,11 @@ function AdminAccessShell({ children }: { children: ReactNode }) {
 export function AdminAccessLoading() {
   return (
     <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-stone-surface)] text-[var(--color-ink)]">
+      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
         <Loader2 size={18} className="animate-spin" />
       </div>
-      <h1 className="mt-4 font-display text-xl text-[var(--color-charcoal)]">Checking admin access</h1>
-      <p className="mt-2 text-sm text-[var(--color-ink-soft)]">Please wait while your session is verified.</p>
+      <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Checking admin access</h1>
+      <p className="mt-2 text-sm text-[#6b6b66]">Please wait while your session is verified.</p>
     </AdminAccessShell>
   );
 }
@@ -31,21 +31,21 @@ export function AdminAccessLoading() {
 export function AdminForbidden() {
   return (
     <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-stone-surface)] text-[var(--color-ink)]">
+      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
         <ShieldAlert size={18} />
       </div>
-      <h1 className="mt-4 font-display text-xl text-[var(--color-charcoal)]">Access denied</h1>
-      <p className="mt-2 text-sm text-[var(--color-ink-soft)]">You do not have access to the admin console.</p>
+      <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Access denied</h1>
+      <p className="mt-2 text-sm text-[#6b6b66]">You do not have access to the admin console.</p>
       <div className="mt-5 flex justify-center gap-3">
         <Link
           to="/app"
-          className="inline-flex items-center justify-center rounded-lg bg-[var(--color-midnight)] px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="inline-flex items-center justify-center rounded-lg bg-[#111111] px-3 py-2 text-sm font-medium text-white hover:bg-black"
         >
           Back to app
         </Link>
         <Link
           to="/profile"
-          className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-stone-surface)]"
+          className="inline-flex items-center justify-center rounded-lg border border-[#dedbd3] px-3 py-2 text-sm font-medium text-[#333333] hover:bg-[#f7f7f5]"
         >
           Profile
         </Link>
@@ -57,14 +57,14 @@ export function AdminForbidden() {
 export function AdminUnavailable({ message = "Admin access is temporarily unavailable." }: AdminAccessStateProps) {
   return (
     <AdminAccessShell>
-      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-stone-surface)] text-[var(--color-ink)]">
+      <div className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#f1f1ef] text-[#333333]">
         <AlertTriangle size={18} />
       </div>
-      <h1 className="mt-4 font-display text-xl text-[var(--color-charcoal)]">Admin unavailable</h1>
-      <p className="mt-2 text-sm text-[var(--color-ink-soft)]">{message}</p>
+      <h1 className="mt-4 text-xl font-semibold tracking-tight text-[#111111]">Admin unavailable</h1>
+      <p className="mt-2 text-sm text-[#6b6b66]">{message}</p>
       <Link
         to="/"
-        className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-stone-surface)]"
+        className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#dedbd3] px-3 py-2 text-sm font-medium text-[#333333] hover:bg-[#f7f7f5]"
       >
         <ArrowLeft size={15} />
         Back to home

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/primitives";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { useAdminRoleStore } from "@/admin/store/useAdminRoleStore";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -89,6 +90,9 @@ export function LandingNav() {
   // in hides it and shows the avatar/account menu.
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const rolesInitialized = useAdminRoleStore((s) => s.initialized);
+  const canAccessAdmin = useAdminRoleStore((s) => s.canAccessAdmin);
+  const showMobileAdminLink = Boolean(user && rolesInitialized && canAccessAdmin);
   // Auth-aware workspace CTA target (signed-out → /signup, never /app).
   const cta = useWorkspaceCta();
 
@@ -312,6 +316,15 @@ export function LandingNav() {
                     initial="hidden"
                     animate="visible"
                   >
+                    {showMobileAdminLink && (
+                      <Link
+                        to="/admin"
+                        onClick={close}
+                        className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                      >
+                        Admin console
+                      </Link>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

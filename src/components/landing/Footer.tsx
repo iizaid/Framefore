@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "Where are my projects saved?",
-    a: "Locally in your browser. No account is required to start, and nothing is uploaded.",
+    a: "You need an account to open the workspace. Projects remain local-first in your browser unless a future cloud sync feature is added.",
   },
   {
     q: "Which AI video tools does it support?",

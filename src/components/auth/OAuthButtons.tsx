@@ -1,9 +1,12 @@
+import { useLocation } from "react-router-dom";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { getPostAuthRedirectTarget, savePostAuthRedirect } from "@/lib/authAccess";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // Google + GitHub OAuth buttons. Both kick off Supabase's OAuth redirect flow;
 // the browser leaves the page and returns to /auth/callback once authorized.
 export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
+  const location = useLocation();
   const { signInWithGoogle, signInWithGitHub, loading } = useAuthStore();
   const label = mode === "login" ? "Continue" : "Sign up";
 
@@ -11,12 +14,19 @@ export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
     return null;
   }
 
+  const saveRedirectIntent = () => {
+    savePostAuthRedirect(getPostAuthRedirectTarget(location.state));
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <button
         type="button"
         disabled={loading}
-        onClick={() => signInWithGoogle()}
+        onClick={() => {
+          saveRedirectIntent();
+          void signInWithGoogle();
+        }}
         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-50"
       >
         {/* Google G icon */}
@@ -32,7 +42,10 @@ export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
       <button
         type="button"
         disabled={loading}
-        onClick={() => signInWithGitHub()}
+        onClick={() => {
+          saveRedirectIntent();
+          void signInWithGitHub();
+        }}
         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-50"
       >
         {/* GitHub icon */}

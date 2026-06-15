@@ -33,28 +33,28 @@ export function AdminMetricCard({
   return (
     <article
       className={cn(
-        "rounded-[var(--radius-card)] border bg-[var(--color-surface)] p-4",
-        isUnavailable ? "border-dashed border-[var(--color-border-strong)] opacity-80" : "border-[var(--color-border-strong)]"
+        "rounded-xl border bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]",
+        isUnavailable ? "border-dashed border-[#dedbd3] opacity-80" : "border-[#e6e4de]"
       )}
     >
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-soft)]">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6b6b66]">{label}</p>
         {statusLabel && (
-          <span className="shrink-0 rounded-full border border-[var(--color-border-strong)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)]">
+          <span className="shrink-0 rounded-full border border-[#dedbd3] bg-[#f7f7f5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6b6b66]">
             {statusLabel}
           </span>
         )}
       </div>
       <div
         className={cn(
-          "mt-3 font-display text-3xl leading-none",
-          isUnavailable ? "text-[var(--color-ink-soft)]" : "text-[var(--color-charcoal)]"
+          "mt-3 text-3xl font-semibold leading-none tracking-tight",
+          isUnavailable ? "text-[#77756f]" : "text-[#111111]"
         )}
       >
         {renderValue(value, isUnavailable, unavailableLabel)}
       </div>
-      {secondaryValue && <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{secondaryValue}</p>}
-      {helperText && <p className="mt-2 text-xs leading-5 text-[var(--color-ink-soft)]">{helperText}</p>}
+      {secondaryValue && <p className="mt-2 text-sm font-medium text-[#333333]">{secondaryValue}</p>}
+      {helperText && <p className="mt-2 text-xs leading-5 text-[#6b6b66]">{helperText}</p>}
     </article>
   );
 }

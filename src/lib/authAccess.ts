@@ -12,6 +12,7 @@ import type { User } from "@supabase/supabase-js";
 // provider tokens.
 
 export const DEFAULT_POST_AUTH_PATH = "/app";
+const POST_AUTH_REDIRECT_KEY = "framefore.postAuthRedirect";
 
 // Routes we must never redirect *back into* after auth. Bouncing a freshly
 // signed-in user to /login or /verify-email would create navigation loops.
@@ -51,6 +52,8 @@ export function isSafeInternalPath(path: string): boolean {
   return true;
 }
 
+export const isSafePostAuthRedirect = isSafeInternalPath;
+
 // React Router lets us stash an attempted destination in `location.state`.
 // Guards write either a string (`from: "/app#/project/x"`) or an object
 // (`from: { pathname, search, hash }`); normalize both to a single path string.
@@ -81,6 +84,33 @@ export function getPostAuthRedirectTarget(state: unknown): string {
   const from = readFromState(state);
   if (from && isSafeInternalPath(from)) return from;
   return DEFAULT_POST_AUTH_PATH;
+}
+
+export function savePostAuthRedirect(path: string | null | undefined) {
+  if (typeof window === "undefined") return;
+
+  try {
+    if (path && isSafePostAuthRedirect(path)) {
+      window.sessionStorage.setItem(POST_AUTH_REDIRECT_KEY, path);
+    } else {
+      window.sessionStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+    }
+  } catch {
+    // Session storage can be unavailable in strict privacy contexts. Auth still
+    // falls back to the default workspace route after callback.
+  }
+}
+
+export function consumePostAuthRedirect(): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const path = window.sessionStorage.getItem(POST_AUTH_REDIRECT_KEY);
+    window.sessionStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+    return path && isSafePostAuthRedirect(path) ? path : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

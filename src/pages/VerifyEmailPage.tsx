@@ -96,30 +96,33 @@ export function VerifyEmailPage() {
         </div>
       )}
 
-      {/* Actions depend on whether there is a signed-in (but unverified) user. */}
+      {/* Continue requires a signed-in session; resend only needs a known email. */}
       <div className="flex w-full max-w-sm flex-col gap-3">
-        {user ? (
-          <>
-            <button
-              type="button"
-              onClick={handleContinue}
-              disabled={checking}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
-            >
-              {checking ? <Loader2 size={16} className="animate-spin" /> : "I verified my email — continue"}
-            </button>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={!isSupabaseConfigured || !email || resendState === "sending"}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-40"
-            >
-              {resendState === "sending" ? <Loader2 size={16} className="animate-spin" /> : "Resend confirmation email"}
-            </button>
-          </>
-        ) : (
+        {user && (
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={checking}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+          >
+            {checking ? <Loader2 size={16} className="animate-spin" /> : "I verified my email — continue"}
+          </button>
+        )}
+
+        {email && (
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={!isSupabaseConfigured || resendState === "sending"}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-40"
+          >
+            {resendState === "sending" ? <Loader2 size={16} className="animate-spin" /> : "Resend confirmation email"}
+          </button>
+        )}
+
+        {!user && (
           <p className="text-sm text-[var(--color-ink-soft)]">
-            Once you've confirmed your email, sign in to open the workspace.
+            After confirming your email, sign in to continue.
           </p>
         )}
 

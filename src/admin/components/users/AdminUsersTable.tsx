@@ -53,7 +53,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         id: "createdAt",
         header: "Created",
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap text-sm text-[var(--color-ink-soft)]">{formatDate(getValue())}</span>
+          <span className="whitespace-nowrap text-sm text-[#6b6b66]">{formatDate(getValue())}</span>
         ),
       }),
       columnHelper.accessor("lastSignInAt", {
@@ -62,7 +62,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         cell: ({ getValue }) => {
           const value = getValue();
           return (
-            <span className="whitespace-nowrap text-sm text-[var(--color-ink-soft)]">
+            <span className="whitespace-nowrap text-sm text-[#6b6b66]">
               {value ? formatDate(value, true) : "Never"}
             </span>
           );
@@ -74,13 +74,13 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         cell: ({ row }) => {
           const hasConsole = row.original.isOwner || row.original.isAdmin;
           return hasConsole ? (
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-[var(--color-ink)]">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-[#333333]">
               <ShieldCheck size={13} />
               Admin console
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--color-ink-soft)]"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[#6b6b66]"
               title="Support and reviewer roles do not grant Admin Console access in the MVP."
             >
               <ShieldOff size={13} />
@@ -108,17 +108,17 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
   });
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)]">
+    <div className="overflow-hidden rounded-2xl border border-[#e6e4de] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-left">
-          <thead className="border-b border-[var(--color-border-strong)] bg-[var(--color-surface)]">
+          <thead className="border-b border-[#e6e4de] bg-[#fbfbfa]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     scope="col"
-                    className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)]"
+                    className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b6b66]"
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
@@ -126,9 +126,9 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-[var(--color-border-strong)]">
+          <tbody className="divide-y divide-[#eeece7]">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[var(--color-stone-surface)]/50">
+              <tr key={row.id} className="hover:bg-[#f7f7f5]">
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-4 py-3.5 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

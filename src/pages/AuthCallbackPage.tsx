@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { isEmailVerified } from "@/lib/authAccess";
+import { DEFAULT_POST_AUTH_PATH, consumePostAuthRedirect, isEmailVerified } from "@/lib/authAccess";
 
 // Landing spot for OAuth (Google/GitHub) and signup-confirmation redirects.
 // supabase-js auto-detects the session in the URL (detectSessionInUrl), so we
 // just wait for it to settle, then forward the user based on verification:
-// verified → /app, signed-in-but-unverified → /verify-email. OAuth providers
-// that return a confirmed email satisfy isEmailVerified and pass straight to /app.
+// verified → saved safe route or /app, signed-in-but-unverified → /verify-email
+// with the safe route preserved in state. OAuth providers that return a
+// confirmed email satisfy isEmailVerified and pass straight through.
 export function AuthCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +34,16 @@ export function AuthCallbackPage() {
       return;
     }
 
-    // A confirmed user goes to the workspace; a signed-in-but-unverified user is
-    // routed to the verify-email screen rather than into /app.
+    // A confirmed user goes to the saved safe route; a signed-in-but-unverified
+    // user is routed to the verify-email screen rather than into /app.
     const forward = (user: Parameters<typeof isEmailVerified>[0]) => {
       if (!mounted) return;
-      navigate(isEmailVerified(user) ? "/app" : "/verify-email", { replace: true });
+      const target = consumePostAuthRedirect() ?? DEFAULT_POST_AUTH_PATH;
+      if (isEmailVerified(user)) {
+        navigate(target, { replace: true });
+      } else {
+        navigate("/verify-email", { replace: true, state: { from: target, email: user?.email } });
+      }
     };
 
     (async () => {

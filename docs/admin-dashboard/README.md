@@ -1,8 +1,8 @@
 # Framefore Admin Dashboard — Planning Package
 
-> **Status: PLANNING PACKAGE + PHASE B/C/D/E1/E2/F1 FOUNDATION.** The Admin
+> **Status: PLANNING PACKAGE + PHASE B/C/D/E1/E2/F1/P1/F2 + AUTH-1.1 + ADMIN VISUAL REFRESH.** The Admin
 > Overview is implemented with real aggregate metrics only; the Users list has a
-> secure data contract only, with no Users UI yet. Phase B added read-only
+> secure data contract and a read-only Users UI. Phase B added read-only
 > current-user role
 > helpers and a Zustand role store; see
 > [phase-b-role-helpers.md](phase-b-role-helpers.md). Phase C added `AdminGuard`
@@ -17,7 +17,7 @@
 > [phase-f1-users-list-data-contract.md](phase-f1-users-list-data-contract.md).
 > **Phase F1 hardening applied** (`0011_admin_users_list_hardening.sql`): search
 > length cap (100), `LIKE` wildcard escaping, lowercase role normalization,
-> offset cap (10000), and supporting `public` indexes — still no Users UI.
+> offset cap (10000), and supporting `public` indexes.
 > **Platform-1 admin server-state foundation implemented**: TanStack Query is
 > available (provider wired at the app root), TanStack Table is available, and
 > Zod runtime validation now guards the Overview and Users RPC payloads; see
@@ -35,6 +35,14 @@
 > menu (UX only — `AdminGuard` is still the boundary), and signed-out landing
 > CTAs route to `/signup` instead of `/app`. `/app` stays local-first after
 > access is granted; no cloud sync. See [auth-access-gate.md](../auth-access-gate.md).
+> **Auth-1.1 polish applied**: OAuth preserves safe intended routes through
+> callback, `/verify-email` can resend with only a pending email, the footer FAQ
+> reflects the verified-account gate, and the mobile landing drawer shows Admin
+> Console only for initialized owner/admin access.
+> **Admin visual system refresh applied**: the admin shell now uses a clean
+> production backoffice style with light neutral surfaces, white cards/tables,
+> black primary accents, and no grid/canvas/pattern background; see
+> [admin-visual-system-refresh.md](admin-visual-system-refresh.md).
 > Audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:
@@ -87,6 +95,8 @@ QA/hardening → roadmap → decisions.**
 | F1 | [phase-f1-users-list-data-contract.md](phase-f1-users-list-data-contract.md) | Implemented safe Users list data contract |
 | P1 | [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md) | Implemented admin server-state foundation (TanStack Query/Table, Zod) |
 | F2 | [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md) | Implemented Users List UI (+ strict page schema) using `admin_list_users` only |
+| Auth-1.1 | [../auth-access-gate.md](../auth-access-gate.md) | Applied safe OAuth intent, verify-email resend polish, and mobile admin link |
+| Visual | [admin-visual-system-refresh.md](admin-visual-system-refresh.md) | Applied clean production backoffice visual refresh |
 
 ## Hard rules this package obeys
 
@@ -105,10 +115,9 @@ QA/hardening → roadmap → decisions.**
 
 ## Next recommended implementation phase
 
-Phase F1 is now implemented as a secure Users list data contract only. The next
-recommended implementation phase is Phase F2: build the Users list UI using
-`loadAdminUsers()` only, with no fake rows and no direct browser reads from
-`auth.users`.
+Auth-1.1 and the Admin visual refresh are now applied. The next feature phase
+should stay narrow and contract-first: either a read-only user detail contract
+or a role-management design pass with audited server-side mutation boundaries.
 
 > **Codex reconciliation note (updated):** Codex's pre-admin cleanup has now
 > **landed**. In place today: the Profile redesign
@@ -119,9 +128,9 @@ recommended implementation phase is Phase F2: build the Users list UI using
 > Profile + Sign out, no admin link), scoped "smart" loading
 > ([AppLoadingScreen.tsx](../../src/components/AppLoadingScreen.tsx)), and the
 > closure checklist ([docs/pre-admin-closure-checklist.md](../pre-admin-closure-checklist.md)).
-> This planning package has been reconciled against that branch. **The Admin
-> Dashboard modules beyond Overview are still not implemented** — `/admin` now
+> This planning package has been reconciled against that branch. `/admin` now
 > has a protected shell and real aggregate Overview at
-> [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx). The Users list now
-> has a data contract in [src/admin/lib/users.ts](../../src/admin/lib/users.ts),
-> but no Users UI route or table has been built yet.
+> [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx). `/admin/users` now
+> has a protected read-only table backed by
+> [src/admin/lib/users.ts](../../src/admin/lib/users.ts). User actions, user
+> detail, audit UI, role-management UI, and cloud sync are still not implemented.

@@ -10,7 +10,6 @@ import { AdminShellEmptyState } from "@/admin/components/AdminShellEmptyState";
 import { useAdminOverviewStore } from "@/admin/store/useAdminOverviewStore";
 
 const PLANNED_MODULES = [
-  "Users - planned",
   "Roles - planned",
   "Audit log table - planned",
   "Security events table - planned",
@@ -61,26 +60,26 @@ export function AdminPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <section className="rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 sm:p-6">
+        <section className="rounded-2xl border border-[#e6e4de] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-ink-soft)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b6b66]">
                 Real aggregate overview
               </p>
-              <h2 className="mt-2 font-display text-2xl text-[var(--color-charcoal)]">Admin overview</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-ink-soft)]">
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#111111]">Admin overview</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6b66]">
                 Metrics are loaded from the admin-only aggregate RPC. No user
                 rows, creative content, event details, or storage paths are shown.
               </p>
               {formattedLastLoadedAt && (
-                <p className="mt-2 text-xs text-[var(--color-ink-soft)]">Last updated: {formattedLastLoadedAt}</p>
+                <p className="mt-2 text-xs text-[#6b6b66]">Last updated: {formattedLastLoadedAt}</p>
               )}
             </div>
             <button
               type="button"
               onClick={() => void refresh()}
               disabled={loading}
-              className="inline-flex w-fit items-center justify-center gap-1.5 rounded-lg bg-[var(--color-midnight)] px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-fit items-center justify-center gap-1.5 rounded-lg bg-[#111111] px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             >
               <RefreshCw size={15} className={loading ? "animate-spin" : undefined} />
               Refresh
@@ -163,7 +162,7 @@ export function AdminPage() {
 
             <AdminShellEmptyState
               title="Future admin modules remain planned"
-              description="The Overview now uses real aggregate metrics. Other modules stay disabled until their secure data producers and UI contracts exist."
+              description="Overview and Users now use real RPC-backed data. Other modules stay disabled until their secure data producers and UI contracts exist."
               statusLabel="Planned"
               bullets={PLANNED_MODULES}
             />
@@ -175,14 +174,14 @@ export function AdminPage() {
               bullets={GUARDRAILS}
             />
 
-            <section className="rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-4">
+            <section className="rounded-xl border border-[#e6e4de] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
               <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--color-midnight)] text-white">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#111111] text-white">
                   <ShieldCheck size={16} />
                 </span>
                 <div>
-                  <h2 className="font-display text-base text-[var(--color-charcoal)]">AdminGuard remains the gate</h2>
-                  <p className="mt-1 text-sm leading-6 text-[var(--color-ink-soft)]">
+                  <h2 className="text-base font-semibold tracking-tight text-[#111111]">AdminGuard remains the gate</h2>
+                  <p className="mt-1 text-sm leading-6 text-[#6b6b66]">
                     Non-admin, support, and reviewer accounts are stopped before
                     this overview store loads. Owner/admin access is still the
                     only MVP path into the shell.

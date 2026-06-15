@@ -17,10 +17,10 @@ export function AdminRoleBadge({ role }: AdminRoleBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
-        role === "owner" && "bg-[var(--color-midnight)] text-white",
-        role === "admin" && "border border-[var(--color-midnight)] text-[var(--color-ink)]",
-        role === "support" && "bg-[var(--color-stone-surface)] text-[var(--color-ink)]",
-        role === "reviewer" && "border border-[var(--color-border-strong)] text-[var(--color-ink-soft)]"
+        role === "owner" && "bg-[#111111] text-white",
+        role === "admin" && "border border-[#111111] bg-white text-[#333333]",
+        role === "support" && "bg-[#f1f1ef] text-[#333333]",
+        role === "reviewer" && "border border-[#dedbd3] text-[#6b6b66]"
       )}
     >
       {ROLE_LABELS[role]}
