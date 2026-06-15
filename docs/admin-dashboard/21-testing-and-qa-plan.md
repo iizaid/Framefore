@@ -13,8 +13,8 @@ Run each as a real session of that role (bootstrap test users via SQL editor).
 |---|---|
 | **owner** opens every admin route | all load; owner/admin grant options visible |
 | **admin** opens every route | all load; owner/admin grant options **hidden**; support/reviewer grants work |
-| **support** opens routes | read-only views load (per policy decision); **no** mutation controls anywhere |
-| **reviewer** opens routes | same read scope as support; no mutations |
+| **support** opens `/admin` | **MVP: `AdminForbidden`** (no console read policy/helper covers support yet); no admin data, no flicker. (Future: read-only views once a staff helper + policies land) |
+| **reviewer** opens `/admin` | **MVP: `AdminForbidden`** (same as support); no mutations ever |
 | **normal user** opens `/admin` (and deep links) | `AdminForbidden`, no admin data, no flicker of admin UI |
 | **signed-out** opens `/admin/users/x` | redirected to `/login?redirect=/admin/users/x`; after login, lands there |
 | **Supabase unconfigured** | redirected to `/login`; no fake admin data |
@@ -43,6 +43,12 @@ Run each as a real session of that role (bootstrap test users via SQL editor).
 - Projects / Security / Abuse render labelled empty states, **no fabricated rows**.
 - Future metric tiles show the "available after …" variant, not a `0` metric.
 - Users list shows no email/last-login column until the Edge fn exists.
+- **Avatars in the users list show initials or the external OAuth `avatar_url`
+  only.** Confirm the list never attempts (and never succeeds at) a
+  `createSignedUrl()` for another user's uploaded `avatar_path` from the browser —
+  storage RLS is owner-scoped, so such a call returns no access. Viewing an
+  uploaded avatar for another user must route through the audited
+  `admin-view-storage-object` Edge fn ([12](12-storage-and-avatar-moderation.md)).
 
 ## Security tests (the important ones)
 
@@ -65,8 +71,12 @@ Run each as a real session of that role (bootstrap test users via SQL editor).
 
 - `/app` loads, projects persist (IndexedDB `framefore-state` v9), guest +
   signed-in flows unchanged.
-- `/profile` loads and saves; avatar upload/remove works.
-- `AccountMenu` unchanged (and reconcile with Codex's cleanup once merged).
+- `/profile` loads and saves with the redesigned "Profile settings" layout;
+  avatar change opens the crop editor ([AvatarCropDialog.tsx](../../src/components/account/AvatarCropDialog.tsx))
+  and uploads a bounded WebP; remove works.
+- `AccountMenu` (post-Codex cleanup) shows **Profile + Sign out only**; admin
+  code must not regress it. An "Admin" entry is a future addition gated on the
+  role helper, not part of this scope.
 - Local→nothing: admin code never writes to `useStore` / local project data.
 - `npm run build` passes (tsc + vite).
 

@@ -25,7 +25,7 @@ infra. Add path 2's auth fields when the Edge runtime is set up.
 |---|---|---|
 | Display name (`full_name`) | profiles | ✅ |
 | Nickname | profiles | ✅ |
-| Avatar (status + signed URL) | profiles.avatar_path/url | ✅ |
+| Avatar — initials or external `avatar_url` only (uploaded `avatar_path` not displayable for others without Edge fn) | profiles.avatar_url + status flag | ✅ |
 | `profile_completed` | profiles | ✅ |
 | Roles | user_roles | ✅ |
 | Created at | profiles.created_at | ✅ |
@@ -36,10 +36,23 @@ infra. Add path 2's auth fields when the Edge runtime is set up.
 | Project / scene counts | projects/scenes | 🔮 post cloud sync |
 | Storage footprint | scene_assets / avatar | 🔮 / partial |
 
-> Avatars in a list: minting a signed URL per row is expensive (one Storage call
-> each). For lists, show initials by default and lazily resolve the signed URL
-> only for the rows in view, or add a batched avatar-URL Edge endpoint. Reuse the
-> `getAvatarDisplayUrl` logic from [lib/profile.ts](../../src/lib/profile.ts).
+> **Avatars in the list — important RLS reality.** Storage RLS for the `avatars`
+> bucket is **owner-scoped**: an admin **cannot** `createSignedUrl()` for another
+> user's uploaded `avatar_path` from the browser
+> ([0008](../../supabase/migrations/0008_profile_account_fields_and_avatars.sql)).
+> So the `getAvatarDisplayUrl` path in [lib/profile.ts](../../src/lib/profile.ts)
+> only works for the *caller's own* avatar — it does **not** generalize to an
+> admin list of other users.
+>
+> **Users-list MVP therefore shows initials and/or the external OAuth
+> `avatar_url` only** (a public http(s) URL safe to render). Uploaded
+> `avatar_path` images for *other* users are **not** displayable in the browser.
+> Viewing another user's uploaded avatar requires the audited
+> `admin-view-storage-object` Edge function (service role) that mints a short-TTL
+> signed URL and writes an `admin_audit_events` row — see
+> [12](12-storage-and-avatar-moderation.md) / [13](13-admin-actions-and-edge-functions.md).
+> Do **not** add a broad admin SELECT policy on `storage.objects` to work around
+> this.
 
 ## User detail page (`/admin/users/:userId`)
 

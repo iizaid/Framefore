@@ -15,7 +15,7 @@ record the final call + date when made.
 | 8 | What is strictly **owner-only**? | — | grant/revoke owner+admin · settings/feature-flag writes · user delete/ban (already enforced for roles by `is_owner()`) | _pending_ |
 | 9 | What **needs Edge functions** (vs. RLS)? | — | auth.users reads · suspend/ban/delete · view others' storage · exports · cleanup · system health · abuse aggregation ([13](13-admin-actions-and-edge-functions.md)) | _pending_ |
 | 10 | What must wait for **cloud project persistence**? | — | projects metadata viewer · project/scene/storage counts · most Tier-2 metrics ([06](06-dashboard-home-and-metrics.md)) | _pending_ |
-| 11 | Should **support/reviewer** read audit/security data? | yes · admin-only | Extend SELECT policies or Edge fn to include them **if** the support role is meant to triage — else admin-only. Affects [03](03-role-permissions-matrix.md) note ¹ | _pending_ |
+| 11 | Should **support/reviewer** get admin-console access (read audit/security/users)? | yes now · owner/admin-only for MVP | **MVP: owner/admin only.** `is_admin()` doesn't cover support/reviewer and no console read policy includes them, so `/admin` gates to owner/admin. Granting support/reviewer access later requires a staff helper (`is_staff()` / extended gate) **+** matching SELECT policies/Edge fns **+** widening `AdminGuard`. Affects [03](03-role-permissions-matrix.md)/[05](05-admin-routes-and-navigation.md). | **MVP decided: owner/admin only**; broader access deferred |
 | 12 | Show **email/last-sign-in** in users list? | now (Edge fn) · later | **Later** — requires Edge runtime; list works without it first ([07](07-user-management-plan.md)) | _pending_ |
 | 13 | **Phone/PII** display: masked + reveal (audited) or hidden? | masked+audit · hidden | **Masked with audited reveal** on detail page only | _pending_ |
 | 14 | **Security event producers**: which events, client vs Edge? | — | client-safe events (own user_id) from app; auth events via Edge/auth hooks ([10](10-security-events-and-audit-logs.md)) | _pending_ |
@@ -38,9 +38,11 @@ re-litigated:
 
 ## Action items surfaced during planning
 
-- ⚠️ **Audit `public/client_secret_2_Framefore.json`** (present in repo root /
-  `public/`). An OAuth client secret in `public/` would be served to anyone.
-  Verify it isn't a real secret, move it out of `public/`, and git-ignore it
-  before any launch. (Not part of the admin build, but a launch blocker — listed
-  in [22](22-production-hardening-checklist.md).)
-- Confirm whether migrations `0001–0008` are actually applied in each environment.
+- ✅ **Resolved by Codex cleanup:** the earlier `public/client_secret_2_Framefore.json`
+  has been **removed** from `public/` serving scope. Ongoing guard: **verify no
+  OAuth client-secret JSON exists in `public/` or `dist/` on every build**
+  (`ls public/client_secret* dist/client_secret*` → none) — listed in
+  [22](22-production-hardening-checklist.md).
+- **Verify migrations `0001–0008` applied status per environment** before deploy.
+  They exist and may already be applied in the current Supabase setup; don't
+  assume universally unapplied — confirm staging/prod individually.

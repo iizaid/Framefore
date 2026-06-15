@@ -5,26 +5,36 @@ Roles are defined in [0006_admin_roles.sql](../../supabase/migrations/0006_admin
 *and* the server enforces. **UI hiding is cosmetic; the right-most "Enforced by"
 column is the real boundary.**
 
-Legend: ✅ allowed · ❌ denied · 🔒 owner-only · 🧩 Edge Function required · 🔮 future
+> **MVP access decision (important).** The SQL `is_admin()` today resolves to
+> **owner or admin only**, and there are **no admin-console read policies for
+> `support`/`reviewer`**. Therefore **Admin MVP gates `/admin` to owner/admin
+> only.** The `support` and `reviewer` columns below describe the *intended*
+> model once a dedicated helper (e.g. `is_staff()` / an extended
+> `get_current_user_roles()` gate) **and** matching read policies/Edge functions
+> are added — they are **🔮 future** until then. `AdminGuard` should treat
+> support/reviewer as **not yet authorized** for the console in MVP.
+
+Legend: ✅ allowed · ❌ denied · 🔒 owner-only · 🧩 Edge Function required ·
+🔮 future · ⓕ future for support/reviewer (owner/admin only in MVP)
 
 | Action | owner | admin | support | reviewer | user | guest | Enforced by |
 |---|---|---|---|---|---|---|---|
-| Access `/admin` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | `AdminGuard` + RLS on data |
-| View dashboard metrics | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | RLS / view grants |
-| View users list | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | admin view / Edge fn ([07](07-user-management-plan.md)) |
-| View user details | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | admin view / Edge fn |
-| View user roles | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | `user_roles` SELECT (`is_admin()`) |
+| Access `/admin` | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | `AdminGuard` (`is_admin()`); support/reviewer 🔮 |
+| View dashboard metrics | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | RLS / view grants (`is_admin()`) |
+| View users list | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | admin view / Edge fn ([07](07-user-management-plan.md)) |
+| View user details | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | admin view / Edge fn |
+| View user roles | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | `user_roles` SELECT (`is_admin()`) |
 | Grant owner | 🔒 | ❌ | ❌ | ❌ | ❌ | ❌ | `grant_app_role` (`is_owner()`) |
 | Revoke owner | 🔒 | ❌ | ❌ | ❌ | ❌ | ❌ | `revoke_app_role` (`is_owner()` + last-owner guard) |
 | Grant admin | 🔒 | ❌ | ❌ | ❌ | ❌ | ❌ | `grant_app_role` (`is_owner()`) |
 | Revoke admin | 🔒 | ❌ | ❌ | ❌ | ❌ | ❌ | `revoke_app_role` (`is_owner()`) |
 | Grant support/reviewer | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | `grant_app_role` (`is_admin()`) |
 | Revoke support/reviewer | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | `revoke_app_role` (`is_admin()`) |
-| View admin audit logs | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | `admin_audit_events` SELECT (`is_admin()`)¹ |
-| View security events | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | needs admin view/Edge fn² |
-| View rate-limit events | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | 🧩 Edge fn (table is service-only) |
-| View storage metadata | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | 🧩 Edge fn / admin view |
-| View user **project metadata** | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | ❌ | 🔮 after cloud sync ([09](09-project-visibility-and-support-plan.md)) |
+| View admin audit logs | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | `admin_audit_events` SELECT (`is_admin()`)¹ |
+| View security events | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | needs admin view/Edge fn² |
+| View rate-limit events | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | 🧩 Edge fn (table is service-only) |
+| View storage metadata | ✅ | ✅ | ⓕ | ⓕ | ❌ | ❌ | 🧩 Edge fn / admin view |
+| View user **project metadata** | ✅ | ✅ | ⚠️🔮 | ⚠️🔮 | ❌ | ❌ | 🔮 after cloud sync ([09](09-project-visibility-and-support-plan.md)) |
 | View user **project content** (prompts/scripts/images) | ⚠️🧩 | ⚠️🧩 | ❌ | ❌ | ❌ | ❌ | 🔮 justified+logged Edge fn only |
 | Modify user project content | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | not built; future 🧩 + audit |
 | Delete user project content | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | future 🧩 + audit |
@@ -36,11 +46,13 @@ Legend: ✅ allowed · ❌ denied · 🔒 owner-only · 🧩 Edge Function requi
 | View system health | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | config probes + 🧩 Edge fn |
 
 ¹ `support`/`reviewer` are not `is_admin()` in SQL today (only `owner`/`admin`
-are). To let them *read* audit/role/security data, either (a) extend the SELECT
-policies to include `has_current_user_role('support'|'reviewer')`, or (b) serve
-those reads through an Edge function that checks the broader role set. **Decision
-needed** — see [24](24-open-questions-and-decisions.md). Until then, support/reviewer
-effectively get access only where a policy/function explicitly includes them.
+are), and no admin-console read policy includes them. **MVP decision: `/admin`
+is owner/admin only; support/reviewer get no console access yet.** To grant them
+read access later, either (a) extend the relevant SELECT policies to include
+`has_current_user_role('support'|'reviewer')` / a new `is_staff()` helper, or
+(b) serve those reads through an Edge function that checks the broader role set,
+**and** widen the `AdminGuard` to admit them. Tracked in
+[24](24-open-questions-and-decisions.md).
 
 ² `security_events` today is SELECT-own only; an admin-wide read needs a new
 policy or an Edge function ([10](10-security-events-and-audit-logs.md)).
@@ -50,7 +62,9 @@ policy or an Edge function ([10](10-security-events-and-audit-logs.md)).
 1. **Owner-only** for any `owner`/`admin` grant or revoke — already enforced by
    `grant_app_role`/`revoke_app_role`'s `is_owner()` check.
 2. **Admin-or-owner** for `support`/`reviewer` grants — enforced by `is_admin()`.
-3. **support/reviewer are read-only** in MVP. No mutation paths exposed.
+3. **support/reviewer have no console access in MVP** (no `is_admin()`/read
+   policy covers them). When added later they are **read-only** — no mutation
+   paths are ever exposed to them.
 4. **No broad content access.** Reading user creative content is never a default;
    it is a future, justified, logged Edge-function path only.
 5. **Every dangerous action** goes through an Edge Function and writes

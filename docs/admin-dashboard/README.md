@@ -69,12 +69,16 @@ helpers (`useRoleStore` / `lib/roles.ts`) on top of the existing `is_admin()` /
 `has_current_user_role()` functions — *read-only, no UI yet*. This is the
 smallest safe step and unblocks the `AdminGuard` (Phase C).
 
-> **Codex reconciliation note:** at the time of writing, Codex's pre-admin
-> cleanup (profile redesign, avatar crop editor, `AccountMenu` cleanup, smart
-> loading, pre-admin closure checklist) had **not** landed
-> (`docs/pre-admin-closure-checklist.md` is absent). This plan deliberately
-> avoids the files Codex is editing
-> ([AccountMenu.tsx](../../src/components/account/AccountMenu.tsx),
-> [ProfilePage.tsx](../../src/pages/ProfilePage.tsx),
-> [AppLoadingScreen.tsx](../../src/components/AppLoadingScreen.tsx),
-> `AvatarCropDialog.tsx`). Reconcile this plan once that branch merges.
+> **Codex reconciliation note (updated):** Codex's pre-admin cleanup has now
+> **landed**. In place today: the Profile redesign
+> ([ProfilePage.tsx](../../src/pages/ProfilePage.tsx)), the avatar crop editor
+> ([AvatarCropDialog.tsx](../../src/components/account/AvatarCropDialog.tsx)),
+> the `AccountMenu` cleanup
+> ([AccountMenu.tsx](../../src/components/account/AccountMenu.tsx) — now just
+> Profile + Sign out, no admin link), scoped "smart" loading
+> ([AppLoadingScreen.tsx](../../src/components/AppLoadingScreen.tsx)), and the
+> closure checklist ([docs/pre-admin-closure-checklist.md](../pre-admin-closure-checklist.md)).
+> This planning package has been reconciled against that branch. **The Admin
+> Dashboard itself is still not implemented** — `/admin` remains the placeholder
+> at [src/pages/AdminPage.tsx](../../src/pages/AdminPage.tsx), and these documents
+> remain planning-only.

@@ -54,6 +54,20 @@ and avatar signed-URL resolution. [src/store/useProfileStore.ts](../../src/store
 wraps it and **resets on identity change** (so a second user never sees the
 first user's data — a pattern the admin store must copy).
 
+> **Codex pre-admin cleanup (landed).** The profile/account surface has been
+> redesigned and closed out per
+> [docs/pre-admin-closure-checklist.md](../pre-admin-closure-checklist.md):
+> the Profile page now uses a clean "Profile settings" layout grouped into
+> avatar/identity, contact/location, and sign-in/security; avatar changes go
+> through a crop editor ([AvatarCropDialog.tsx](../../src/components/account/AvatarCropDialog.tsx))
+> that uploads a bounded WebP; the [AccountMenu](../../src/components/account/AccountMenu.tsx)
+> dropdown is trimmed to **Profile + Sign out only (no admin link yet)**; and
+> loading is scoped (one landing splash per session + compact route/workspace
+> fallbacks). The avatar display priority `avatar_path → avatar_url → initials`
+> is implemented. None of this changes the admin plan's substance — but the
+> admin console should reuse these patterns rather than reinventing them, and an
+> "Admin" entry in `AccountMenu` is a future addition gated on the role helper.
+
 ## Local-first `/app`
 
 [src/store/useStore.ts](../../src/store/useStore.ts) persists projects to
@@ -62,12 +76,15 @@ store (`framefore-images`). Projects are account-scoped *locally* via
 `ownerUserId` (`null` = guest). `App.tsx`'s `useSyncProjectOwner()` keeps the
 filter in sync with the session. **Project data never reaches Supabase today.**
 
-## Supabase schema (written, hardened — not necessarily applied/wired)
+## Supabase schema (written, hardened — applied status is per-environment)
 
-Per [supabase/SCHEMA_OVERVIEW.md](../../supabase/SCHEMA_OVERVIEW.md): migrations
-`0001–0008` exist and are reviewed, but the overview states they are *"Not yet
-applied to any Supabase project, and not wired to the app."* Treat application
-status as environment-dependent and verify before building.
+Migrations `0001–0008` exist and are reviewed/hardened
+([supabase/SCHEMA_OVERVIEW.md](../../supabase/SCHEMA_OVERVIEW.md)). They **may
+already be applied** in the current Supabase setup — do **not** assume they are
+universally unapplied. Treat applied status as **environment-specific**: confirm
+per environment (staging/prod) before relying on any table/function and before
+deploy. Independently of DB state, the schema is **not yet wired to the app**
+(the frontend remains local-first for project data).
 
 | Table | State | Admin relevance |
 |---|---|---|
@@ -112,7 +129,8 @@ status as environment-dependent and verify before building.
    view or Edge Function (see [07](07-user-management-plan.md), [14](14-database-views-rpcs-and-migrations.md)).
 3. No Edge Function runtime/secrets configured → blocks every privileged action.
 4. Event producers missing → security/abuse viewers would be empty.
-5. Migrations' applied status must be confirmed per environment.
+5. Migrations' applied status must be **verified per environment** before deploy
+   (they exist and may be applied; don't assume either way).
 
 ## Risks of implementing admin too early
 

@@ -29,9 +29,12 @@ live. Builds on the pre-launch checklist in
       (`grep -ri service_role` clean; bundle scan clean).
 - [ ] Service-role key + IP-hash salt set only as Edge-function secrets
       (`supabase secrets set`).
-- [ ] `.env.local` (and `client_secret_*.json` seen in repo root) are
-      git-ignored / not bundled — **audit the stray `public/client_secret_2_Framefore.json`**
-      before launch; OAuth client secrets must never ship in `public/`.
+- [ ] `.env.local` is git-ignored / not bundled.
+- [ ] **Verify no OAuth client-secret JSON files exist in `public/` or `dist/`
+      before launch** (e.g. `ls public/client_secret* dist/client_secret*` → none).
+      Codex's cleanup removed the earlier `public/client_secret_2_Framefore.json`;
+      re-verify each build, since anything under `public/`/`dist/` is served
+      publicly. OAuth client secrets belong only in server/Edge secrets.
 - [ ] CI/CD never echoes secrets in logs.
 
 ## Identity & access

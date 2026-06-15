@@ -6,21 +6,28 @@ All admin routes nest under `/admin` and render inside a shared `AdminLayout`.
 This is additive to [src/App.tsx](../../src/App.tsx) — the existing flat routes
 stay as-is.
 
-| Route | Component | Min role | Notes |
-|---|---|---|---|
-| `/admin` | `OverviewPage` | support | index |
-| `/admin/users` | `UsersPage` | support | table |
-| `/admin/users/:userId` | `UserDetailPage` | support | detail + role actions |
-| `/admin/roles` | `RolesPage` | admin (view: support) | role mgmt |
-| `/admin/audit` | `AuditPage` | admin | log viewer |
-| `/admin/security` | `SecurityPage` | admin | empty until producers |
-| `/admin/abuse` | `AbusePage` | admin | Edge-fn backed |
-| `/admin/storage` | `StoragePage` | admin | avatars now |
-| `/admin/projects` | `ProjectsPage` | admin | future-gated state |
-| `/admin/system` | `SystemPage` | admin | health |
-| `/admin/settings` | `SettingsPage` | owner | future |
-| `/admin/docs` | `RunbookPage` | support | static |
-| `/admin/*` | `AdminNotFound` | (any admin) | in-console 404 |
+> **MVP gate: owner/admin only.** `is_admin()` covers owner+admin and there are
+> no console read policies for support/reviewer yet, so **every route below
+> requires owner/admin in MVP.** The "Min role" column shows the *intended*
+> long-term floor; cells naming `support`/`reviewer` are **🔮 future** and only
+> take effect once a staff helper + read policies are added (see
+> [03](03-role-permissions-matrix.md), [24](24-open-questions-and-decisions.md)).
+
+| Route | Component | Min role (intended) | MVP gate | Notes |
+|---|---|---|---|---|
+| `/admin` | `OverviewPage` | support 🔮 | owner/admin | index |
+| `/admin/users` | `UsersPage` | support 🔮 | owner/admin | table |
+| `/admin/users/:userId` | `UserDetailPage` | support 🔮 | owner/admin | detail + role actions |
+| `/admin/roles` | `RolesPage` | admin (view: support 🔮) | owner/admin | role mgmt |
+| `/admin/audit` | `AuditPage` | admin | owner/admin | log viewer |
+| `/admin/security` | `SecurityPage` | admin | owner/admin | empty until producers |
+| `/admin/abuse` | `AbusePage` | admin | owner/admin | Edge-fn backed |
+| `/admin/storage` | `StoragePage` | admin | owner/admin | avatars now |
+| `/admin/projects` | `ProjectsPage` | admin | owner/admin | future-gated state |
+| `/admin/system` | `SystemPage` | admin | owner/admin | health |
+| `/admin/settings` | `SettingsPage` | owner | owner | future |
+| `/admin/docs` | `RunbookPage` | support 🔮 | owner/admin | static |
+| `/admin/*` | `AdminNotFound` | (any admin) | owner/admin | in-console 404 |
 
 ### Router shape (planned)
 
@@ -59,8 +66,11 @@ The guard must distinguish four states and never flash admin chrome:
    attempted path so login can bounce back).
 3. **Signed in, not admin** → `AdminForbidden` (403 panel, link back to `/app`),
    **not** a redirect (a redirect leaks "this exists / you almost had it"; an
-   explicit, calm 403 is clearer and avoids loops).
-4. **Signed in, sufficient role** → render the layout + route.
+   explicit, calm 403 is clearer and avoids loops). **In MVP this includes
+   `support` and `reviewer`** — they hold a role but no console access yet, so
+   they see Forbidden until a staff helper + read policies land
+   ([03](03-role-permissions-matrix.md)).
+4. **Signed in, sufficient role (owner/admin in MVP)** → render the layout + route.
 
 ### No-flicker contract
 
@@ -71,10 +81,13 @@ mount AdminGuard
   ├─ if !authStore.initialized  -> AdminBootScreen (wait)
   ├─ else if !user              -> redirect /login?redirect=...
   ├─ else if role === undefined -> AdminBootScreen (role fetch in flight)
-  ├─ else if !roleAllowed       -> AdminForbidden
+  ├─ else if !roleAllowed       -> AdminForbidden   // MVP: roleAllowed = isAdmin() (owner|admin)
   └─ else                       -> children
 ```
 
+- `roleAllowed` in MVP is simply **owner or admin**; support/reviewer evaluate to
+  `false` and land on `AdminForbidden` until a staff helper + read policies are
+  added ([03](03-role-permissions-matrix.md)).
 - Admin UI is **never** rendered before `role` resolves (prevents a
   "saw the dashboard for 200ms then got kicked" flash).
 - The role fetch is a single RPC (`has_current_user_role` per needed role, or one

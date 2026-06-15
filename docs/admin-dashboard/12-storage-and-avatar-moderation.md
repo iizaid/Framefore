@@ -19,6 +19,12 @@ write paths for reference-images).
   count `avatar_path IS NOT NULL` and, with care, view a specific avatar via a
   signed URL minted through an Edge function (admins can't read other users'
   storage with the anon client — RLS scopes to the owner).
+  - **Consequence for the Users list ([07](07-user-management-plan.md)):** the
+    list **cannot** display other users' uploaded avatars in the browser. Show
+    **initials and/or the external OAuth `avatar_url`** (a public http(s) URL)
+    only. Rendering an uploaded `avatar_path` for another user requires the
+    audited `admin-view-storage-object` Edge function below — never a broad admin
+    SELECT policy on `storage.objects`.
 - **Reference images (after cloud sync):** `scene_assets` holds metadata
   (`storage_path`, `mime_type`, `size_bytes`, `position`). Footprint =
   `sum(size_bytes)`. Empty until sync.
