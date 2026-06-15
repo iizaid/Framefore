@@ -14,11 +14,10 @@
 --   * Roles do NOT live on profiles, so a profile UPDATE can never touch them.
 --
 -- BOOTSTRAP (first owner): insert exactly one owner row manually, once, using
--- the Supabase SQL Editor (which runs as service-role / postgres):
+-- the Supabase SQL Editor:
 --     INSERT INTO public.user_roles (user_id, role, granted_by)
 --     VALUES ('<YOUR-AUTH-USER-UUID>', 'owner', '<YOUR-AUTH-USER-UUID>');
 -- After that, the owner uses grant_app_role() for everyone else.
--- See supabase/ADMIN_MODEL.md.
 --
 -- Safe to re-run: CREATE TABLE IF NOT EXISTS, CREATE OR REPLACE FUNCTION,
 -- DROP POLICY IF EXISTS before CREATE POLICY.
@@ -27,17 +26,13 @@
 -- ---------------------------------------------------------------------------
 -- 1. user_roles
 -- ---------------------------------------------------------------------------
--- role is text + CHECK (not an enum) so the migration stays idempotent — adding
--- enum values later is awkward; a CHECK list is trivial to extend.
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role        text        NOT NULL CHECK (role IN ('owner','admin','support','reviewer')),
-  -- Who granted this role (audit breadcrumb). SET NULL if that admin is deleted.
   granted_by  uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
-  -- A user holds each role at most once.
   CONSTRAINT user_roles_user_role_uniq UNIQUE (user_id, role)
 );
 
@@ -52,18 +47,14 @@ CREATE TRIGGER set_user_roles_updated_at
 -- ---------------------------------------------------------------------------
 -- 2. Role-check helper functions
 -- ---------------------------------------------------------------------------
--- SECURITY DEFINER so they can read user_roles regardless of the caller's RLS
--- view (a user can confirm their own admin status; policies can call is_admin()
--- without needing a SELECT policy that exposes other users' role rows).
--- No dynamic SQL anywhere. Explicit search_path. STABLE (no writes).
---
--- PRIVACY: there is deliberately NO function that lets a normal user look up an
--- ARBITRARY user's role. The self-check below takes no uid argument — it can
--- only ever read auth.uid(), so it cannot be used to enumerate other accounts'
--- privileges. Arbitrary-uid lookups go through admin_has_app_role(), which
--- returns false for non-admins (fails closed; leaks nothing).
+-- Important order:
+-- has_current_user_role -> is_admin/is_owner -> admin_has_app_role
+-- because admin_has_app_role calls is_admin().
 
--- Self-only: "does the CURRENT caller hold this role?" Safe to expose broadly.
+-- Remove old unsafe helper if it exists from any previous draft.
+DROP FUNCTION IF EXISTS public.has_app_role(uuid, text);
+
+-- Self-only: "does the CURRENT caller hold this role?"
 CREATE OR REPLACE FUNCTION public.has_current_user_role(required_role text)
 RETURNS boolean
 LANGUAGE sql
@@ -72,13 +63,47 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.user_roles r
-    WHERE r.user_id = auth.uid() AND r.role = required_role
+    SELECT 1
+    FROM public.user_roles r
+    WHERE r.user_id = auth.uid()
+      AND r.role = required_role
   );
 $$;
 
--- Admin-only arbitrary lookup. Returns false (NOT an error) when the caller is
--- not an admin, so it can't be used as a role-enumeration oracle.
+-- "Is the current caller an admin?" Owner is treated as admin.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles r
+    WHERE r.user_id = auth.uid()
+      AND r.role IN ('owner','admin')
+  );
+$$;
+
+-- "Is the current caller an owner?"
+CREATE OR REPLACE FUNCTION public.is_owner()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles r
+    WHERE r.user_id = auth.uid()
+      AND r.role = 'owner'
+  );
+$$;
+
+-- Admin-only arbitrary lookup.
+-- Returns false for non-admins, so normal users cannot enumerate roles.
 CREATE OR REPLACE FUNCTION public.admin_has_app_role(target_user uuid, required_role text)
 RETURNS boolean
 LANGUAGE sql
@@ -88,68 +113,38 @@ SET search_path = public
 AS $$
   SELECT public.is_admin()
      AND EXISTS (
-       SELECT 1 FROM public.user_roles r
-       WHERE r.user_id = target_user AND r.role = required_role
+       SELECT 1
+       FROM public.user_roles r
+       WHERE r.user_id = target_user
+         AND r.role = required_role
      );
 $$;
 
--- "Is the current caller an admin?" — owner is a superset of admin.
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles r
-    WHERE r.user_id = auth.uid() AND r.role IN ('owner','admin')
-  );
-$$;
-
-CREATE OR REPLACE FUNCTION public.is_owner()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles r
-    WHERE r.user_id = auth.uid() AND r.role = 'owner'
-  );
-$$;
-
--- Lock down execution: revoke from anonymous, allow signed-in users to call.
--- has_current_user_role / admin_has_app_role are both safe to expose to
--- authenticated: the first is self-only; the second fails closed for non-admins.
+-- Lock down execution.
 REVOKE ALL ON FUNCTION public.has_current_user_role(text)      FROM public, anon;
 REVOKE ALL ON FUNCTION public.admin_has_app_role(uuid, text)   FROM public, anon;
 REVOKE ALL ON FUNCTION public.is_admin()                       FROM public, anon;
 REVOKE ALL ON FUNCTION public.is_owner()                       FROM public, anon;
+
 GRANT EXECUTE ON FUNCTION public.has_current_user_role(text)    TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_has_app_role(uuid, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin()                     TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_owner()                     TO authenticated;
-
--- NOTE: the old public.has_app_role(uuid, text) has been removed (it let any
--- authenticated user probe an arbitrary user's roles). If a prior version of
--- this migration was applied to a staging project, drop the stale function:
---   DROP FUNCTION IF EXISTS public.has_app_role(uuid, text);
 
 -- ---------------------------------------------------------------------------
 -- 3. RLS on user_roles — read-only for the client, NO write path
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- A user may see their OWN role rows (e.g., to toggle admin UI). Admins may see
--- everyone's (for support). No one may INSERT/UPDATE/DELETE via the client —
--- there is intentionally no write policy, so all client writes are denied.
 DROP POLICY IF EXISTS "user_roles_select_own_or_admin" ON public.user_roles;
 CREATE POLICY "user_roles_select_own_or_admin" ON public.user_roles
-  FOR SELECT USING (auth.uid() = user_id OR public.is_admin());
+  FOR SELECT
+  USING (
+    auth.uid() = user_id
+    OR public.is_admin()
+  );
 
--- (No INSERT/UPDATE/DELETE policies. This is deliberate — see header.)
+-- No INSERT/UPDATE/DELETE policies. Deliberate.
 
 -- ---------------------------------------------------------------------------
 -- 4. admin_audit_events — append-only record of privileged actions
@@ -164,29 +159,24 @@ CREATE TABLE IF NOT EXISTS public.admin_audit_events (
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS admin_audit_actor_idx  ON public.admin_audit_events(actor_user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS admin_audit_target_idx ON public.admin_audit_events(target_user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS admin_audit_actor_idx
+  ON public.admin_audit_events(actor_user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS admin_audit_target_idx
+  ON public.admin_audit_events(target_user_id, created_at DESC);
 
 ALTER TABLE public.admin_audit_events ENABLE ROW LEVEL SECURITY;
 
--- Admins can READ the audit log. Regular users cannot read global audit data.
 DROP POLICY IF EXISTS "admin_audit_select_admin" ON public.admin_audit_events;
 CREATE POLICY "admin_audit_select_admin" ON public.admin_audit_events
-  FOR SELECT USING (public.is_admin());
+  FOR SELECT
+  USING (public.is_admin());
 
--- No client INSERT/UPDATE/DELETE policies: rows are written only by the
--- SECURITY DEFINER grant/revoke functions below (and service role).
+-- No client INSERT/UPDATE/DELETE policies.
 
 -- ---------------------------------------------------------------------------
 -- 5. Controlled grant / revoke — the only in-DB role write path
 -- ---------------------------------------------------------------------------
--- Authorization rules (least privilege):
---   * Only an OWNER may grant or revoke 'owner' or 'admin'.
---   * An ADMIN (or owner) may grant or revoke 'support' or 'reviewer'.
---   * Anyone else → exception. A user can never escalate themselves because the
---     function checks the CALLER's existing role first.
--- Both functions write an admin_audit_events row. No dynamic SQL.
-
 CREATE OR REPLACE FUNCTION public.grant_app_role(target_user uuid, new_role text)
 RETURNS void
 LANGUAGE plpgsql
@@ -204,7 +194,7 @@ BEGIN
     RAISE EXCEPTION 'grant_app_role: invalid role %', new_role;
   END IF;
 
-  -- Privileged roles require owner; lesser roles require admin-or-owner.
+  -- Owner/admin are privileged roles and can only be granted by owner.
   IF new_role IN ('owner','admin') THEN
     IF NOT public.is_owner() THEN
       RAISE EXCEPTION 'grant_app_role: only an owner may grant %', new_role;
@@ -220,7 +210,12 @@ BEGIN
   ON CONFLICT (user_id, role) DO NOTHING;
 
   INSERT INTO public.admin_audit_events (actor_user_id, target_user_id, action, metadata)
-  VALUES (caller, target_user, 'grant_role', jsonb_build_object('role', new_role));
+  VALUES (
+    caller,
+    target_user,
+    'grant_role',
+    jsonb_build_object('role', new_role)
+  );
 END;
 $$;
 
@@ -237,6 +232,10 @@ BEGIN
     RAISE EXCEPTION 'revoke_app_role: no authenticated caller';
   END IF;
 
+  IF old_role NOT IN ('owner','admin','support','reviewer') THEN
+    RAISE EXCEPTION 'revoke_app_role: invalid role %', old_role;
+  END IF;
+
   IF old_role IN ('owner','admin') THEN
     IF NOT public.is_owner() THEN
       RAISE EXCEPTION 'revoke_app_role: only an owner may revoke %', old_role;
@@ -247,7 +246,7 @@ BEGIN
     END IF;
   END IF;
 
-  -- Safety rail: never allow removing the last remaining owner (lock-out guard).
+  -- Safety rail: never allow removing the last remaining owner.
   IF old_role = 'owner' THEN
     IF (SELECT count(*) FROM public.user_roles WHERE role = 'owner') <= 1 THEN
       RAISE EXCEPTION 'revoke_app_role: cannot remove the last owner';
@@ -255,27 +254,29 @@ BEGIN
   END IF;
 
   DELETE FROM public.user_roles
-  WHERE user_id = target_user AND role = old_role;
+  WHERE user_id = target_user
+    AND role = old_role;
 
   INSERT INTO public.admin_audit_events (actor_user_id, target_user_id, action, metadata)
-  VALUES (caller, target_user, 'revoke_role', jsonb_build_object('role', old_role));
+  VALUES (
+    caller,
+    target_user,
+    'revoke_role',
+    jsonb_build_object('role', old_role)
+  );
 END;
 $$;
 
--- These mutate roles. Even though they self-check the caller, keep them off the
--- anon role entirely; only signed-in users may attempt them (and will be
--- rejected unless already owner/admin).
 REVOKE ALL ON FUNCTION public.grant_app_role(uuid, text)  FROM public, anon;
 REVOKE ALL ON FUNCTION public.revoke_app_role(uuid, text) FROM public, anon;
+
 GRANT EXECUTE ON FUNCTION public.grant_app_role(uuid, text)  TO authenticated;
 GRANT EXECUTE ON FUNCTION public.revoke_app_role(uuid, text) TO authenticated;
 
 -- =============================================================================
--- Production stance on admin ACCESS TO USER CONTENT (documented decision):
---   This migration deliberately does NOT add admin SELECT/UPDATE policies on
---   projects/scenes/etc. Admin RLS over user content is broad and easy to leak.
---   Support/admin operations on user data should go through Edge Functions using
---   the service role, with every action written to admin_audit_events. Add
---   narrow, explicit admin read policies later only if a concrete support flow
---   requires them. See supabase/ADMIN_MODEL.md.
+-- Production stance on admin ACCESS TO USER CONTENT:
+-- This migration deliberately does NOT add admin SELECT/UPDATE policies on
+-- projects/scenes/etc. Support/admin operations on user content should go
+-- through Edge Functions using the service role, with every action written to
+-- admin_audit_events. Add narrow admin read policies later only if needed.
 -- =============================================================================
