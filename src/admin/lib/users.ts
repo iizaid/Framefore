@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { adminUsersListSchema } from "@/admin/lib/users.schema";
 import { ADMIN_ROLES, type AdminRole, type AdminUsersListResult } from "@/admin/types";
 
 export interface LoadAdminUsersOptions {
@@ -15,8 +16,6 @@ export type AdminUsersListLoadResult = {
   unavailable?: boolean;
 };
 
-type JsonRecord = Record<string, unknown>;
-
 const ROLE_SET = new Set<string>(ADMIN_ROLES);
 
 // Keep these in sync with the server-side guards in
@@ -28,35 +27,6 @@ function logUsersError(context: string, error: unknown) {
   if (import.meta.env.DEV) {
     console.warn(`[admin users] ${context}`, error);
   }
-}
-
-function isRecord(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function asString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
-function asNullableString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() !== "" ? value : null;
-}
-
-function asNumber(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return 0;
-}
-
-function asBoolean(value: unknown): boolean {
-  return value === true;
-}
-
-function asNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function normalizeLimit(limit: number | null | undefined): number {
@@ -79,66 +49,17 @@ function isAdminRole(value: unknown): value is AdminRole {
   return typeof value === "string" && ROLE_SET.has(value);
 }
 
-function asRoleArray(value: unknown): AdminRole[] {
-  if (!Array.isArray(value)) return [];
-
-  const roles: AdminRole[] = [];
-  for (const role of value) {
-    if (isAdminRole(role) && !roles.includes(role)) {
-      roles.push(role);
-    }
-  }
-  return roles;
-}
-
-function asNullableRole(value: unknown): AdminRole | null {
-  return isAdminRole(value) ? value : null;
-}
-
+// Runtime validation lives in users.schema.ts. The schema drops invalid user
+// rows (e.g. empty userId) and filters unknown roles; a structurally wrong
+// payload returns null so callers fall back to a safe "unavailable" state.
+// Raw Zod issue details are only logged in dev.
 function parseUsersList(value: unknown): AdminUsersListResult | null {
-  if (!isRecord(value)) return null;
-
-  const page = isRecord(value.page) ? value.page : {};
-  const filters = isRecord(value.filters) ? value.filters : {};
-  const users = Array.isArray(value.users) ? value.users : [];
-
-  return {
-    generatedAt: typeof value.generatedAt === "string" ? value.generatedAt : new Date().toISOString(),
-    sourceVersion: "phase-f1",
-    page: {
-      limit: asNumber(page.limit),
-      offset: asNumber(page.offset),
-      returned: asNumber(page.returned),
-      total: asNumber(page.total),
-      hasMore: asBoolean(page.hasMore),
-    },
-    filters: {
-      search: asNullableString(filters.search),
-      role: asNullableRole(filters.role),
-      profileCompleted: asNullableBoolean(filters.profileCompleted),
-    },
-    users: users
-      .filter(isRecord)
-      .map((user) => {
-        const userId = asString(user.userId).trim();
-        if (userId === "") return null;
-
-        const roles = asRoleArray(user.roles);
-        return {
-          userId,
-          email: asNullableString(user.email),
-          displayName: asNullableString(user.displayName),
-          createdAt: asString(user.createdAt),
-          lastSignInAt: asNullableString(user.lastSignInAt),
-          profileCompleted: asBoolean(user.profileCompleted),
-          hasUploadedAvatar: asBoolean(user.hasUploadedAvatar),
-          roles,
-          isOwner: asBoolean(user.isOwner) || roles.includes("owner"),
-          isAdmin: asBoolean(user.isAdmin) || roles.includes("owner") || roles.includes("admin"),
-        };
-      })
-      .filter((user): user is AdminUsersListResult["users"][number] => user !== null),
-  };
+  const result = adminUsersListSchema.safeParse(value);
+  if (!result.success) {
+    logUsersError("Users list failed schema validation.", result.error.issues);
+    return null;
+  }
+  return result.data;
 }
 
 function friendlyUsersError(error: { code?: string; message?: string }): AdminUsersListLoadResult {

@@ -18,6 +18,12 @@
 > **Phase F1 hardening applied** (`0011_admin_users_list_hardening.sql`): search
 > length cap (100), `LIKE` wildcard escaping, lowercase role normalization,
 > offset cap (10000), and supporting `public` indexes — still no Users UI.
+> **Platform-1 admin server-state foundation implemented**: TanStack Query is
+> available (provider wired at the app root), TanStack Table is available, and
+> Zod runtime validation now guards the Overview and Users RPC payloads; see
+> [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md).
+> Zustand still owns auth/role/local state; the Overview store is unchanged.
+> Users UI is still not implemented and `/app` stays local-first.
 > Users table, audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:
@@ -68,6 +74,7 @@ QA/hardening → roadmap → decisions.**
 | E1 | [phase-e1-overview-data-contract.md](phase-e1-overview-data-contract.md) | Implemented safe aggregate Overview metrics contract |
 | E2 | [phase-e2-overview-dashboard-ui.md](phase-e2-overview-dashboard-ui.md) | Implemented Overview UI using real aggregate metrics only |
 | F1 | [phase-f1-users-list-data-contract.md](phase-f1-users-list-data-contract.md) | Implemented safe Users list data contract |
+| P1 | [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md) | Implemented admin server-state foundation (TanStack Query/Table, Zod) |
 
 ## Hard rules this package obeys
 
