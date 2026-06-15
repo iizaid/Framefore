@@ -17,6 +17,7 @@ Read this file before running anything.
 | `migrations/0005_security_events.sql` | Optional append-only per-user audit log table |
 | `migrations/0006_admin_roles.sql` | `user_roles`, role-check functions, `grant/revoke_app_role()`, `admin_audit_events` |
 | `migrations/0007_rate_limit_events.sql` | Service-role-only counter table for future Edge-Function rate limits |
+| `migrations/0008_profile_account_fields_and_avatars.sql` | Adds profile/account fields (nickname, phone, country, city, timezone, bio, avatar_path, profile_completed) + self-insert policy + private `avatars` Storage bucket and RLS |
 
 ### Companion docs
 
@@ -86,6 +87,18 @@ that is infrastructure for **future** Edge-Function rate limits. It does **not**
 and cannot rate-limit Supabase Auth login/signup — that is a dashboard +
 CAPTCHA + Cloudflare concern. See `RATE_LIMITING.md`.
 
+**0008** — profile/account fields + avatars. Adds editable columns to
+`public.profiles` (`nickname`, `phone_number`, `country`, `city`, `timezone`,
+`bio`, `avatar_path`, `profile_completed`) using `ADD COLUMN IF NOT EXISTS` so it
+is safe on a live database. All new fields are nullable/optional (OAuth users are
+never broken). Adds length/format CHECK constraints, a case-insensitive unique
+index on `lower(nickname)`, and a narrow `profiles_insert_own` policy so the
+Profile page can self-heal a missing row. Declares the **private** `avatars`
+Storage bucket (2 MB limit, PNG/JPEG/WebP/GIF, SVG excluded) with own-folder RLS
+on `storage.objects` keyed on the first path segment (`<user_id>/avatar/<file>`).
+Uploaded `avatar_path` (shown via signed URL) takes priority over the external
+`avatar_url` OAuth fallback. See `../docs/profile-and-security-next-steps.md`.
+
 ### Tenant integrity is structural, not just RLS
 
 0002 adds composite UNIQUE constraints and composite FKs so that a scene, link,
@@ -103,7 +116,7 @@ tenants. See `SCHEMA_OVERVIEW.md` and `SECURITY_REVIEW.md`.
 ### Method A — Supabase Dashboard SQL Editor (recommended for one-off setup)
 
 1. Open your Supabase project → SQL Editor.
-2. Paste and run each file **in order**: 0001 → 0002 → 0003 → 0004 → 0005 → 0006 → 0007.
+2. Paste and run each file **in order**: 0001 → 0002 → 0003 → 0004 → 0005 → 0006 → 0007 → 0008.
 3. Check for errors after each file before proceeding to the next.
 
 ### Method B — Supabase CLI
@@ -220,6 +233,9 @@ See `SECURITY_REVIEW.md` for the full residual-risk list and pre-launch checklis
 - Do not run 0003 before 0002 — policies reference tables that must exist.
 - Do not run 0004's INSERT into `storage.buckets` if the bucket already exists
   via the Dashboard — the `ON CONFLICT DO NOTHING` handles it, but verify first.
+- 0008 declares the private `avatars` bucket the same way. If your Supabase
+  version cannot write `storage.buckets` via SQL, create the `avatars` bucket
+  manually (private, 2 MB, PNG/JPEG/WebP/GIF) and run only its policy block.
 - Keep the service-role key out of any frontend variable.
 - Keep RLS enabled on every table. Never disable it to "fix" a permission error
   — fix the policy instead.

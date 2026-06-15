@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/primitives";
+import { useAuthStore } from "@/store/useAuthStore";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -23,7 +25,17 @@ function LandingBrandMark({
   onClick?: () => void;
 }) {
   return (
-    <Link to="/" onClick={onClick} className="flex items-center gap-2.5 shrink-0">
+    <Link 
+      to="/" 
+      onClick={(e) => {
+        if (window.location.pathname === "/") {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (onClick) onClick();
+      }} 
+      className="flex items-center gap-2.5 shrink-0 cursor-pointer"
+    >
       <img
         src={variant === "dark" ? "/black.svg" : "/white.svg"}
         alt="Framefore"
@@ -72,6 +84,11 @@ export function LandingNav() {
   const [open, toggle] = useReducer((s: boolean) => !s, false);
   const close = () => { if (open) toggle(); };
 
+  // Signed-in state drives the auth controls: signed-out shows "Log in"; signed
+  // in hides it and shows the avatar/account menu.
+  const user = useAuthStore((s) => s.user);
+  const signOut = useAuthStore((s) => s.signOut);
+
   // Track scroll in React state so logo src (JSX attr) updates correctly
   const [scrolled, setScrolled] = useState(false);
 
@@ -114,8 +131,8 @@ export function LandingNav() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
           isLight
-            ? "border-b border-[var(--color-border-strong)] bg-white/95 shadow-sm backdrop-blur"
-            : "border-b border-transparent bg-gradient-to-b from-black/50 to-transparent"
+            ? "border-b border-[var(--color-border-strong)] bg-white/85 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] backdrop-blur-xl"
+            : "border-b border-white/10 bg-black/20 backdrop-blur-md"
         )}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
@@ -132,31 +149,50 @@ export function LandingNav() {
           </nav>
 
           {/* Desktop actions */}
-          <div className="hidden items-center gap-2 md:flex">
-            <Link to="/login">
-              <button
-                className={cn(
-                  "px-3 py-2 text-sm font-semibold transition-colors duration-200",
-                  isLight
-                    ? "text-[var(--color-ink)] hover:text-neutral-600"
-                    : "text-white hover:text-white/80"
-                )}
-              >
-                Login
-              </button>
-            </Link>
-            <Link to="/app">
-              <Button
-                variant="primary"
-                size="sm"
-                className={cn(
-                  "transition-all duration-300",
-                  !isLight && "bg-white text-black hover:bg-white/90"
-                )}
-              >
-                Start planning
-              </Button>
-            </Link>
+          <div className="hidden items-center gap-2.5 md:flex">
+            {user ? (
+              <>
+                <Link to="/app">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className={cn(
+                      "transition-all duration-300 shadow-xl",
+                      !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
+                    )}
+                  >
+                    Open app
+                  </Button>
+                </Link>
+                <AccountMenu variant={isLight ? "light" : "dark"} />
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className={cn(
+                    "rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300",
+                    isLight
+                      ? "text-[var(--color-ink)] hover:bg-black/5 hover:text-black"
+                      : "text-white/90 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  Log in
+                </Link>
+                <Link to="/app">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className={cn(
+                      "transition-all duration-300 shadow-xl",
+                      !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
+                    )}
+                  >
+                    Start planning
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile — hamburger only (no duplicate CTA in top bar) */}
@@ -247,14 +283,44 @@ export function LandingNav() {
                   initial="hidden"
                   animate="visible"
                 >
-                  <Link
-                    to="/login"
-                    onClick={close}
-                    className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
-                  >
-                    Login
-                  </Link>
+                  {user ? (
+                    <Link
+                      to="/profile"
+                      onClick={close}
+                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                    >
+                      Profile
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/login"
+                      onClick={close}
+                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                    >
+                      Login
+                    </Link>
+                  )}
                 </motion.div>
+
+                {user && (
+                  <motion.div
+                    custom={NAV_LINKS.length + 0.5}
+                    variants={linkVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        close();
+                        void signOut();
+                      }}
+                      className="flex h-11 w-full items-center rounded-xl px-4 text-left text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                    >
+                      Sign out
+                    </button>
+                  </motion.div>
+                )}
 
                 <div className="my-2 h-px bg-[var(--color-border-strong)]" />
 
@@ -267,7 +333,7 @@ export function LandingNav() {
                 >
                   <Link to="/app" onClick={close}>
                     <Button variant="primary" size="md" className="w-full">
-                      Start planning
+                      {user ? "Open app" : "Start planning"}
                     </Button>
                   </Link>
                 </motion.div>

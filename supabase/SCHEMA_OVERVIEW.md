@@ -8,7 +8,7 @@
 
 | Table | Purpose | Tenant key |
 |---|---|---|
-| `profiles` | Display name + avatar, 1:1 with `auth.users` | `id = auth.users.id` |
+| `profiles` | Display name, nickname, bio, contact + avatar (path/url), 1:1 with `auth.users` (0001 + 0008) | `id = auth.users.id` |
 | `user_settings` | Theme, migration flag, prefs JSONB | `user_id` |
 | `projects` | One Framefore project | `user_id` |
 | `scenes` | Ordered scenes — **`order_index` is the video order** | `user_id` + `project_id` |
@@ -70,4 +70,12 @@ writes cheap.
 - unique `(user_id|project_id, client_id)` — idempotent local→cloud migration
 - `security_events(user_id, created_at DESC)`, `admin_audit_*`, `rate_limit_*`
 
-See `migrations/0002…0007` for the authoritative DDL.
+See `migrations/0002…0008` for the authoritative DDL.
+
+## Avatars (0008)
+
+`profiles.avatar_path` holds the **private** Storage object path of an uploaded
+avatar (bucket `avatars`, convention `<user_id>/avatar/<file>`); display it via
+`createSignedUrl()`. `profiles.avatar_url` is the **external** OAuth fallback.
+Priority: `avatar_path` → `avatar_url` → rendered initials. Bucket RLS keys on
+the first path segment = `auth.uid()`, identical to `reference-images`.

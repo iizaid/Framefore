@@ -6,6 +6,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { ProfilePage } from "@/pages/ProfilePage";
 import { AdminPage } from "@/pages/AdminPage";
 
 // Route map:
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -64,20 +64,15 @@ environment as long as each one is allow-listed:
 - **OAuth (Google/GitHub)** and **signup email confirmation** → `/auth/callback`
 - **Password reset emails** → `/reset-password` (where the user sets a new password)
 
-## 4. OAuth providers (optional)
+## 4. Google and GitHub OAuth setup
 
-In Supabase Dashboard → Authentication → Providers:
-
-- **Google** — enable, add Client ID + Secret from Google Cloud Console.
-  In Google Cloud → Credentials, set the **Authorized redirect URI** to your
-  Supabase callback: `https://<project-ref>.supabase.co/auth/v1/callback`.
-- **GitHub** — enable, add Client ID + Secret from a GitHub OAuth App
-  (Settings → Developer settings → OAuth Apps). Set the GitHub app's
-  **Authorization callback URL** to `https://<project-ref>.supabase.co/auth/v1/callback`.
-
-Supabase handles the provider exchange and then redirects the browser to the
-`/auth/callback` route registered in step 3, where Framefore finishes the session
-and forwards the user to `/app`.
+1. **Supabase Dashboard Configuration**: Google/GitHub provider credentials (Client ID and Secret) are configured directly in the Supabase Dashboard (Authentication → Providers). They are NOT managed by the frontend app.
+2. **Frontend Implementation**: The frontend app only calls `signInWithOAuth({ provider: "google" })` or `"github"`. Supabase securely handles the redirect and secret exchange.
+3. **Local Redirect URL**: When configuring the OAuth app in Google Cloud / GitHub, ensure the redirect goes to Supabase as described above, and ensure the Supabase URL Configuration allows: `http://localhost:5173/auth/callback` for local development.
+4. **Production Redirect URL**: After deployment, ensure the Supabase URL Configuration allows: `https://YOUR_DOMAIN.com/auth/callback`
+5. **Security Warning**: **Never expose provider client secrets** in `VITE_` variables. Any variable prefixed with `VITE_` is baked into the public browser code.
+6. **Local Notes**: `.env.local` may contain optional local reference notes (like `GOOGLE_OAUTH_CLIENT_SECRET=`) but these are NOT read by the frontend. Ensure these secrets are never committed.
+7. **Restart Vite**: If you ever modify `.env.local`, remember to restart your Vite development server (`Ctrl+C` then `npm run dev`) for changes to take effect.
 
 ## 5. Email confirmation
 
@@ -95,3 +90,13 @@ In Supabase Dashboard → Authentication → Settings:
   custom `localStorage`.
 - Keep RLS enabled on every table. Cloud project storage and its RLS policies are a
   later phase — this phase is auth only and does not read or write project data to Supabase.
+
+## 7. Profile page & avatars (Phase 4.4)
+
+The `/profile` page lets a signed-in user edit their account and upload an avatar.
+Before using it, run **`supabase/migrations/0008_profile_account_fields_and_avatars.sql`**
+in the SQL Editor. It adds the profile fields and the private `avatars` Storage
+bucket (2 MB; PNG/JPEG/WebP/GIF; SVG excluded). Avatars are private and displayed
+via short-lived signed URLs; an uploaded `avatar_path` takes priority over the
+external OAuth `avatar_url`. 2FA is **not** implemented in this phase — see
+`profile-and-security-next-steps.md`.

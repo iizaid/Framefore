@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useProfileStore } from "@/store/useProfileStore";
+import { AvatarCircle, deriveInitials } from "@/components/account/AccountMenu";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type { Project } from "@/types";
 import { formatDuration, relativeTime } from "@/lib/utils";
@@ -157,12 +159,22 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
-// Minimal account area in the workspace header. Local-first stays the default:
-// when auth isn't configured we render nothing, and signing out leaves the user
-// right here in /app with their local projects intact.
+// Account area in the workspace header. Local-first stays the default: when auth
+// isn't configured we render nothing, so the workspace is unchanged for purely
+// local users. Signed-in users get an avatar that links to their profile plus a
+// quick sign-out; signing out leaves them right here in /app with local projects
+// intact.
 function AccountControl() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const avatarUrl = useProfileStore((s) => s.avatarUrl);
+  const profile = useProfileStore((s) => s.profile);
+  const loadProfile = useProfileStore((s) => s.loadProfile);
+
+  // Resolve the avatar once for signed-in users (shared with /profile + navbar).
+  useEffect(() => {
+    if (user && !profile) void loadProfile();
+  }, [user, profile, loadProfile]);
 
   if (!isSupabaseConfigured) return null;
 
@@ -176,11 +188,20 @@ function AccountControl() {
     );
   }
 
+  const initials = deriveInitials(profile?.full_name, user.email);
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="hidden max-w-[12rem] truncate text-sm text-[var(--color-ink-soft)] sm:inline" title={user.email ?? ""}>
-        {user.email}
-      </span>
+    <div className="flex items-center gap-1">
+      <Link
+        to="/profile"
+        title="Profile & account"
+        className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition-colors hover:bg-[var(--color-stone-surface)]"
+      >
+        <AvatarCircle url={avatarUrl} initials={initials} size={32} />
+        <span className="hidden max-w-[12rem] truncate text-sm text-[var(--color-ink-soft)] sm:inline">
+          {profile?.full_name || user.email}
+        </span>
+      </Link>
       <Button variant="ghost" size="icon" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}>
         <LogOut size={16} />
       </Button>
