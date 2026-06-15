@@ -34,6 +34,7 @@ A subsequent hardening patch was applied to Phase G:
 ## User Experience Polish
 - **Removed Dashboard Noise**: Eliminated the decorative "dashboard" statistic cards from `/admin/users` in favor of a clean, text-based summary strip. The table is now the unambiguous anchor of the page.
 - **Query Invalidation**: After a successful role mutation, TanStack Query immediately invalidates `adminQueryKeys.users.all` and `adminQueryKeys.overview()` to keep UI lists and role counts perfectly in sync. If a user edits their own roles, their local role store (`useAdminRoleStore`) is explicitly refreshed.
+- **Anchored Popover (UX Patch)**: The centered modal/dialog was replaced with a compact `position: fixed` anchored popover (`AdminRoleActionPopover`). No full-screen overlay, no background dim, no page blur. The popover opens beside the "Manage roles" button, clamps to viewport edges, and closes on outside-click or Escape. Inline confirmation (`Confirm grant` / `Confirm revoke`) is required before any RPC is called.
 
 ## Recommended Next Phase
 With Role Management safely deployed, the next logical step would be **Phase H: User Detail View**. This would provide a dedicated page to drill down into a user's specific audit events, security history, and detailed metadata, establishing the groundwork for future suspension or content moderation tools.
