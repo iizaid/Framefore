@@ -20,6 +20,7 @@ const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage").then((m) 
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const AdminPage = lazy(() => import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })));
+const AdminUsersPage = lazy(() => import("@/admin/pages/AdminUsersPage").then((m) => ({ default: m.AdminUsersPage })));
 
 // Route map:
 //   /              → public landing page
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
+          <Route path="/admin/users" element={<AdminGuard><AdminUsersPage /></AdminGuard>} />
           <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

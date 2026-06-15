@@ -17,18 +17,21 @@ import { AdminNavItem } from "@/admin/components/AdminNavItem";
 type AdminSidebarItem = {
   label: string;
   icon: LucideIcon;
-  active?: boolean;
+  /** Real link target. Omit for planned/disabled modules. */
+  to?: string;
+  /** Exact-match the route (used for /admin so it isn't active on /admin/users). */
+  end?: boolean;
 };
 
 const NAV_GROUPS: Array<{ title: string; items: AdminSidebarItem[] }> = [
   {
     title: "Console",
-    items: [{ label: "Overview", icon: LayoutDashboard, active: true }],
+    items: [{ label: "Overview", icon: LayoutDashboard, to: "/admin", end: true }],
   },
   {
     title: "People",
     items: [
-      { label: "Users", icon: Users },
+      { label: "Users", icon: Users, to: "/admin/users" },
       { label: "Roles", icon: UserCog },
     ],
   },
@@ -75,7 +78,7 @@ export function AdminSidebar() {
               </h2>
               <div className="space-y-1.5">
                 {group.items.map((item) => (
-                  <AdminNavItem key={item.label} icon={item.icon} label={item.label} active={item.active} />
+                  <AdminNavItem key={item.label} icon={item.icon} label={item.label} to={item.to} end={item.end} />
                 ))}
               </div>
             </section>

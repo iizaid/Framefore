@@ -23,8 +23,13 @@
 > Zod runtime validation now guards the Overview and Users RPC payloads; see
 > [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md).
 > Zustand still owns auth/role/local state; the Overview store is unchanged.
-> Users UI is still not implemented and `/app` stays local-first.
-> Users table, audit UI, role-management UI, and cloud sync still do not exist.
+> **Platform-1.1 strict Users schema patch + Phase F2 Users List UI
+> implemented**: `/admin/users` exists and is protected by `AdminGuard`, the
+> users table loads from the `admin_list_users` RPC only (TanStack Query +
+> TanStack Table), with URL-backed search/filter/pagination — see
+> [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md). No user management
+> actions, no user detail page, and `/app` stays local-first.
+> Audit UI, role-management UI, and cloud sync still do not exist.
 > The app
 > is still fully local-first (IndexedDB:
 > `framefore-state` / `framefore-images`, store `version 9`). These documents
@@ -75,6 +80,7 @@ QA/hardening → roadmap → decisions.**
 | E2 | [phase-e2-overview-dashboard-ui.md](phase-e2-overview-dashboard-ui.md) | Implemented Overview UI using real aggregate metrics only |
 | F1 | [phase-f1-users-list-data-contract.md](phase-f1-users-list-data-contract.md) | Implemented safe Users list data contract |
 | P1 | [platform-1-admin-server-state-foundation.md](platform-1-admin-server-state-foundation.md) | Implemented admin server-state foundation (TanStack Query/Table, Zod) |
+| F2 | [phase-f2-users-list-ui.md](phase-f2-users-list-ui.md) | Implemented Users List UI (+ strict page schema) using `admin_list_users` only |
 
 ## Hard rules this package obeys
 

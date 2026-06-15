@@ -65,11 +65,16 @@ const usersArraySchema = z.array(z.unknown()).transform((rows) => {
   return items;
 });
 
+// Page counters are always whole, non-negative numbers. Validating them
+// strictly (not as generic numbers) keeps a malformed/older payload from
+// producing nonsensical pagination math in the UI.
+const nonNegativeIntegerSchema = z.number().int().nonnegative();
+
 const pageSchema = z.object({
-  limit: z.number(),
-  offset: z.number(),
-  returned: z.number(),
-  total: z.number(),
+  limit: nonNegativeIntegerSchema,
+  offset: nonNegativeIntegerSchema,
+  returned: nonNegativeIntegerSchema,
+  total: nonNegativeIntegerSchema,
   hasMore: z.boolean(),
 });
 
