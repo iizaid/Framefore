@@ -51,7 +51,7 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, collapsed = f
           iconOnly ? "justify-center" : "gap-2.5",
           isActive
             ? "bg-white/[0.08] font-medium text-white shadow-sm ring-1 ring-white/10 before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-[var(--ff-violet)]"
-            : "text-[#9ca3af] hover:bg-white/[0.04] hover:text-white"
+            : "text-white/55 hover:bg-white/[0.04] hover:text-white"
         )
       }
     >

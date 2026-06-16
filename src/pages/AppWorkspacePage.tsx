@@ -95,7 +95,7 @@ function ProjectUnavailable({ onBack }: { onBack: () => void }) {
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6">
       <div className="max-w-sm text-center">
-        <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Project not available</h1>
+        <h1 className="font-display text-2xl text-[var(--ff-ink)]">Project not available</h1>
         <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
           This project isn't available for the account you're signed in with.
         </p>

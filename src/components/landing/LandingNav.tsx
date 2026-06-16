@@ -46,7 +46,7 @@ function LandingBrandMark({
       <span
         className={cn(
           "font-display text-xl transition-colors duration-300",
-          variant === "dark" ? "text-[var(--color-charcoal)]" : "text-white"
+          variant === "dark" ? "text-[var(--ff-ink)]" : "text-white"
         )}
       >
         Framefore

@@ -536,7 +536,7 @@ function ToolBtn({ label, onClick, children }: { label: string; onClick: () => v
       onPointerDown={(e) => e.stopPropagation()}
       title={label}
       aria-label={label}
-      className="grid h-7 w-7 place-items-center rounded-full text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+      className="grid h-7 w-7 place-items-center rounded-full text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
     >
       {children}
     </button>

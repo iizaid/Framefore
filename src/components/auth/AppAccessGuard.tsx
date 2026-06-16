@@ -74,13 +74,13 @@ function AppAccessUnavailable() {
     <div className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6">
       <div className="w-full max-w-sm text-center">
         <img src="/black.svg" alt="Framefore" className="mx-auto h-9 w-9" />
-        <h1 className="mt-5 font-display text-2xl text-[var(--color-charcoal)]">Workspace unavailable</h1>
+        <h1 className="mt-5 font-display text-2xl text-[var(--ff-ink)]">Workspace unavailable</h1>
         <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
           Accounts are temporarily unavailable, so the workspace can't be opened right now. Please try again later.
         </p>
         <Link
           to="/"
-          className="mt-6 inline-flex items-center justify-center rounded-xl border border-[var(--color-border-strong)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-stone-surface)]"
+          className="mt-6 inline-flex items-center justify-center rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-surface-2)]"
         >
           Back to home
         </Link>

@@ -12,11 +12,11 @@ const FEATURES = [
 
 export function FeatureCards() {
   return (
-    <section id="product" className="px-6 py-20 sm:py-28">
-      <div className="mx-auto max-w-5xl">
+    <section id="product" className="px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px]">
         <Reveal>
-          <div className="mb-12 max-w-2xl">
-            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
+          <div className="mb-8 max-w-3xl">
+            <h2 className="font-hero text-3xl leading-tight text-[var(--ff-ink)] sm:text-5xl">
               Everything before you hit generate.
             </h2>
             <p className="mt-3 text-[var(--color-ink-soft)]">
@@ -30,7 +30,7 @@ export function FeatureCards() {
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <RevealItem key={title}>
               <div className="card-surface group h-full rounded-[var(--radius-card)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_46px_-32px_rgba(18,43,165,0.35)]">
-                <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-[var(--ff-haiti)] text-white transition-transform duration-200 group-hover:scale-105">
+                <div className="mb-4 grid h-10 w-10 place-items-center rounded-[var(--radius-button)] bg-[var(--ff-haiti)] text-white transition-transform duration-200 group-hover:scale-105">
                   <Icon size={18} />
                 </div>
                 <h3 className="text-base font-semibold text-[var(--color-ink)]">{title}</h3>

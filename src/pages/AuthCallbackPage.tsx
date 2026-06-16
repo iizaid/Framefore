@@ -89,7 +89,7 @@ export function AuthCallbackPage() {
         </>
       ) : (
         <>
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--color-charcoal)]" />
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--ff-violet)]" />
           <p className="text-sm text-[var(--color-ink-soft)]">Finishing sign in…</p>
         </>
       )}

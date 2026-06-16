@@ -33,7 +33,7 @@
 
 ## Hero Video Removal
 
-The landing hero no longer renders or references the previous background video. The new hero is centered, text-first, and uses a small mono badge, strong headline, clear supporting copy, and existing CTA destinations.
+The landing hero no longer renders or references the previous background video. The current hero is centered, text-first, removes the small pill/badge entirely, and keeps the existing CTA destinations.
 
 ## Canvas Background
 

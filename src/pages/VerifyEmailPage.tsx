@@ -63,14 +63,14 @@ export function VerifyEmailPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white px-6 py-12 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[var(--ff-blue-chalk)] px-6 py-12 text-center">
       <img src="/black.svg" alt="Framefore" className="h-9 w-9" />
 
       <div className="max-w-sm">
-        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--color-stone-surface)] text-[var(--color-charcoal)]">
+        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-[var(--radius-card)] bg-white text-[var(--ff-violet)] shadow-[var(--ff-shadow-card)]">
           <MailCheck size={22} />
         </div>
-        <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Verify your email</h1>
+        <h1 className="font-display text-2xl text-[var(--ff-ink)]">Verify your email</h1>
         <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-soft)]">
           Check your inbox and confirm your email before opening the workspace.
         </p>
@@ -103,7 +103,7 @@ export function VerifyEmailPage() {
             type="button"
             onClick={handleContinue}
             disabled={checking}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)] disabled:opacity-40"
           >
             {checking ? <Loader2 size={16} className="animate-spin" /> : "I verified my email — continue"}
           </button>
@@ -114,7 +114,7 @@ export function VerifyEmailPage() {
             type="button"
             onClick={handleResend}
             disabled={!isSupabaseConfigured || resendState === "sending"}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-40"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)] disabled:opacity-40"
           >
             {resendState === "sending" ? <Loader2 size={16} className="animate-spin" /> : "Resend confirmation email"}
           </button>

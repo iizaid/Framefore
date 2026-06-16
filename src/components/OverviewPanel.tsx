@@ -33,11 +33,11 @@ export function OverviewPanel({ project }: { project: Project }) {
       {/* Readiness */}
       <div>
         <div className="mb-2 flex items-end justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">Readiness</span>
+          <span className="font-mono-ui text-[11px] font-medium uppercase text-[var(--color-ink-faint)]">Readiness</span>
           <span className="font-display text-3xl leading-none text-[var(--color-ink)]">{r.score}%</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-stone-surface)]">
-          <div className="h-full rounded-full bg-[#121212] transition-all duration-500" style={{ width: `${r.score}%` }} />
+        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--ff-linen)]">
+          <div className="h-full rounded-full bg-[var(--ff-violet)] transition-all duration-500" style={{ width: `${r.score}%` }} />
         </div>
         {hasScenes && (
           <p className="mt-1.5 text-[11px] text-[var(--color-ink-faint)]">
@@ -56,10 +56,10 @@ export function OverviewPanel({ project }: { project: Project }) {
       {/* Missing essentials — quiet, only when present */}
       {gaps.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">Missing essentials</span>
+          <span className="font-mono-ui text-[11px] font-medium uppercase text-[var(--color-ink-faint)]">Missing essentials</span>
           {gaps.map((g, i) => (
             <div key={i} className="flex items-center gap-2 text-[13px] text-[var(--color-ink-soft)]">
-              <span className="grid h-4 w-4 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[10px] font-semibold text-[var(--color-ink)]">
+              <span className="grid h-4 w-4 place-items-center rounded-full bg-[var(--ff-yellow-soft)] text-[10px] font-semibold text-[var(--ff-haiti)] ring-1 ring-inset ring-[var(--ff-yellow-border)]">
                 {g.n}
               </span>
               {g.label}{g.n > 1 ? "s" : ""}
@@ -71,7 +71,7 @@ export function OverviewPanel({ project }: { project: Project }) {
       {/* Publishing — compact card */}
       <div className="rounded-[10px] card-surface p-3">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">
+          <span className="font-mono-ui flex items-center gap-1.5 text-[11px] font-medium uppercase text-[var(--color-ink-faint)]">
             <Send size={12} /> Publishing
           </span>
           <span className="rounded-md bg-[var(--color-surface-2)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-ink-soft)]">
@@ -81,7 +81,7 @@ export function OverviewPanel({ project }: { project: Project }) {
         <div className="mt-2 flex items-baseline gap-1.5">
           {best ? (
             <>
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ember)]">Best</span>
+              <span className="font-mono-ui text-[10px] font-semibold uppercase text-[var(--ff-violet)]">Best</span>
               <span className="text-sm font-semibold text-[var(--color-ink)]">{best.name}</span>
               <span className="ml-auto text-[11px] text-[var(--color-ink-faint)]">{formatDuration(sceneSec)} total</span>
             </>
@@ -96,7 +96,7 @@ export function OverviewPanel({ project }: { project: Project }) {
           <Collapsible title="Platform recommendations">
             {mismatch && (
               <p className="mb-2 flex items-start gap-1.5 text-[12px] leading-snug text-[var(--color-ink-soft)]">
-                <AlertTriangle size={13} className="mt-0.5 shrink-0 text-[var(--color-sunburst)]" />
+                <AlertTriangle size={13} className="mt-0.5 shrink-0 text-[var(--ff-yellow)]" />
                 {mismatch}
               </p>
             )}
@@ -125,7 +125,7 @@ export function OverviewPanel({ project }: { project: Project }) {
           <div className="space-y-1.5">
             {health.slice(0, 6).map((w, i) => (
               <div key={i} className="flex items-center gap-2 text-[12px]">
-                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#121212] text-[10px] font-semibold text-white">
+                <span className="font-mono-ui grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--ff-haiti)] text-[10px] font-semibold text-white">
                   {String(w.sceneIndex + 1).padStart(2, "0")}
                 </span>
                 <span className="text-[var(--color-ink-soft)]">{w.issue}</span>
@@ -142,7 +142,7 @@ export function OverviewPanel({ project }: { project: Project }) {
 }
 
 function FitDot({ fit, best }: { fit: Fit; best: boolean }) {
-  const color = best ? "var(--color-ember)" : fit === "great" ? "var(--color-meadow)" : fit === "ok" ? "var(--color-ink-faint)" : "var(--color-fog)";
+  const color = best ? "var(--ff-violet)" : fit === "great" ? "#2f9e73" : fit === "ok" ? "var(--color-ink-faint)" : "var(--color-fog)";
   return <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />;
 }
 
@@ -181,7 +181,7 @@ function Collapsible({
       >
         {warn && <AlertTriangle size={13} className="shrink-0" />}
         {title}
-        {badge && <span className="rounded-full bg-[var(--color-stone-surface)] px-1.5 text-[10px] font-semibold text-[var(--color-ink-soft)]">{badge}</span>}
+        {badge && <span className="rounded-full bg-[var(--color-surface-2)] px-1.5 text-[10px] font-semibold text-[var(--color-ink-soft)]">{badge}</span>}
         <ChevronDown size={14} className={cn("ml-auto transition-transform", open && "rotate-180")} />
       </button>
       {open && <div className={cn("pt-2", !warn && "mt-0")}>{children}</div>}

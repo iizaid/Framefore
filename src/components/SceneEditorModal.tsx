@@ -108,7 +108,7 @@ export function SceneEditorModal({
         {/* Header */}
         <div className="shrink-0 border-b border-[var(--color-border)] px-4 pb-0 pt-4 sm:px-6 sm:pt-6">
           <div className="flex items-start gap-3 pr-8">
-            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#121212] text-sm font-semibold tabular-nums text-white">
+            <span className="font-mono-ui mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-button)] bg-[var(--ff-haiti)] text-sm font-semibold tabular-nums text-white">
               {String(index + 1).padStart(2, "0")}
             </span>
             <div className="min-w-0 flex-1">
@@ -134,7 +134,7 @@ export function SceneEditorModal({
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors",
                   tab === t.key
-                    ? "border-[#121212] text-[var(--color-ink)]"
+                    ? "border-[var(--ff-violet)] text-[var(--color-ink)]"
                     : "border-transparent text-[var(--color-ink-faint)] hover:text-[var(--color-ink-soft)]",
                 )}
               >
@@ -242,7 +242,7 @@ export function SceneEditorModal({
                     <div key={img.id} className="group/img relative aspect-square">
                       <ImageThumb id={img.id} alt={img.name} className="h-full w-full" />
                       {i === 0 && (
-                        <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-black/65 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+                        <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-[var(--ff-haiti)]/75 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white backdrop-blur-sm">
                           <Star size={9} className="fill-white" /> Cover
                         </span>
                       )}
@@ -500,7 +500,7 @@ function ModelField({
       label={label}
       hint={
         overriding ? (
-          <button onClick={() => onChange("")} className="text-[var(--color-ember)] hover:opacity-80">
+          <button onClick={() => onChange("")} className="text-[var(--ff-violet)] hover:text-[var(--ff-violet-deep)]">
             reset to default
           </button>
         ) : (

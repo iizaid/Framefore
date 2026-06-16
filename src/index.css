@@ -13,7 +13,8 @@
   --ff-violet-muted: #514B81;
 
   --ff-yellow: #F0E100;
-  --ff-yellow-soft: #FFF8B8;
+  --ff-yellow-soft: #FFF9B8;
+  --ff-yellow-border: #E8DA39;
   --ff-yellow-muted: #B9A900;
 
   --ff-haiti: #18102B;
@@ -31,18 +32,20 @@
   --ff-white: #FFFFFF;
 
   --ff-canvas-bg: #F5F3FF;
-  --ff-canvas-dot: rgba(24, 16, 43, 0.10);
-  --ff-canvas-dot-strong: rgba(131, 77, 251, 0.12);
+  --ff-canvas-dot: rgba(24, 16, 43, 0.11);
+  --ff-canvas-dot-strong: rgba(131, 77, 251, 0.14);
 
   --ff-radius-button: 9px;
   --ff-radius-card: 12px;
-  --ff-radius-large: 24px;
+  --ff-radius-large-card: 24px;
   --ff-radius-pill: 54px;
 
   --ff-shadow-card: rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
                     rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
                     rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
                     rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
+  --ff-shadow-subtle: rgba(0, 0, 0, 0.10) 0px 1px 3px 0px,
+                      rgba(0, 0, 0, 0.10) 0px 1px 2px -1px;
   --ff-shadow-button: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
 
   /* Design reference aliases from public/design. */
@@ -68,7 +71,7 @@
   --color-abyss: #090909;
   --color-violet-glow: #b38cff;
 
-  /* Compatibility aliases used by existing components. */
+  /* Legacy variable aliases mapped into the Framefore system. */
   --color-warm-canvas: var(--ff-blue-chalk);
   --color-stone-surface: var(--ff-linen);
   --color-parchment-card: var(--ff-paper);
@@ -113,7 +116,7 @@
 
   --radius-card: var(--ff-radius-card);
   --radius-button: var(--ff-radius-button);
-  --radius-large: var(--ff-radius-large);
+  --radius-large: var(--ff-radius-large-card);
   --radius-pill: var(--ff-radius-pill);
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "Tahoma", sans-serif;
@@ -178,10 +181,11 @@
   .dot-canvas {
     background-color: var(--color-canvas-bg);
     background-image:
-      radial-gradient(var(--color-canvas-grid) 1px, transparent 1px),
-      radial-gradient(var(--color-canvas-grid-strong) 1px, transparent 1px);
-    background-size: 18px 18px;
-    background-position: -1px -1px, -1px -1px;
+      radial-gradient(circle, var(--color-canvas-grid) 1px, transparent 1px),
+      linear-gradient(var(--color-canvas-grid-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-canvas-grid-strong) 1px, transparent 1px);
+    background-size: 18px 18px, 180px 180px, 180px 180px;
+    background-position: -1px -1px, -1px -1px, -1px -1px;
   }
   .card-glow:hover {
     box-shadow:
@@ -193,7 +197,7 @@
     font-weight: 700;
     letter-spacing: 0;
   }
-  /* Hero / large display headings. Heavy, compact hierarchy without negative tracking. */
+  /* Hero / large display headings. Heavy, compact hierarchy from public/design. */
   .font-hero {
     font-family: var(--font-hero);
     font-weight: 800;
@@ -214,7 +218,7 @@
   }
 }
 
-/* ── React Flow theming — fold the node editor into the Family design system ──
+/* ── React Flow theming — fold the node editor into the Framefore system ──
    The library ships neutral defaults; we override handles, selection, and the
    pane background so the canvas reads as part of the app, not a bolt-on. */
 .react-flow {

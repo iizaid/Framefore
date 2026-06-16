@@ -221,7 +221,7 @@ export function ProfilePage() {
             <form onSubmit={saveContact} className="flex flex-col gap-5" noValidate>
               <label className="flex flex-col gap-1.5">
                 <FieldLabel label="Email" />
-                <div className="flex items-center gap-2 rounded-[10px] border border-[var(--color-border-strong)] bg-[var(--color-stone-surface)] px-3 py-2 text-sm text-[var(--color-ink-soft)]">
+                <div className="flex items-center gap-2 rounded-[10px] border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 py-2 text-sm text-[var(--color-ink-soft)]">
                   <Mail size={15} className="shrink-0" />
                   <span className="truncate">{user.email ?? "—"}</span>
                   {emailConfirmed && (
@@ -306,7 +306,7 @@ function PageChrome({ children }: { children: React.ReactNode }) {
 function ProfileHeader() {
   return (
     <header className="mb-8">
-      <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">Profile settings</h1>
+      <h1 className="font-display text-2xl font-semibold text-[var(--ff-ink)]">Profile settings</h1>
       <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
         Manage your personal details, avatar, contact information, and sign-in options.
       </p>
@@ -317,7 +317,7 @@ function ProfileHeader() {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-[var(--color-border-strong)] bg-white p-5 sm:p-6">
-      <h2 className="mb-4 font-display text-base text-[var(--color-charcoal)]">{title}</h2>
+      <h2 className="mb-4 font-display text-base text-[var(--ff-ink)]">{title}</h2>
       {children}
     </section>
   );
@@ -456,7 +456,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-      <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ink-soft)]", muted && "opacity-60")}>
+      <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-soft)]", muted && "opacity-60")}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
@@ -473,10 +473,10 @@ function CardsSkeleton() {
     <div className="flex flex-col gap-5">
       {[0, 1].map((i) => (
         <div key={i} className="rounded-2xl border border-[var(--color-border-strong)] bg-white p-6">
-          <div className="mb-4 h-5 w-32 animate-pulse rounded bg-[var(--color-stone-surface)]" />
+          <div className="mb-4 h-5 w-32 animate-pulse rounded bg-[var(--color-surface-2)]" />
           <div className="flex flex-col gap-4">
-            <div className="h-10 animate-pulse rounded-lg bg-[var(--color-stone-surface)]" />
-            <div className="h-10 animate-pulse rounded-lg bg-[var(--color-stone-surface)]" />
+            <div className="h-10 animate-pulse rounded-lg bg-[var(--color-surface-2)]" />
+            <div className="h-10 animate-pulse rounded-lg bg-[var(--color-surface-2)]" />
           </div>
         </div>
       ))}
@@ -488,7 +488,7 @@ function UnavailableState() {
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--color-bg)] px-6">
       <div className="max-w-md text-center">
-        <h1 className="font-display text-2xl text-[var(--color-charcoal)]">Account unavailable</h1>
+        <h1 className="font-display text-2xl text-[var(--ff-ink)]">Account unavailable</h1>
         <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
           Profile and account features are temporarily unavailable. You can keep using Framefore locally in the meantime.
         </p>

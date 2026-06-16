@@ -121,7 +121,7 @@ export function AccountMenu({ variant = "light" }: { variant?: "light" | "dark" 
                 type="button"
                 role="menuitem"
                 onClick={handleSignOut}
-                className="flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                className="flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
               >
                 <LogOut size={16} className="text-[var(--color-ink-soft)]" />
                 Sign out
@@ -140,7 +140,7 @@ function MenuLink({ to, icon, label, onClick }: { to: string; icon: React.ReactN
       to={to}
       role="menuitem"
       onClick={onClick}
-      className="flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+      className="flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
     >
       <span className="text-[var(--color-ink-soft)]">{icon}</span>
       {label}
@@ -151,7 +151,7 @@ function MenuLink({ to, icon, label, onClick }: { to: string; icon: React.ReactN
 export function AvatarCircle({ url, initials, size = 32 }: { url: string | null; initials: string; size?: number }) {
   return (
     <span
-      className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-[var(--color-charcoal)] text-white"
+      className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-[var(--ff-haiti)] text-white"
       style={{ width: size, height: size }}
     >
       {url ? (

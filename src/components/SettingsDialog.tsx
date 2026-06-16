@@ -35,7 +35,7 @@ export function SettingsDialog({ open, onClose, project }: { open: boolean; onCl
             className={cn(
               "flex items-center gap-1.5 border-b-2 px-3 py-2 text-[13px] font-medium transition-colors",
               tab === t.key
-                ? "border-[#121212] text-[var(--color-ink)]"
+                ? "border-[var(--ff-violet)] text-[var(--color-ink)]"
                 : "border-transparent text-[var(--color-ink-faint)] hover:text-[var(--color-ink-soft)]",
             )}
           >

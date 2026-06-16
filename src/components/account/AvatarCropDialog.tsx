@@ -179,7 +179,7 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border-strong)] px-5 py-4">
           <div>
-            <h2 id="avatar-editor-title" className="font-display text-lg font-semibold text-[var(--color-charcoal)]">
+            <h2 id="avatar-editor-title" className="font-display text-lg font-semibold text-[var(--ff-ink)]">
               Adjust avatar
             </h2>
             <p className="text-xs text-[var(--color-ink-faint)]">Choose, position, then save a square crop.</p>
@@ -188,7 +188,7 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="rounded-full p-1.5 text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] disabled:opacity-50"
+            className="rounded-full p-1.5 text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)] disabled:opacity-50"
             aria-label="Close"
           >
             <X size={18} />
@@ -222,13 +222,13 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
               </span>
             </button>
           ) : !image && !error ? (
-            <div className="grid h-[280px] w-[280px] place-items-center rounded-full bg-[var(--color-stone-surface)]">
+            <div className="grid h-[280px] w-[280px] place-items-center rounded-full bg-[var(--ff-blue-chalk)]">
               <Loader2 size={24} className="animate-spin text-[var(--color-ink-soft)]" />
             </div>
           ) : image ? (
             <div className="flex w-full flex-col items-center gap-5">
               <div
-                className="relative cursor-move touch-none select-none overflow-hidden rounded-full bg-[var(--color-stone-surface)] shadow-inner"
+                className="relative cursor-move touch-none select-none overflow-hidden rounded-full bg-[var(--ff-blue-chalk)] shadow-inner"
                 style={{ width: CROP_SIZE, height: CROP_SIZE }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -248,7 +248,7 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
                   step="0.01"
                   value={zoom}
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="flex-1 accent-[var(--color-charcoal)]"
+                  className="flex-1 accent-[var(--ff-violet)]"
                   disabled={saving}
                 />
                 <button
@@ -258,7 +258,7 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
                     setOffset({ x: 0, y: 0 });
                   }}
                   disabled={saving}
-                  className="shrink-0 rounded-full p-1.5 text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] disabled:opacity-50"
+                  className="shrink-0 rounded-full p-1.5 text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)] disabled:opacity-50"
                   aria-label="Reset crop"
                   title="Reset crop"
                 >
@@ -284,7 +284,7 @@ export function AvatarCropDialog({ initialFile = null, onClose, onSave }: Avatar
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border-strong)] bg-[var(--color-stone-surface)] px-5 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-5 py-4">
           <Button type="button" variant="ghost" size="md" onClick={onClose} disabled={saving}>
             Cancel
           </Button>

@@ -57,11 +57,11 @@ export function PricingSection() {
   // Resolve the free-tier CTA to an auth-aware target (signed-out → /signup).
   const workspaceCta = useWorkspaceCta();
   return (
-    <section id="pricing" className="px-6 py-20 sm:py-28">
-      <div className="mx-auto max-w-5xl">
+    <section id="pricing" className="px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px]">
         <Reveal>
           <div className="mb-12 text-center">
-            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
+            <h2 className="font-hero text-3xl leading-tight text-[var(--ff-ink)] sm:text-5xl">
               Simple, honest pricing.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-[var(--color-ink-soft)]">
@@ -75,7 +75,7 @@ export function PricingSection() {
             <RevealItem
               key={t.name}
               className={cn(
-                "relative flex h-full flex-col rounded-2xl p-6",
+                "relative flex h-full flex-col rounded-[var(--radius-card)] p-6",
                 t.featured
                   ? "border border-[var(--ff-violet)] bg-white shadow-[0_30px_60px_-42px_rgba(131,77,251,0.50)]"
                   : "card-surface",

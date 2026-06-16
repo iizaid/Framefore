@@ -173,7 +173,7 @@ function SceneLinkEdgeImpl({
                     onClick={(e) => { e.stopPropagation(); commitLabel(); }}
                     title="Save label"
                     aria-label="Save label"
-                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
                   >
                     <Check size={12} />
                   </button>
@@ -201,7 +201,7 @@ function SceneLinkEdgeImpl({
                     onClick={(e) => { e.stopPropagation(); setEditing(true); }}
                     title="Edit label"
                     aria-label="Edit label"
-                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+                    className="grid h-6 w-6 place-items-center rounded-full text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
                   >
                     <Pencil size={11} />
                   </button>

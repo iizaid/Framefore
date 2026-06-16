@@ -178,7 +178,7 @@ export function ExportDialog({ open, onClose, project }: { open: boolean; onClos
 function FormatGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <span className="mb-1.5 block px-1 text-[10px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">
+      <span className="font-mono-ui mb-1.5 block px-1 text-[10px] font-medium uppercase text-[var(--color-ink-faint)]">
         {label}
       </span>
       <div className="flex flex-col gap-0.5">{children}</div>
@@ -193,14 +193,14 @@ function PrimaryFormatBtn({ format, active, onClick }: { format: Format; active:
       className={cn(
         "min-h-20 rounded-xl border p-3 text-left transition-colors",
         active
-          ? "border-neutral-900 bg-neutral-900/[0.04] ring-1 ring-neutral-900/10"
+          ? "border-[var(--ff-violet)] bg-[var(--ff-blue-chalk)] ring-1 ring-[var(--color-accent-glow)]"
           : "border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)]",
       )}
     >
       <div className="flex items-center gap-2">
-        <span className="text-neutral-900">{format.icon}</span>
+        <span className="text-[var(--ff-violet)]">{format.icon}</span>
         <span className="text-sm font-semibold text-[var(--color-ink)]">{format.label}</span>
-        <span className="ml-auto rounded-full bg-[#121212] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+        <span className="ml-auto rounded-full bg-[var(--ff-haiti)] px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white">
           Recommended
         </span>
       </div>

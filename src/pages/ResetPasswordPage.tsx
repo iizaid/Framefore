@@ -74,7 +74,7 @@ export function ResetPasswordPage() {
       {done ? (
         <div className="flex flex-col gap-6">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">
+            <h1 className="font-display text-2xl font-semibold text-[var(--ff-ink)]">
               Password updated
             </h1>
             <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
@@ -83,7 +83,7 @@ export function ResetPasswordPage() {
           </div>
           <button
             onClick={() => navigate("/app", { replace: true })}
-            className="flex h-11 w-full items-center justify-center rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80"
+            className="flex h-11 w-full items-center justify-center rounded-[var(--radius-button)] bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)]"
           >
             Continue to app
           </button>
@@ -94,7 +94,7 @@ export function ResetPasswordPage() {
       ) : hasSession === false ? (
         <div className="flex flex-col gap-6">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">
+            <h1 className="font-display text-2xl font-semibold text-[var(--ff-ink)]">
               Reset link invalid
             </h1>
             <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
@@ -104,20 +104,20 @@ export function ResetPasswordPage() {
           </div>
           <Link
             to="/login"
-            className="flex h-11 w-full items-center justify-center rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80"
+            className="flex h-11 w-full items-center justify-center rounded-[var(--radius-button)] bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)]"
           >
             Back to sign in
           </Link>
         </div>
       ) : hasSession === null ? (
         <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--color-charcoal)]" />
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-border-strong)] border-t-[var(--ff-violet)]" />
           <p className="text-sm text-[var(--color-ink-soft)]">Verifying your reset link…</p>
         </div>
       ) : (
         <div className="flex flex-col gap-8">
           <div>
-            <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">
+            <h1 className="font-display text-2xl font-semibold text-[var(--ff-ink)]">
               Set a new password
             </h1>
             <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
@@ -163,7 +163,7 @@ export function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+              className="mt-1 flex h-11 w-full items-center justify-center rounded-[var(--radius-button)] bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)] disabled:opacity-40"
             >
               {loading ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -215,7 +215,7 @@ function Field({
           className={cn(
             "h-11 w-full rounded-xl border border-[var(--color-border-strong)] bg-white px-4 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)]",
             "outline-none transition-shadow",
-            "focus:border-[var(--color-charcoal)] focus:shadow-[0_0_0_3px_rgba(52,52,51,0.1)]",
+            "focus:border-[var(--ff-violet)] focus:shadow-[0_0_0_3px_rgba(131,77,251,0.14)]",
             rightSlot && "pr-11"
           )}
         />

@@ -32,11 +32,11 @@ const ROLE_LABELS: Record<AdminRole, string> = {
 };
 
 const SELECT_CLASS =
-  "rounded-md border border-[#dedbd3] bg-white px-2.5 py-1.5 text-sm text-[#333333] disabled:cursor-not-allowed disabled:opacity-60";
+  "rounded-[var(--radius-button)] border border-[var(--color-border)] bg-white px-2.5 py-1.5 text-sm text-[var(--color-ink)] focus:border-[var(--ff-violet)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-glow)] disabled:cursor-not-allowed disabled:opacity-60";
 const TAB_CLASS =
-  "shrink-0 border-b-2 border-transparent px-2.5 py-1.5 text-sm font-medium text-[#4f4e49] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-60";
+  "shrink-0 border-b-2 border-transparent px-2.5 py-1.5 text-sm font-medium text-[var(--color-ink-soft)] hover:text-[var(--ff-ink)] disabled:cursor-not-allowed disabled:opacity-60";
 const ACTIVE_TAB_CLASS =
-  "shrink-0 border-b-2 border-[#111111] px-2.5 py-1.5 text-sm font-semibold text-[#111111] disabled:cursor-not-allowed disabled:opacity-60";
+  "shrink-0 border-b-2 border-[var(--ff-violet)] px-2.5 py-1.5 text-sm font-semibold text-[var(--ff-ink)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export function AdminUsersToolbar({
   search,
@@ -79,7 +79,7 @@ export function AdminUsersToolbar({
   }, [searchInput, tooLong, onSearchChange]);
 
   return (
-    <div className="space-y-2 border-b border-[#eeeeea] bg-white px-3 py-2.5 sm:px-4">
+    <div className="space-y-2 border-b border-[var(--color-border)] bg-white px-3 py-2.5 sm:px-4">
       <div className="flex gap-2 overflow-x-auto">
         <button
           type="button"
@@ -110,7 +110,7 @@ export function AdminUsersToolbar({
           <div className="relative">
             <Search
               size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#77756f]"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-faint)]"
             />
             <input
               id="admin-users-search"
@@ -123,7 +123,7 @@ export function AdminUsersToolbar({
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search email or display name"
               aria-invalid={tooLong}
-              className="w-full rounded-md border border-[#dedbd3] bg-white py-1.5 pl-8 pr-3 text-sm text-[#333333] placeholder:text-[#8a8983] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-[var(--radius-button)] border border-[var(--color-border)] bg-white py-1.5 pl-8 pr-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] focus:border-[var(--ff-violet)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-glow)] disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
           {tooLong && (
@@ -135,7 +135,7 @@ export function AdminUsersToolbar({
 
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="admin-users-profile" className="text-xs font-medium text-[#6b6b66]">
+            <label htmlFor="admin-users-profile" className="text-xs font-medium text-[var(--color-ink-soft)]">
               Profile
             </label>
             <select
@@ -154,7 +154,7 @@ export function AdminUsersToolbar({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="admin-users-page-size" className="text-xs font-medium text-[#6b6b66]">
+            <label htmlFor="admin-users-page-size" className="text-xs font-medium text-[var(--color-ink-soft)]">
               Page size
             </label>
             <select
@@ -176,7 +176,7 @@ export function AdminUsersToolbar({
             type="button"
             onClick={onReset}
             disabled={disabled || !isFiltered}
-            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[#dedbd3] bg-white px-2.5 py-1.5 text-sm font-medium text-[#333333] hover:bg-[#f7f7f5] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-white px-2.5 py-1.5 text-sm font-medium text-[var(--ff-charcoal)] hover:bg-[var(--color-surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RotateCcw size={14} />
             Reset

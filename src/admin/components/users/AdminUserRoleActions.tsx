@@ -27,12 +27,12 @@ export function AdminUserRoleActions({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e8ec] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] shadow-sm hover:bg-[#f9fafb]"
+        className="inline-flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--ff-charcoal)] shadow-[var(--ff-shadow-subtle)] hover:bg-[var(--color-surface-2)]"
       >
         Manage roles
         <ChevronDown
           size={12}
-          className={`text-[#9ca3af] transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-[var(--color-ink-faint)] transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

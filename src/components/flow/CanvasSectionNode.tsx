@@ -43,7 +43,7 @@ function CanvasSectionNodeImpl({ id, data, selected }: NodeProps) {
               e.currentTarget.blur();
             }
           }}
-          className="nodrag nopan min-w-0 flex-1 bg-transparent text-[12px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)] outline-none"
+          className="font-mono-ui nodrag nopan min-w-0 flex-1 bg-transparent text-[12px] font-semibold uppercase text-[var(--color-ink-faint)] outline-none"
           aria-label="Section title"
         />
         <button

@@ -71,7 +71,7 @@ export function CookieBanner() {
                   </button>
                   <button
                     onClick={handleDecline}
-                    className="rounded-lg px-4 py-2 text-xs font-semibold text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+                    className="rounded-lg px-4 py-2 text-xs font-semibold text-[var(--color-ink-soft)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
                   >
                     Manage / Later
                   </button>

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play, Sparkles } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
 import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 
@@ -14,21 +14,11 @@ export function HeroSection() {
   const cta = useWorkspaceCta();
 
   return (
-    <section className="relative z-0 flex min-h-[82vh] flex-col items-center justify-center overflow-hidden bg-[var(--ff-blue-chalk)] px-6 pb-28 pt-32 text-center sm:pt-40">
+    <section className="relative z-0 flex min-h-[74vh] flex-col items-center justify-center overflow-hidden bg-[var(--ff-blue-chalk)] px-6 pb-24 pt-32 text-center sm:pt-36">
       <div className="absolute inset-0 -z-10 opacity-80">
         <div className="absolute left-1/2 top-28 h-56 w-56 -translate-x-1/2 rounded-full bg-[var(--ff-violet)]/10 blur-3xl" />
         <div className="absolute right-[18%] top-44 h-20 w-20 rounded-full bg-[var(--ff-yellow)]/35 blur-2xl" />
       </div>
-
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="font-mono-ui mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--color-border-strong)] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase text-[var(--ff-haiti)] shadow-[var(--ff-shadow-button)]"
-      >
-        <Sparkles size={13} className="text-[var(--ff-violet)]" />
-        AI video planning workspace
-      </motion.div>
 
       <h1 className="font-hero max-w-5xl text-balance text-[2.75rem] leading-[1.02] text-[var(--ff-ink)] sm:text-6xl lg:text-[76px]">
         {HEADLINE.map((line, li) => (

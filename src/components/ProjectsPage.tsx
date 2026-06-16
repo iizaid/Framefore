@@ -113,7 +113,7 @@ export function ProjectsPage({ onOpen }: { onOpen: (id: string) => void }) {
             <a href="/" title="Back to home page" className="transition-opacity hover:opacity-75">
               <img src="/black.svg" alt="Framefore home" className="h-9 w-9" />
             </a>
-            <h1 className="font-display text-3xl text-[var(--color-charcoal)] sm:text-4xl">Framefore</h1>
+            <h1 className="font-display text-3xl text-[var(--ff-ink)] sm:text-4xl">Framefore</h1>
           </div>
           <p className="max-w-md text-sm text-[var(--color-ink-soft)]">
             Plan AI videos scene by scene. Write prompts, attach references, balance narration,
@@ -232,7 +232,7 @@ function ImportBanner({
 }) {
   return (
     <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[var(--color-border-strong)] bg-white p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ink-soft)]">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-surface-2)] text-[var(--color-ink-soft)]">
         <Download size={18} />
       </div>
       <div className="min-w-0 flex-1">

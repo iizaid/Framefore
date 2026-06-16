@@ -27,13 +27,13 @@ export function AdminUserIdentityCell({ user }: AdminUserIdentityCellProps) {
     <div className="flex min-w-0 items-center gap-3">
       <span
         aria-hidden
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f1f1ef] text-[11px] font-semibold text-[#333333]"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-button)] bg-[var(--ff-blue-chalk)] text-[11px] font-semibold text-[var(--ff-violet)]"
       >
         {initialsFor(user)}
       </span>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-[#111111]">{primary}</p>
-        {secondary && <p className="truncate text-xs text-[#6b6b66]">{secondary}</p>}
+        <p className="truncate text-sm font-medium text-[var(--ff-ink)]">{primary}</p>
+        {secondary && <p className="truncate text-xs text-[var(--color-ink-soft)]">{secondary}</p>}
       </div>
     </div>
   );

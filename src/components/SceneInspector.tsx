@@ -17,7 +17,8 @@ import type { Project, Scene } from "@/types";
 import { cn, copyToClipboard, formatDuration } from "@/lib/utils";
 import { scenePrompt } from "@/lib/export";
 import { resolvedImageModel, resolvedVideoModel } from "@/lib/models";
-import { essentialGaps } from "@/lib/colors";
+import { essentialGaps, sceneColor } from "@/lib/colors";
+import { getAutoSceneColor } from "@/lib/sceneColors";
 import { STATUS_STYLE } from "@/lib/constants";
 import { useStore } from "@/store/useStore";
 import { ConfirmDialog } from "./ui/Modal";
@@ -52,6 +53,10 @@ export function SceneInspector({
   const promptPreview = scene.visualPrompt.trim() || scene.summary.trim();
   const narrationPreview = scene.narrationPart.trim();
   const continuity = scene.continuityNotes.trim();
+  const autoColor = getAutoSceneColor(scene.id, index);
+  const userColor = scene.color !== "none" ? sceneColor(scene.color) : null;
+  const accent = userColor ? userColor.hex : autoColor.accent;
+  const softAccent = userColor ? "var(--color-surface-2)" : autoColor.soft;
 
   const handleCopyPrompt = async () => {
     const ok = await copyToClipboard(scenePrompt(scene, project.global));
@@ -67,8 +72,11 @@ export function SceneInspector({
     <>
       <div className="flex h-full flex-col">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-[var(--color-border-strong)] px-4 py-3">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#121212] text-[12px] font-semibold tabular-nums text-white">
+        <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
+          <span
+            style={{ background: accent, color: accent === "#F0E100" ? "var(--ff-haiti)" : "#fff" }}
+            className="font-mono-ui grid h-7 w-7 shrink-0 place-items-center rounded-[var(--radius-button)] text-[12px] font-semibold tabular-nums"
+          >
             {String(index + 1).padStart(2, "0")}
           </span>
           <div className="min-w-0 flex-1">
@@ -86,7 +94,7 @@ export function SceneInspector({
             onClick={onClose}
             title="Close inspector"
             aria-label="Close inspector"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
           >
             <X size={16} />
           </button>
@@ -98,7 +106,10 @@ export function SceneInspector({
           {cover ? (
             <ImageThumb id={cover.id} alt={scene.title} className="h-32 w-full rounded-lg object-cover ring-1 ring-inset ring-black/10" />
           ) : (
-            <div className="flex h-32 w-full items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-ink-faint)] ring-1 ring-inset ring-[var(--color-border-strong)]">
+            <div
+              style={{ background: softAccent, boxShadow: `inset 0 0 0 1px ${accent}33` }}
+              className="flex h-32 w-full items-center justify-center rounded-[var(--radius-card)] text-[var(--color-ink-faint)]"
+            >
               <ImageIcon size={22} />
             </div>
           )}
@@ -106,7 +117,7 @@ export function SceneInspector({
           {/* Quick facts */}
           <div className="flex flex-wrap items-center gap-1.5">
             {scene.role !== "none" && (
-              <span className="rounded-full bg-[#121212] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-[var(--ff-haiti)] px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
                 {scene.role}
               </span>
             )}
@@ -120,9 +131,9 @@ export function SceneInspector({
 
           {/* Missing essentials */}
           {gaps.length > 0 && (
-            <div className="flex items-start gap-2 rounded-[10px] bg-amber-50 px-3 py-2 ring-1 ring-amber-200/70">
-              <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-600" />
-              <div className="text-[12px] leading-snug text-amber-800">
+            <div className="flex items-start gap-2 rounded-[10px] bg-[var(--ff-yellow-soft)] px-3 py-2 ring-1 ring-[var(--ff-yellow-border)]">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[var(--ff-haiti)]" />
+              <div className="text-[12px] leading-snug text-[var(--ff-haiti)]">
                 <span className="font-medium">Missing essentials:</span> {gaps.join(", ")}
               </div>
             </div>
@@ -173,10 +184,10 @@ export function SceneInspector({
         </div>
 
         {/* Sticky actions footer */}
-        <div className="space-y-2 border-t border-[var(--color-border-strong)] px-4 py-3">
+        <div className="space-y-2 border-t border-[var(--color-border)] px-4 py-3">
           <button
             onClick={onEdit}
-            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#121212] py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
+            className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--ff-carbon)] py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--ff-haiti)]"
           >
             <Pencil size={14} /> Edit full scene
           </button>
@@ -202,7 +213,7 @@ export function SceneInspector({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">{label}</div>
+      <div className="font-mono-ui mb-1 text-[11px] font-medium uppercase text-[var(--color-ink-faint)]">{label}</div>
       {children}
     </div>
   );
@@ -223,7 +234,7 @@ function Chip({ icon, children }: { icon: React.ReactNode; children: React.React
 function ModelChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-[10px] bg-[var(--color-surface-2)] p-2.5">
-      <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-[var(--color-ink-faint)]">
+      <div className="font-mono-ui flex items-center gap-1 text-[10px] font-medium uppercase text-[var(--color-ink-faint)]">
         {icon} {label}
       </div>
       <div className="mt-0.5 truncate text-[12px] font-medium text-[var(--color-ink)]" title={value || undefined}>

@@ -7,7 +7,7 @@ type AdminUserRoleBadgesProps = {
 
 export function AdminUserRoleBadges({ roles }: AdminUserRoleBadgesProps) {
   if (roles.length === 0) {
-    return <span className="text-xs text-[#6b6b66]">No roles</span>;
+    return <span className="text-xs text-[var(--color-ink-soft)]">No roles</span>;
   }
 
   return (

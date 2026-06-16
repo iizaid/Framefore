@@ -56,7 +56,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         id: "createdAt",
         header: "Created",
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap text-[13px] text-[#9ca3af]">{formatDate(getValue())}</span>
+          <span className="whitespace-nowrap text-[13px] text-[var(--color-ink-faint)]">{formatDate(getValue())}</span>
         ),
       }),
       ch.accessor("lastSignInAt", {
@@ -65,8 +65,8 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         cell: ({ getValue }) => {
           const v = getValue();
           return (
-            <span className="whitespace-nowrap text-[13px] text-[#9ca3af]">
-              {v ? formatDate(v, true) : <span className="text-[#d1d5db]">Never</span>}
+            <span className="whitespace-nowrap text-[13px] text-[var(--color-ink-faint)]">
+              {v ? formatDate(v, true) : <span className="text-[var(--color-fog)]">Never</span>}
             </span>
           );
         },
@@ -120,12 +120,12 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
       <table className="w-full min-w-[760px] border-collapse text-left">
         <thead>
           {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id} className="border-b border-[#f3f4f6] bg-[#fafafa]">
+            <tr key={hg.id} className="border-b border-[var(--color-border)] bg-[var(--color-surface-2)]">
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
                   scope="col"
-                  className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9ca3af]"
+                  className="px-5 py-3 font-mono-ui text-[11px] font-semibold uppercase text-[var(--color-ink-faint)]"
                 >
                   {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
                 </th>
@@ -137,7 +137,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
           {table.getRowModel().rows.map((row, i) => (
             <tr
               key={row.id}
-              className={`border-b border-[#f9fafb] transition-colors hover:bg-[#f9fafb] ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+              className={`border-b border-[var(--color-border)] transition-colors hover:bg-[var(--ff-blue-chalk)] ${i % 2 === 0 ? "bg-white" : "bg-[var(--color-surface-2)]"}`}
             >
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-5 py-3.5 align-middle">

@@ -17,24 +17,24 @@ type AdminBarTrendChartProps = {
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-[#e8e8ec] bg-white px-3 py-2 shadow-sm">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af]">
+      <div className="rounded-[var(--radius-button)] border border-[var(--color-border)] bg-white px-3 py-2 shadow-[var(--ff-shadow-subtle)]">
+        <p className="mb-1 font-mono-ui text-[10px] font-semibold uppercase text-[var(--color-ink-faint)]">
           {label}
         </p>
-        <p className="text-sm font-bold text-[#111111]">{payload[0].value}</p>
+        <p className="text-sm font-bold text-[var(--ff-ink)]">{payload[0].value}</p>
       </div>
     );
   }
   return null;
 }
 
-export function AdminBarTrendChart({ data, color = "#111111" }: AdminBarTrendChartProps) {
+export function AdminBarTrendChart({ data, color = "var(--ff-violet)" }: AdminBarTrendChartProps) {
   const hasData = data.some((d) => d.value > 0);
 
   if (!hasData) {
     return (
-      <div className="grid h-full min-h-[200px] w-full place-items-center rounded-xl border border-dashed border-[#e8e8ec] bg-[#fafafa]">
-        <p className="text-sm text-[#9ca3af]">No events recorded</p>
+      <div className="grid h-full min-h-[200px] w-full place-items-center rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface-2)]">
+        <p className="text-sm text-[var(--color-ink-faint)]">No events recorded</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export function AdminBarTrendChart({ data, color = "#111111" }: AdminBarTrendCha
     <div className="h-full min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ff-linen)" />
           <XAxis
             dataKey="date"
             axisLine={false}
@@ -55,7 +55,7 @@ export function AdminBarTrendChart({ data, color = "#111111" }: AdminBarTrendCha
             tickLine={false}
             tick={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f9fafb" }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--ff-blue-chalk)" }} />
           <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={40} />
         </BarChart>
       </ResponsiveContainer>

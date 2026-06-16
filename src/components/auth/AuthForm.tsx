@@ -169,7 +169,7 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, onNee
     <div className="flex flex-col gap-8">
       {/* Heading */}
       <div className="text-center">
-        <h1 className="font-display text-2xl font-semibold text-[var(--color-charcoal)]">{heading}</h1>
+        <h1 className="font-display text-2xl font-semibold text-[var(--ff-ink)]">{heading}</h1>
         <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtext}</p>
       </div>
 

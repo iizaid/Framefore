@@ -83,7 +83,7 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
             const nextKind = e.target.value as CanvasNoteKind;
             if (nextKind !== kind) updateCanvasNote(projectId, noteId, { kind: nextKind });
           }}
-          className="nodrag nopan h-6 max-w-[104px] rounded-full border border-[var(--color-border-strong)] bg-white px-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)] outline-none hover:bg-[var(--color-surface-2)]"
+          className="font-mono-ui nodrag nopan h-6 max-w-[104px] rounded-full border border-[var(--color-border-strong)] bg-white px-2 text-[10px] font-semibold uppercase text-[var(--color-ink-faint)] outline-none hover:bg-[var(--color-surface-2)]"
           aria-label="Note type"
           title="Note type"
         >
@@ -99,7 +99,7 @@ function CanvasNoteNodeImpl({ id, data, selected }: NodeProps) {
               e.stopPropagation();
               createSceneFromNote();
             }}
-            className="nodrag nopan grid h-6 w-6 place-items-center rounded-md text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+            className="nodrag nopan grid h-6 w-6 place-items-center rounded-md text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
             aria-label="Create scene from note"
             title="Create scene from note"
           >

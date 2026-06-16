@@ -16,11 +16,11 @@ export function AdminRoleBadge({ role }: AdminRoleBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[10px] font-semibold uppercase tracking-[0.1em]",
-        role === "owner" && "text-[#111111]",
-        role === "admin" && "text-[#333333]",
-        role === "support" && "text-[#55514c]",
-        role === "reviewer" && "text-[#77736d]"
+        "inline-flex items-center font-mono-ui text-[10px] font-semibold uppercase",
+        role === "owner" && "text-[var(--ff-ink)]",
+        role === "admin" && "text-[var(--ff-violet)]",
+        role === "support" && "text-[var(--color-ink-soft)]",
+        role === "reviewer" && "text-[var(--color-ink-faint)]"
       )}
     >
       {ROLE_LABELS[role]}

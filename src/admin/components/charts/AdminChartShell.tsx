@@ -12,12 +12,12 @@ export function AdminChartShell({ title, subtitle, children, action }: AdminChar
     <div className="flex flex-col">
       <div className="mb-3 flex items-start justify-between px-1">
         <div>
-          <h3 className="text-sm font-semibold text-[#111111]">{title}</h3>
-          {subtitle && <p className="mt-0.5 text-xs text-[#9ca3af]">{subtitle}</p>}
+          <h3 className="text-sm font-semibold text-[var(--ff-ink)]">{title}</h3>
+          {subtitle && <p className="mt-0.5 text-xs text-[var(--color-ink-faint)]">{subtitle}</p>}
         </div>
         {action}
       </div>
-      <div className="rounded-xl border border-[#e8e8ec] bg-white p-4">
+      <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white p-4 shadow-[var(--ff-shadow-card)]">
         {children}
       </div>
     </div>

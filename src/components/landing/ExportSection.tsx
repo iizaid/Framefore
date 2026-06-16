@@ -12,11 +12,11 @@ const FORMATS = [
 
 export function ExportSection() {
   return (
-    <section className="px-6 py-20 sm:py-28">
-      <div className="mx-auto max-w-5xl">
+    <section className="px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1200px]">
         <Reveal className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
+            <h2 className="font-hero text-3xl leading-tight text-[var(--ff-ink)] sm:text-5xl">
               Export the plan.<br />Generate with confidence.
             </h2>
 
@@ -31,7 +31,7 @@ export function ExportSection() {
             </p>
           </div>
 
-          <div className="card-surface rounded-2xl p-2.5">
+          <div className="card-surface rounded-[var(--radius-card)] p-2.5">
             <div className="flex flex-col gap-1.5">
               {FORMATS.map(({ icon: Icon, label, desc }) => (
                 <div
