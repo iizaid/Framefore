@@ -27,7 +27,7 @@ export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
           saveRedirectIntent();
           void signInWithGoogle();
         }}
-        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-50"
+        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)] disabled:opacity-50"
       >
         {/* Google G icon */}
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
@@ -46,7 +46,7 @@ export function OAuthButtons({ mode }: { mode: "login" | "signup" }) {
           saveRedirectIntent();
           void signInWithGitHub();
         }}
-        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)] disabled:opacity-50"
+        className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border-strong)] bg-white text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)] disabled:opacity-50"
       >
         {/* GitHub icon */}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

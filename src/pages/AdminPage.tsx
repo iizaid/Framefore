@@ -40,9 +40,9 @@ function StatItem({
 }) {
   return (
     <div className="flex flex-col px-4 py-4 sm:px-6">
-      <p className="text-sm font-medium text-[#6b7280]">{label}</p>
-      <p className="mt-1 text-3xl font-bold tracking-tight text-[#111111] tabular-nums">{value}</p>
-      {sub && <p className="mt-1 text-xs text-[#9ca3af]">{sub}</p>}
+      <p className="text-sm font-medium text-[var(--color-ink-faint)]">{label}</p>
+      <p className="mt-1 text-3xl font-bold text-[var(--ff-ink)] tabular-nums">{value}</p>
+      {sub && <p className="mt-1 text-xs text-[var(--color-ink-faint)]">{sub}</p>}
     </div>
   );
 }
@@ -63,13 +63,13 @@ function SectionCard({
     <div className="flex flex-col">
       <div className="mb-3 flex items-start justify-between px-1">
         <div>
-          <h3 className="text-sm font-semibold text-[#111111]">{title}</h3>
-          {subtitle && <p className="mt-0.5 text-xs text-[#9ca3af]">{subtitle}</p>}
+          <h3 className="text-sm font-semibold text-[var(--ff-ink)]">{title}</h3>
+          {subtitle && <p className="mt-0.5 text-xs text-[var(--color-ink-faint)]">{subtitle}</p>}
         </div>
         {action}
       </div>
-      <div className="rounded-xl border border-[#e8e8ec] bg-white">
-        <div className="flex flex-col divide-y divide-[#f3f4f6] px-4 py-1">
+      <div className="rounded-xl border border-[var(--color-border)] bg-white">
+        <div className="flex flex-col divide-y divide-[var(--color-border)] px-4 py-1">
           {children}
         </div>
       </div>
@@ -88,10 +88,10 @@ function DataRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-6 py-2.5">
-      <span className="min-w-0 text-sm text-[#6b7280]">{label}</span>
+      <span className="min-w-0 text-sm text-[var(--color-ink-faint)]">{label}</span>
       <div className="flex shrink-0 items-center gap-2">
         {badge}
-        <span className="min-w-[3rem] text-right text-sm font-semibold tabular-nums text-[#111111]">{value}</span>
+        <span className="min-w-[3rem] text-right text-sm font-semibold tabular-nums text-[var(--ff-ink)]">{value}</span>
       </div>
     </div>
   );
@@ -135,8 +135,8 @@ export function AdminPage() {
       {/* Page header */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-[#111111]">Dashboard</h1>
-          <p className="mt-0.5 text-sm text-[#9ca3af]">
+          <h1 className="text-xl font-bold text-[var(--ff-ink)]">Dashboard</h1>
+          <p className="mt-0.5 text-sm text-[var(--color-ink-faint)]">
             {lastLoadedAt
               ? `Last updated ${fmtDate(lastLoadedAt)}`
               : "Aggregate operational metrics"}
@@ -148,7 +148,7 @@ export function AdminPage() {
             type="button"
             onClick={() => void refresh()}
             disabled={loading}
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#e8e8ec] bg-white px-4 py-2 text-sm font-medium text-[#374151] shadow-sm hover:bg-[#f9fafb] disabled:opacity-50"
+            className="inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] shadow-sm hover:bg-[var(--color-surface-2)] disabled:opacity-50"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : undefined} />
             Refresh
@@ -217,8 +217,8 @@ function DashboardContent({
       )}
 
       {/* ── Top metric summary strip ── */}
-      <div className="overflow-hidden rounded-2xl border border-[#e8e8ec] bg-white shadow-sm">
-        <div className="grid grid-cols-1 divide-y divide-[#e8e8ec] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-y-0">
+      <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-[var(--ff-shadow-card)]">
+        <div className="grid grid-cols-1 divide-y divide-[var(--color-border)] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-y-0">
           <StatItem
             label="Total Users"
             value={n(data.users.total)}
@@ -321,7 +321,7 @@ function DashboardContent({
       </div>
 
       {/* Footer note */}
-      <p className="text-xs text-[#9ca3af]">
+      <p className="text-xs text-[var(--color-ink-faint)]">
         Metrics are aggregate-only. No user rows, emails, paths, or content are exposed. Cloud sync not enabled.
       </p>
     </div>

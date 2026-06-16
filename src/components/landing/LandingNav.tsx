@@ -1,4 +1,4 @@
-import { useEffect, useState, useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -96,16 +96,6 @@ export function LandingNav() {
   // Auth-aware workspace CTA target (signed-out → /signup, never /app).
   const cta = useWorkspaceCta();
 
-  // Track scroll in React state so logo src (JSX attr) updates correctly
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   // Lock body scroll when drawer is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -120,14 +110,15 @@ export function LandingNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Light mode = scrolled past hero OR mobile menu is open
-  const isLight = scrolled || open;
+  // Hero is now a light, text-first surface, so the nav stays in its light
+  // product-cockpit mode from the first paint.
+  const isLight = true;
 
   // Nav link style depends on navbar mode
   const linkClass = cn(
     "rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200",
     isLight
-      ? "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+      ? "text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
       : "text-white/80 hover:bg-white/10 hover:text-white"
   );
 
@@ -138,7 +129,7 @@ export function LandingNav() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
           isLight
-            ? "border-b border-[var(--color-border-strong)] bg-white/85 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] backdrop-blur-xl"
+            ? "border-b border-[var(--color-border)] bg-white/88 shadow-[0_4px_20px_-14px_rgba(18,43,165,0.18)] backdrop-blur-xl"
             : "border-b border-white/10 bg-black/20 backdrop-blur-md"
         )}
       >
@@ -163,10 +154,7 @@ export function LandingNav() {
                   <Button
                     variant="primary"
                     size="sm"
-                    className={cn(
-                      "transition-all duration-300 shadow-xl",
-                      !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
-                    )}
+                    className="transition-all duration-300"
                   >
                     {cta.label}
                   </Button>
@@ -190,10 +178,7 @@ export function LandingNav() {
                   <Button
                     variant="primary"
                     size="sm"
-                    className={cn(
-                      "transition-all duration-300 shadow-xl",
-                      !isLight && "bg-white text-black shadow-white/10 hover:bg-white/90"
-                    )}
+                    className="transition-all duration-300"
                   >
                     {cta.label}
                   </Button>
@@ -211,7 +196,7 @@ export function LandingNav() {
               className={cn(
                 "grid h-10 w-10 place-items-center rounded-full transition-colors",
                 isLight
-                  ? "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)]"
+                  ? "text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)]"
                   : "text-white hover:bg-white/10"
               )}
             >
@@ -278,7 +263,7 @@ export function LandingNav() {
                     initial="hidden"
                     animate="visible"
                     onClick={close}
-                    className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                    className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
                   >
                     {l.label}
                   </motion.a>
@@ -294,7 +279,7 @@ export function LandingNav() {
                     <Link
                       to="/profile"
                       onClick={close}
-                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
                     >
                       Profile
                     </Link>
@@ -302,7 +287,7 @@ export function LandingNav() {
                     <Link
                       to="/login"
                       onClick={close}
-                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                      className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
                     >
                       Login
                     </Link>
@@ -320,7 +305,7 @@ export function LandingNav() {
                       <Link
                         to="/admin"
                         onClick={close}
-                        className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                        className="flex h-11 items-center rounded-xl px-4 text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
                       >
                         Admin console
                       </Link>
@@ -331,7 +316,7 @@ export function LandingNav() {
                         close();
                         void signOut();
                       }}
-                      className="flex h-11 w-full items-center rounded-xl px-4 text-left text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-stone-surface)]"
+                      className="flex h-11 w-full items-center rounded-xl px-4 text-left text-[15px] font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-surface-2)]"
                     >
                       Sign out
                     </button>

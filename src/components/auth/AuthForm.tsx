@@ -49,7 +49,7 @@ function AuthInput({
           className={cn(
             "h-11 w-full rounded-xl border border-[var(--color-border-strong)] bg-white px-4 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)]",
             "outline-none transition-shadow",
-            "focus:border-[var(--color-charcoal)] focus:shadow-[0_0_0_3px_rgba(52,52,51,0.1)]",
+            "focus:border-[var(--ff-violet)] focus:shadow-[0_0_0_3px_rgba(131,77,251,0.14)]",
             rightSlot && "pr-11"
           )}
         />
@@ -208,7 +208,7 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, onNee
             <button
               type="submit"
               disabled={disabled}
-              className="flex h-11 w-full items-center justify-center rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)] disabled:opacity-40"
             >
               {loading ? <Spinner /> : "Send reset link"}
             </button>
@@ -304,7 +304,7 @@ export function AuthForm({ mode, heading, subtext, submitLabel, onSuccess, onNee
             <button
               type="submit"
               disabled={disabled}
-              className="mt-1 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--color-charcoal)] text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+              className="mt-1 flex h-11 w-full items-center justify-center rounded-xl bg-[var(--ff-carbon)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)] disabled:opacity-40"
             >
               {loading ? <Spinner /> : submitLabel}
             </button>

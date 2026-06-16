@@ -61,7 +61,7 @@ export function PricingSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <div className="mb-12 text-center">
-            <h2 className="font-hero text-3xl text-[var(--color-charcoal)] sm:text-4xl">
+            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
               Simple, honest pricing.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-[var(--color-ink-soft)]">
@@ -77,18 +77,18 @@ export function PricingSection() {
               className={cn(
                 "relative flex h-full flex-col rounded-2xl p-6",
                 t.featured
-                  ? "border border-[var(--color-midnight)] bg-white shadow-[0_30px_60px_-40px_rgba(0,0,0,0.5)]"
+                  ? "border border-[var(--ff-violet)] bg-white shadow-[0_30px_60px_-42px_rgba(131,77,251,0.50)]"
                   : "card-surface",
               )}
             >
               {t.featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-midnight)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--ff-haiti)] px-3 py-1 text-[10px] font-semibold uppercase text-white">
                   Most popular
                 </span>
               )}
               <h3 className="text-lg font-semibold text-[var(--color-ink)]">{t.name}</h3>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="font-display text-3xl text-[var(--color-charcoal)]">{t.price}</span>
+                <span className="font-display text-3xl text-[var(--ff-ink)]">{t.price}</span>
                 {t.cadence && <span className="text-sm text-[var(--color-ink-faint)]">{t.cadence}</span>}
               </div>
               <p className="mt-2 text-sm text-[var(--color-ink-soft)]">{t.tagline}</p>
@@ -96,7 +96,7 @@ export function PricingSection() {
               <ul className="mt-5 flex flex-1 flex-col gap-2.5">
                 {t.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
-                    <Check size={16} className="mt-0.5 shrink-0 text-[var(--color-meadow)]" />
+                    <Check size={16} className="mt-0.5 shrink-0 text-[var(--ff-violet)]" />
                     {f}
                   </li>
                 ))}

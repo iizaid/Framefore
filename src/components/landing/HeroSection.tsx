@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/primitives";
 import { useWorkspaceCta } from "@/components/auth/useWorkspaceCta";
 
-const HEADLINE = ["Build AI videos", "before you generate them."];
+const HEADLINE = ["Plan AI videos", "scene by scene."];
 
 
 
@@ -14,24 +14,23 @@ export function HeroSection() {
   const cta = useWorkspaceCta();
 
   return (
-    <section className="relative z-0 flex min-h-[85vh] flex-col items-center justify-center overflow-hidden px-6 pb-32 pt-36 text-center sm:pt-44">
-      {/* Background Video */}
-      <div className="absolute inset-0 -z-20 h-full w-full bg-neutral-950">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-full w-full object-cover opacity-90"
-          src="/hero%20section%20video/hero%20section%20video.mp4"
-        />
-        {/* Subtle overall dark overlay for text readability */}
-        <div className="absolute inset-0 bg-neutral-950/40" />
-        {/* Short gradient overlay at the very bottom for a smooth blend into the page */}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[var(--color-bg)]" />
+    <section className="relative z-0 flex min-h-[82vh] flex-col items-center justify-center overflow-hidden bg-[var(--ff-blue-chalk)] px-6 pb-28 pt-32 text-center sm:pt-40">
+      <div className="absolute inset-0 -z-10 opacity-80">
+        <div className="absolute left-1/2 top-28 h-56 w-56 -translate-x-1/2 rounded-full bg-[var(--ff-violet)]/10 blur-3xl" />
+        <div className="absolute right-[18%] top-44 h-20 w-20 rounded-full bg-[var(--ff-yellow)]/35 blur-2xl" />
       </div>
 
-      <h1 className="font-hero max-w-4xl text-balance text-[2.6rem] leading-[1.02] text-white sm:text-6xl lg:text-7xl">
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="font-mono-ui mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--color-border-strong)] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase text-[var(--ff-haiti)] shadow-[var(--ff-shadow-button)]"
+      >
+        <Sparkles size={13} className="text-[var(--ff-violet)]" />
+        AI video planning workspace
+      </motion.div>
+
+      <h1 className="font-hero max-w-5xl text-balance text-[2.75rem] leading-[1.02] text-[var(--ff-ink)] sm:text-6xl lg:text-[76px]">
         {HEADLINE.map((line, li) => (
           <span key={li} className="block">
             {line.split(" ").map((w, i) => (
@@ -53,9 +52,9 @@ export function HeroSection() {
         initial={reduce ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 0.6 }}
-        className="mt-7 max-w-xl text-balance text-base text-white/80 sm:text-lg"
+        className="mt-7 max-w-2xl text-balance text-base leading-relaxed text-[var(--color-ink-soft)] sm:text-lg"
       >
-        Plan scenes, organize prompts, and perfect your vision before using AI video tools.
+        Organize scenes, prompts, references, notes, and timeline order before you generate in external AI video tools.
       </motion.p>
 
       <motion.div
@@ -70,7 +69,7 @@ export function HeroSection() {
           </Button>
         </Link>
         <a href="#canvas" className="w-full sm:w-auto">
-          <Button variant="subtle" size="md" className="w-full bg-white text-black hover:bg-white/90 sm:w-auto">
+          <Button variant="outline" size="md" className="w-full bg-white sm:w-auto">
             <Play size={15} /> See how it works
           </Button>
         </a>

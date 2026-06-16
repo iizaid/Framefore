@@ -13,7 +13,7 @@ export function DemoVideoSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <div className="mb-10 text-center">
-            <h2 className="font-hero text-3xl text-[var(--color-charcoal)] sm:text-4xl">
+            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
               See Framefore in action.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-ink-soft)]">
@@ -25,23 +25,23 @@ export function DemoVideoSection() {
 
         <Reveal delay={0.08}>
           {/* Dotted canvas wrapper keeps the product visual language */}
-          <div className="dot-canvas rounded-3xl p-4 sm:p-6">
+          <div className="dot-canvas rounded-[var(--radius-large)] border border-[var(--color-border)] p-4 shadow-[var(--ff-shadow-card)] sm:p-6">
             {/* Video card */}
             <button
               type="button"
-              className="group relative w-full cursor-pointer overflow-hidden rounded-2xl bg-neutral-900 shadow-2xl ring-1 ring-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-midnight)]"
+              className="group relative w-full cursor-pointer overflow-hidden rounded-[var(--radius-card)] bg-[var(--ff-haiti)] shadow-[0_24px_60px_-36px_rgba(24,16,43,0.65)] ring-1 ring-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ff-violet)]"
               onClick={() => setOpen(true)}
               aria-label="Play Framefore demo video"
             >
               <div className="relative aspect-video flex items-center justify-center">
                 {/* Gradient background fill */}
-                <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-950" />
+                <div className="absolute inset-0 bg-[var(--ff-haiti)]" />
 
                 {/* Subtle inner dot grid */}
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{
-                    backgroundImage: "radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px)",
+                    backgroundImage: "radial-gradient(rgba(245,243,255,0.25) 1px, transparent 1px)",
                     backgroundSize: "22px 22px",
                   }}
                 />
@@ -54,7 +54,7 @@ export function DemoVideoSection() {
                   <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-2xl transition-transform duration-300 group-hover:scale-110">
                     <Play size={22} className="ml-1 text-neutral-900" fill="currentColor" />
                   </div>
-                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/60 backdrop-blur-sm">
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/70 backdrop-blur-sm">
                     Demo coming soon
                   </span>
                 </div>

@@ -26,11 +26,11 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
   const topRole = roles[0];
 
   return (
-    <header className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b border-[#e8e8ec] bg-white/90 px-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b border-[var(--color-border)] bg-white/88 px-4 backdrop-blur-sm sm:px-6">
       {/* Mobile hamburger */}
       <button
         onClick={onOpenSidebar}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] lg:hidden"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] lg:hidden"
         aria-label="Open navigation"
       >
         <Menu size={18} />
@@ -38,29 +38,29 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
 
       {/* Breadcrumb */}
       <div className="min-w-0 flex-1">
-        <span className="text-xs text-[#9ca3af]">Admin</span>
-        <span className="mx-1.5 text-xs text-[#d1d5db]">/</span>
-        <span className="text-xs font-medium text-[#374151]">{sectionTitle}</span>
+        <span className="text-xs text-[var(--color-ink-faint)]">Admin</span>
+        <span className="mx-1.5 text-xs text-[var(--color-border-strong)]">/</span>
+        <span className="text-xs font-medium text-[var(--color-ink-soft)]">{sectionTitle}</span>
       </div>
 
       {/* Right actions */}
       <div className="flex shrink-0 items-center gap-2">
         {/* Role pill — only on larger screens */}
         {topRole && (
-          <span className="hidden items-center rounded-full bg-[#f3f4f6] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#374151] sm:flex">
+          <span className="hidden items-center rounded-full bg-[var(--ff-blue-chalk)] px-2.5 py-1 text-[11px] font-semibold uppercase text-[var(--ff-haiti)] ring-1 ring-inset ring-[var(--color-border)] sm:flex">
             {topRole}
           </span>
         )}
 
         {/* Loading indicator */}
         {loading && (
-          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--ff-violet)]" />
         )}
 
         {/* Back to app */}
         <Link
           to="/app"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#111111] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-black"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--ff-carbon)] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[var(--ff-haiti)]"
         >
           <ArrowLeft size={13} />
           <span>Back to app</span>

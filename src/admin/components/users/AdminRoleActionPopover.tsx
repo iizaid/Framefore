@@ -193,33 +193,33 @@ export function AdminRoleActionPopover({
         zIndex: 50,
         width: "min(360px, calc(100vw - 24px))",
       }}
-      className="overflow-hidden rounded-xl border border-[#e8e8ec] bg-white shadow-lg"
+      className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-[var(--ff-shadow-card)]"
     >
       {/* Header */}
-      <div className="border-b border-[#f3f4f6] px-4 py-3">
-        <p className="text-sm font-semibold text-[#111111]">Manage roles</p>
-        <p className="mt-0.5 truncate text-xs text-[#6b7280]" title={identity}>
+      <div className="border-b border-[var(--color-border)] px-4 py-3">
+        <p className="text-sm font-semibold text-[var(--ff-ink)]">Manage roles</p>
+        <p className="mt-0.5 truncate text-xs text-[var(--color-ink-faint)]" title={identity}>
           {identity}
         </p>
-        <p className="mt-0.5 text-[10px] text-[#9ca3af]">Changes are audited.</p>
+        <p className="mt-0.5 text-[10px] text-[var(--color-ink-faint)]">Changes are audited.</p>
       </div>
 
       {/* Feedback */}
       {errorMsg && (
-        <div className="flex items-start gap-2 border-b border-[#f3f4f6] bg-red-50 px-4 py-2.5 text-red-700">
+        <div className="flex items-start gap-2 border-b border-[var(--color-border)] bg-red-50 px-4 py-2.5 text-red-700">
           <ShieldAlert size={14} className="mt-0.5 shrink-0" />
           <p className="text-xs font-medium">{errorMsg}</p>
         </div>
       )}
       {successMsg && (
-        <div className="flex items-start gap-2 border-b border-[#f3f4f6] bg-emerald-50 px-4 py-2.5 text-emerald-700">
+        <div className="flex items-start gap-2 border-b border-[var(--color-border)] bg-emerald-50 px-4 py-2.5 text-emerald-700">
           <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
           <p className="text-xs font-medium">{successMsg}</p>
         </div>
       )}
 
       {/* Role rows */}
-      <div className="max-h-[min(480px,calc(100vh-120px))] divide-y divide-[#f3f4f6] overflow-y-auto">
+      <div className="max-h-[min(480px,calc(100vh-120px))] divide-y divide-[var(--color-border)] overflow-y-auto">
         {ALL_ROLES.map((role) => {
           const meta = ROLE_META[role];
           const hasRole = currentRoles.includes(role);
@@ -235,7 +235,7 @@ export function AdminRoleActionPopover({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-sm font-semibold capitalize text-[#111111]">
+                    <span className="text-sm font-semibold capitalize text-[var(--ff-ink)]">
                       {meta.label}
                     </span>
                     {hasRole && (
@@ -245,16 +245,16 @@ export function AdminRoleActionPopover({
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[11px] leading-snug text-[#9ca3af]">
+                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--color-ink-faint)]">
                     {meta.description}
                   </p>
                   {isSelfDemoting && (
-                    <p className="mt-1 text-[11px] text-[#6b7280]">
+                    <p className="mt-1 text-[11px] text-[var(--color-ink-faint)]">
                       You cannot revoke your own critical admin role from this console.
                     </p>
                   )}
                   {!isSelfDemoting && isOwnerOnlyBlocked && (
-                    <p className="mt-1 text-[11px] text-[#6b7280]">
+                    <p className="mt-1 text-[11px] text-[var(--color-ink-faint)]">
                       Only owners can change owner/admin roles.
                     </p>
                   )}
@@ -267,8 +267,8 @@ export function AdminRoleActionPopover({
                     onClick={() => handleActionClick(role, hasRole ? "revoke" : "grant")}
                     className={
                       hasRole
-                        ? "shrink-0 rounded-lg border border-[#e8e8ec] bg-white px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
-                        : "shrink-0 rounded-lg bg-[#f3f4f6] px-2.5 py-1 text-[11px] font-semibold text-[#374151] hover:bg-[#e5e7eb] disabled:opacity-40"
+                        ? "shrink-0 rounded-lg border border-[var(--color-border)] bg-white px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
+                        : "shrink-0 rounded-lg bg-[var(--color-surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-ink-soft)] hover:bg-[var(--ff-blue-chalk)] disabled:opacity-40"
                     }
                   >
                     {hasRole ? "Revoke" : "Grant"}
@@ -278,19 +278,19 @@ export function AdminRoleActionPopover({
 
               {/* Inline confirmation */}
               {isConfirmingThis && (
-                <div className="mt-2 rounded-lg border border-[#e8e8ec] bg-[#fafafa] p-3">
-                  <p className="text-[11px] font-medium text-[#374151]">
+                <div className="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+                  <p className="text-[11px] font-medium text-[var(--color-ink-soft)]">
                     {confirming.action === "grant"
                       ? `Grant ${role} to ${displayEmail}?`
                       : `Revoke ${role} from ${displayEmail}?`}
                   </p>
-                  <p className="text-[11px] text-[#9ca3af]">This action will be audited.</p>
+                  <p className="text-[11px] text-[var(--color-ink-faint)]">This action will be audited.</p>
                   <div className="mt-2.5 flex gap-2">
                     <button
                       type="button"
                       onClick={handleConfirm}
                       disabled={isWorking}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#111111] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#374151] disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-lg bg-[var(--ff-carbon)] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--ff-haiti)] disabled:opacity-50"
                     >
                       {isWorking && <Loader2 size={11} className="animate-spin" />}
                       {confirming.action === "grant" ? "Confirm grant" : "Confirm revoke"}
@@ -299,7 +299,7 @@ export function AdminRoleActionPopover({
                       type="button"
                       onClick={() => setConfirming(null)}
                       disabled={isWorking}
-                      className="rounded-lg border border-[#e8e8ec] bg-white px-3 py-1.5 text-[11px] font-medium text-[#6b7280] hover:bg-[#f9fafb] disabled:opacity-50"
+                      className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-[11px] font-medium text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] disabled:opacity-50"
                     >
                       Cancel
                     </button>

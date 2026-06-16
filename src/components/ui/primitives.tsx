@@ -6,16 +6,13 @@ type ButtonVariant = "primary" | "ghost" | "outline" | "danger" | "subtle" | "li
 type ButtonSize = "sm" | "md" | "icon";
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  // Midnight pill — the one dark punch against the cream canvas.
-  primary: "bg-[#121212] text-white hover:bg-[#343433]",
-  ghost: "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-stone-surface)]",
+  primary: "bg-[var(--ff-carbon)] text-white shadow-[var(--ff-shadow-button)] hover:bg-[var(--ff-haiti)]",
+  ghost: "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface-2)]",
   outline:
-    "bg-transparent text-[var(--color-ink)] shadow-[var(--color-border-strong)_0_0_0_1px_inset] hover:bg-[var(--color-stone-surface)]",
+    "bg-transparent text-[var(--color-ink)] shadow-[var(--color-border-strong)_0_0_0_1px_inset] hover:bg-[var(--color-surface-2)]",
   danger: "bg-[#ff2b3a] text-white hover:brightness-95",
-  // Warm stone secondary pill — paired hierarchy with the dark pill.
-  subtle: "bg-[var(--color-stone-surface)] text-[var(--color-ink)] hover:bg-[#ece9e4]",
-  // Ember text-link — the rare orange accent, never a fill.
-  link: "bg-transparent text-[var(--color-ember)] hover:opacity-80 !px-0 !rounded-none",
+  subtle: "bg-[var(--color-surface-2)] text-[var(--color-ink)] hover:bg-[var(--color-linen)]",
+  link: "bg-transparent text-[var(--ff-violet)] hover:text-[var(--ff-violet-deep)] !px-0 !rounded-none",
 };
 const buttonSizes: Record<ButtonSize, string> = {
   sm: "h-8 px-3.5 text-xs gap-1.5",
@@ -30,7 +27,7 @@ export const Button = forwardRef<
   <button
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#121212]/15 cursor-pointer",
+      "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-glow)] cursor-pointer",
       buttonVariants[variant],
       buttonSizes[size],
       className,
@@ -42,7 +39,7 @@ Button.displayName = "Button";
 
 /* ─── Input / Textarea ───────────────────────────────────────────────────── */
 const fieldBase =
-  "w-full rounded-[10px] bg-white border border-[var(--color-border-strong)] px-3 py-2 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition-colors focus:outline-none focus:border-[var(--color-ash)] focus:ring-2 focus:ring-[#121212]/10";
+  "w-full rounded-[var(--radius-button)] bg-white border border-[var(--color-border-strong)] px-3 py-2 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] transition-colors focus:outline-none focus:border-[var(--ff-violet)] focus:ring-2 focus:ring-[var(--color-accent-glow)]";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (

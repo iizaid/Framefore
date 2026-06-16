@@ -31,10 +31,10 @@ export function Footer() {
       <section id="faq" className="border-t border-[var(--color-border-strong)] bg-[var(--color-bg)] px-6 py-20 sm:py-24">
         <Reveal className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1fr_1.4fr]">
           <div>
-            <h2 className="font-hero text-3xl text-[var(--color-charcoal)]">Questions?</h2>
+            <h2 className="font-hero text-3xl text-[var(--ff-ink)]">Questions?</h2>
             <p className="mt-3 text-sm text-[var(--color-ink-soft)] leading-relaxed">
               Can't find what you need? Reach us at{" "}
-              <a href="mailto:support@framefore.app" className="font-semibold text-[var(--color-charcoal)] underline decoration-[var(--color-border-strong)] underline-offset-4 hover:decoration-[var(--color-charcoal)]">
+              <a href="mailto:support@framefore.app" className="font-semibold text-[var(--ff-violet)] underline decoration-[var(--color-border-strong)] underline-offset-4 hover:decoration-[var(--ff-violet)]">
                 support@framefore.app
               </a>
               .
@@ -48,7 +48,7 @@ export function Footer() {
                   key={f.q}
                   className={cn(
                     "overflow-hidden rounded-2xl border transition-colors duration-300",
-                    isOpen ? "border-[var(--color-charcoal)] bg-white shadow-sm" : "border-[var(--color-border-strong)] bg-[var(--color-surface)] hover:border-neutral-300 hover:bg-white"
+                    isOpen ? "border-[var(--ff-violet)] bg-white shadow-sm" : "border-[var(--color-border-strong)] bg-[var(--color-surface)] hover:border-neutral-300 hover:bg-white"
                   )}
                 >
                   <button
@@ -56,7 +56,7 @@ export function Footer() {
                     className="flex w-full items-center justify-between px-6 py-5 text-left"
                   >
                     <span className="text-sm font-semibold text-[var(--color-ink)]">{f.q}</span>
-                    <span className={cn("ml-4 shrink-0 transition-transform duration-300", isOpen ? "rotate-180 text-[var(--color-charcoal)]" : "text-[var(--color-ink-faint)]")}>
+                    <span className={cn("ml-4 shrink-0 transition-transform duration-300", isOpen ? "rotate-180 text-[var(--ff-violet)]" : "text-[var(--color-ink-faint)]")}>
                       {isOpen ? <Minus size={18} /> : <Plus size={18} />}
                     </span>
                   </button>
@@ -80,7 +80,7 @@ export function Footer() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-neutral-950 px-6 py-16 text-white sm:py-24">
+      <footer className="bg-[var(--ff-haiti)] px-6 py-16 text-white sm:py-24">
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
             {/* Left Col: Brand & Newsletter */}
@@ -94,14 +94,14 @@ export function Footer() {
               </p>
               
               <div className="mt-2">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">Subscribe to updates</p>
+                <p className="mb-2 text-xs font-semibold uppercase text-white/40">Subscribe to updates</p>
                 <form className="relative flex items-center" onSubmit={(e) => e.preventDefault()}>
                   <input
                     type="email"
                     placeholder="Enter your email"
                     className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-4 pr-10 text-sm text-white placeholder:text-white/40 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
                   />
-                  <button type="button" className="absolute right-2 grid h-7 w-7 place-items-center rounded-lg bg-white text-neutral-950 transition-transform hover:scale-105" aria-label="Subscribe">
+                  <button type="button" className="absolute right-2 grid h-7 w-7 place-items-center rounded-lg bg-white text-[var(--ff-haiti)] transition-transform hover:scale-105" aria-label="Subscribe">
                     <ArrowRight size={14} />
                   </button>
                 </form>
@@ -111,26 +111,26 @@ export function Footer() {
             {/* Right Col: Links */}
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Product</span>
+                <span className="text-xs font-semibold uppercase text-white/40">Product</span>
                 <a href="#product" className="text-sm text-white/60 transition-colors hover:text-white">Features</a>
                 <a href="#canvas" className="text-sm text-white/60 transition-colors hover:text-white">Canvas</a>
                 <a href="#pricing" className="text-sm text-white/60 transition-colors hover:text-white">Pricing</a>
                 <a href="#faq" className="text-sm text-white/60 transition-colors hover:text-white">FAQ</a>
               </div>
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Workspace</span>
+                <span className="text-xs font-semibold uppercase text-white/40">Workspace</span>
                 <Link to="/login" className="text-sm text-white/60 transition-colors hover:text-white">Log in</Link>
                 <Link to="/signup" className="text-sm text-white/60 transition-colors hover:text-white">Sign up</Link>
                 <Link to={cta.to} className="text-sm text-white/60 transition-colors hover:text-white">{cta.label}</Link>
               </div>
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Resources</span>
+                <span className="text-xs font-semibold uppercase text-white/40">Resources</span>
                 <a href="#" className="text-sm text-white/60 transition-colors hover:text-white">Documentation</a>
                 <a href="#" className="text-sm text-white/60 transition-colors hover:text-white">Blog</a>
                 <a href="#" className="text-sm text-white/60 transition-colors hover:text-white">Community</a>
               </div>
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Legal</span>
+                <span className="text-xs font-semibold uppercase text-white/40">Legal</span>
                 <span className="cursor-default text-sm text-white/40">Privacy Policy</span>
                 <span className="cursor-default text-sm text-white/40">Terms of Service</span>
               </div>

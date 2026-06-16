@@ -38,8 +38,8 @@ export function AdminUsersPage() {
         {/* Page header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[#111111]">Users</h1>
-            <p className="mt-0.5 text-sm text-[#9ca3af]">
+            <h1 className="text-xl font-bold text-[var(--ff-ink)]">Users</h1>
+            <p className="mt-0.5 text-sm text-[var(--color-ink-faint)]">
               Account access, profile status, and admin roles.
             </p>
           </div>
@@ -47,7 +47,7 @@ export function AdminUsersPage() {
             type="button"
             onClick={() => void query.refetch()}
             disabled={query.isFetching}
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#e8e8ec] bg-white px-4 py-2 text-sm font-medium text-[#374151] shadow-sm hover:bg-[#f9fafb] disabled:opacity-50"
+            className="inline-flex w-fit items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] shadow-sm hover:bg-[var(--color-surface-2)] disabled:opacity-50"
           >
             <RefreshCw size={14} className={query.isFetching ? "animate-spin" : undefined} />
             Refresh
@@ -55,21 +55,21 @@ export function AdminUsersPage() {
         </div>
 
         {/* Main card */}
-        <div className="overflow-hidden rounded-2xl border border-[#e8e8ec] bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-[var(--ff-shadow-card)]">
           {/* Card header */}
-          <div className="flex flex-col gap-3 border-b border-[#f3f4f6] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-[#111111]">Accounts</h2>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6b7280]">
+              <h2 className="text-sm font-semibold text-[var(--ff-ink)]">Accounts</h2>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-ink-faint)]">
                 <span>{data ? data.page.total.toLocaleString() : "0"} users</span>
-                <span className="hidden h-1 w-1 rounded-full bg-[#d1d5db] sm:block"></span>
+                <span className="hidden h-1 w-1 rounded-full bg-[var(--color-border-strong)] sm:block"></span>
                 <span>{activeFiltersCount} active filter{activeFiltersCount === 1 ? "" : "s"}</span>
-                <span className="hidden h-1 w-1 rounded-full bg-[#d1d5db] sm:block"></span>
+                <span className="hidden h-1 w-1 rounded-full bg-[var(--color-border-strong)] sm:block"></span>
                 <span>Actions audited</span>
               </div>
             </div>
             {isRefreshing && (
-              <span className="flex items-center gap-1.5 text-xs text-[#9ca3af]" aria-live="polite">
+              <span className="flex items-center gap-1.5 text-xs text-[var(--color-ink-faint)]" aria-live="polite">
                 <Loader2 size={12} className="animate-spin" />
                 Refreshing…
               </span>
@@ -77,7 +77,7 @@ export function AdminUsersPage() {
           </div>
 
           {/* Toolbar */}
-          <div className="border-b border-[#f3f4f6] px-5 py-3">
+          <div className="border-b border-[var(--color-border)] px-5 py-3">
             <AdminUsersToolbar
               search={search}
               role={role}
@@ -116,7 +116,7 @@ export function AdminUsersPage() {
           {data && data.users.length > 0 && (
             <>
               <AdminUsersTable users={data.users} />
-              <div className="border-t border-[#f3f4f6] px-5 py-3">
+              <div className="border-t border-[var(--color-border)] px-5 py-3">
                 <AdminUsersPagination page={data.page} disabled={query.isFetching} onOffsetChange={params.setOffset} />
               </div>
             </>
@@ -126,4 +126,3 @@ export function AdminUsersPage() {
     </AdminLayout>
   );
 }
-

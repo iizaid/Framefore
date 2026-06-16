@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Gauge,
   HardDrive,
   LayoutDashboard,
   LockKeyhole,
@@ -71,7 +70,7 @@ export function AdminSidebar({ open, collapsed, onClose, onToggleCollapse }: Adm
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col bg-[#0b0b0b] transition-all duration-300 lg:flex",
+          "hidden shrink-0 flex-col bg-[var(--ff-haiti)] transition-all duration-300 lg:flex",
           "sticky top-0 h-screen overflow-hidden",
           width
         )}
@@ -82,7 +81,7 @@ export function AdminSidebar({ open, collapsed, onClose, onToggleCollapse }: Adm
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col bg-[#0b0b0b] transition-transform duration-300 lg:hidden",
+          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col bg-[var(--ff-haiti)] transition-transform duration-300 lg:hidden",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -109,8 +108,12 @@ function SidebarContent({
     <div className="flex h-full flex-col overflow-hidden">
       {/* Brand */}
       <div className={cn("flex h-[60px] items-center border-b border-white/[0.06] px-4", collapsed ? "justify-center" : "gap-3")}>
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#0b0b0b]">
-          <Gauge size={15} />
+        <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-[var(--ff-haiti)]">
+          <img
+            src="/main logo white.svg"
+            alt="Framefore logo"
+            className="h-8 w-8 object-contain"
+          />
         </span>
         {!collapsed && (
           <div className="min-w-0">
@@ -125,7 +128,7 @@ function SidebarContent({
         {NAV_GROUPS.map((group) => (
           <div key={group.title} className="mb-4">
             {!collapsed && (
-              <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/30">
+            <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase text-white/35">
                 {group.title}
               </p>
             )}

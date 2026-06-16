@@ -16,7 +16,7 @@ export function FeatureCards() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <div className="mb-12 max-w-2xl">
-            <h2 className="font-hero text-3xl text-[var(--color-charcoal)] sm:text-4xl">
+            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
               Everything before you hit generate.
             </h2>
             <p className="mt-3 text-[var(--color-ink-soft)]">
@@ -29,8 +29,8 @@ export function FeatureCards() {
         <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <RevealItem key={title}>
-              <div className="card-surface group h-full rounded-[var(--radius-card)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_50px_-32px_rgba(0,0,0,0.5)]">
-                <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-midnight)] text-white transition-transform duration-200 group-hover:scale-105">
+              <div className="card-surface group h-full rounded-[var(--radius-card)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_46px_-32px_rgba(18,43,165,0.35)]">
+                <div className="mb-4 grid h-10 w-10 place-items-center rounded-xl bg-[var(--ff-haiti)] text-white transition-transform duration-200 group-hover:scale-105">
                   <Icon size={18} />
                 </div>
                 <h3 className="text-base font-semibold text-[var(--color-ink)]">{title}</h3>

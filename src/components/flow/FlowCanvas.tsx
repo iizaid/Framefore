@@ -49,8 +49,8 @@ import { FlowCallbacksContext, type CanvasToolMode, type FlowCallbacks } from ".
 const nodeTypes = { scene: SceneFlowNode, note: CanvasNoteNode, section: CanvasSectionNode };
 const edgeTypes = { order: OrderEdge, sceneLink: SceneLinkEdge };
 
-const ORDER_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.38)", width: 16, height: 16 };
-const LINK_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(18,18,18,0.78)", width: 18, height: 18 };
+const ORDER_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(24,16,43,0.38)", width: 16, height: 16 };
+const LINK_MARKER = { type: MarkerType.ArrowClosed, color: "rgba(131,77,251,0.78)", width: 18, height: 18 };
 
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2;
@@ -88,7 +88,7 @@ function WorkflowConnectionLine({
       <path
         d={path}
         fill="none"
-        stroke={isValid ? "rgba(18,18,18,0.88)" : "rgba(18,18,18,0.38)"}
+        stroke={isValid ? "rgba(131,77,251,0.92)" : "rgba(24,16,43,0.38)"}
         strokeWidth={isValid ? 2.4 : 1.8}
         strokeLinecap="round"
         strokeDasharray={isValid ? undefined : "6 5"}
@@ -97,8 +97,8 @@ function WorkflowConnectionLine({
         cx={toX}
         cy={toY}
         r={isValid ? 4.5 : 3.5}
-        fill={isValid ? "#121212" : "#ffffff"}
-        stroke={isValid ? "#121212" : "rgba(18,18,18,0.38)"}
+        fill={isValid ? "#834DFB" : "#ffffff"}
+        stroke={isValid ? "#834DFB" : "rgba(24,16,43,0.38)"}
         strokeWidth={1.8}
       />
     </g>
@@ -477,7 +477,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           connectionLineType={ConnectionLineType.Bezier}
           connectionLineComponent={WorkflowConnectionLine}
           connectionLineStyle={{
-            stroke: "rgba(18,18,18,0.45)",
+            stroke: "rgba(131,77,251,0.52)",
             strokeWidth: 2,
           }}
           defaultEdgeOptions={{ type: "sceneLink" }}
@@ -498,7 +498,7 @@ function FlowCanvasInner({ project, activeId, onSelect, onEdit }: Props) {
           panOnDrag={toolMode === "pan"}
           selectionOnDrag={toolMode === "select"}
         >
-          <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="rgba(18,18,18,0.16)" />
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="rgba(24,16,43,0.16)" />
           {toolMode !== "select" && (
             <Panel position="top-center">
               <div className="pointer-events-none rounded-full border border-[var(--color-border-strong)] bg-white/90 px-3 py-1.5 text-[11px] font-medium text-[var(--color-ink-soft)] shadow-sm backdrop-blur">

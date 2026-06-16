@@ -20,7 +20,8 @@ import type { Project, Scene } from "@/types";
 import { cn, copyToClipboard, formatDuration } from "@/lib/utils";
 import { scenePrompt } from "@/lib/export";
 import { resolvedVideoModel } from "@/lib/models";
-import { essentialGaps } from "@/lib/colors";
+import { essentialGaps, sceneColor } from "@/lib/colors";
+import { getAutoSceneColor } from "@/lib/sceneColors";
 import { STATUS_STYLE } from "@/lib/constants";
 import { useStore } from "@/store/useStore";
 import { ConfirmDialog } from "./ui/Modal";
@@ -65,6 +66,12 @@ export function CompactSceneCard({
   const hasContinuity = scene.continuityNotes.trim().length > 0 || scene.endingBeat.trim().length > 0;
   const statusStyle = STATUS_STYLE[scene.status];
 
+  const autoColor = getAutoSceneColor(scene.id, index);
+  const userColor = scene.color !== "none" ? sceneColor(scene.color) : null;
+  const accent = userColor ? userColor.hex : autoColor.accent;
+  const accentBorder = userColor ? "var(--color-border-strong)" : autoColor.border;
+  const softAccent = userColor ? "var(--color-surface-2)" : autoColor.soft;
+
   const handleCopyPrompt = async () => {
     const ok = await copyToClipboard(scenePrompt(scene, project.global));
     toast(ok ? "Scene prompt copied" : "Copy failed", ok ? "success" : "error");
@@ -82,11 +89,10 @@ export function CompactSceneCard({
         <div
           {...attributes}
           {...listeners}
+        style={isActive ? { borderColor: accent, backgroundColor: accent, color: "white" } : { borderColor: accentBorder }}
           className={cn(
             "group/node z-10 grid h-8 w-8 cursor-grab touch-none place-items-center rounded-full border bg-white text-[13px] font-semibold tabular-nums shadow-sm transition-colors active:cursor-grabbing sm:h-9 sm:w-9 sm:text-sm",
-            isActive
-              ? "border-[var(--color-ink)] bg-[#121212] text-white"
-              : "border-[var(--color-border-strong)] text-[var(--color-ink-soft)] group-hover/card:border-[var(--color-ink)] group-hover/card:bg-neutral-50 group-hover/card:text-[var(--color-ink)]",
+            !isActive && "text-[var(--color-ink-soft)] group-hover/card:bg-neutral-50 group-hover/card:text-[var(--color-ink)]"
           )}
           title="Drag to reorder"
           aria-label={`Scene ${index + 1}, drag to reorder`}
@@ -108,21 +114,30 @@ export function CompactSceneCard({
       <motion.div
         layout
         onClick={onSelect}
+        style={{
+          borderColor: isActive ? accent : accentBorder,
+          outline: isActive ? `2px solid ${accent}` : undefined,
+          outlineOffset: isActive ? "2px" : undefined,
+        }}
         className={cn(
-          "group/card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white transition-all duration-200 sm:flex-row",
+          "group/card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[var(--radius-card)] border bg-[var(--color-surface)] transition-all duration-200 sm:flex-row",
           isDragging
             ? "border-neutral-400 shadow-lg"
-            : "border-[var(--color-border-strong)] hover:border-neutral-300 hover:shadow-[0_6px_22px_-8px_rgba(0,0,0,0.12)]",
-          isActive && "border-neutral-400 ring-2 ring-neutral-900/15 ring-offset-2 ring-offset-[var(--color-bg)]",
+            : "hover:shadow-[0_12px_30px_-22px_rgba(18,43,165,0.20)]",
         )}
       >
+        {/* Color accent strip on left edge (desktop) or top edge (mobile) */}
+        <div className="absolute left-0 top-0 h-1 w-full sm:h-full sm:w-1" style={{ background: accent }} />
 
         {/* Thumbnail area */}
         <div className="shrink-0 px-3 pt-3 sm:pb-3 sm:pr-0">
           {cover ? (
             <ImageThumb id={cover.id} alt={scene.title} className="h-40 w-full rounded-lg object-cover ring-1 ring-inset ring-black/10 sm:h-36 sm:w-56" />
           ) : (
-            <div className="flex h-40 w-full items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-ink-faint)] ring-1 ring-inset ring-[var(--color-border-strong)] sm:h-36 sm:w-56">
+            <div
+              style={{ backgroundColor: softAccent, boxShadow: `inset 0 0 0 1px ${accentBorder}` }}
+              className="flex h-40 w-full items-center justify-center rounded-lg text-[var(--color-ink-faint)] sm:h-36 sm:w-56"
+            >
               <ImageIcon size={24} />
             </div>
           )}
@@ -142,7 +157,7 @@ export function CompactSceneCard({
                 </h3>
                 {gaps.length > 0 && (
                   <div
-                    className="flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--ff-yellow-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ff-haiti)] ring-1 ring-inset ring-[#F0E100]/60"
                     title={`Missing: ${gaps.join(", ")}`}
                   >
                     <AlertTriangle size={10} />
@@ -182,7 +197,7 @@ export function CompactSceneCard({
 
           <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4">
             {scene.role !== "none" && (
-              <span className="rounded-full bg-[#121212] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-[var(--ff-haiti)] px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
                 {scene.role}
               </span>
             )}
@@ -233,7 +248,7 @@ function IconBtn({ title, onClick, children }: { title: string; onClick: () => v
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="grid h-9 w-9 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] sm:h-7 sm:w-7"
+      className="grid h-9 w-9 place-items-center rounded-md text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)] sm:h-7 sm:w-7"
     >
       {children}
     </button>

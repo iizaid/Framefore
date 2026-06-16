@@ -16,7 +16,7 @@ export function ExportSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <h2 className="font-hero text-3xl text-[var(--color-charcoal)] sm:text-4xl">
+            <h2 className="font-hero text-3xl text-[var(--ff-ink)] sm:text-4xl">
               Export the plan.<br />Generate with confidence.
             </h2>
 
@@ -38,7 +38,7 @@ export function ExportSection() {
                   key={label}
                   className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-[var(--color-surface-2)]"
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--color-stone-surface)] text-[var(--color-ink)]">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--ff-blue-chalk)] text-[var(--ff-violet)]">
                     <Icon size={16} />
                   </span>
                   <div className="min-w-0">

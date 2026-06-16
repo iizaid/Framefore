@@ -271,7 +271,7 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
 
           {/* Docked timeline overview — supporting tool, under the board */}
           {project.scenes.length > 0 && (
-            <div className="shrink-0 border-t border-[var(--color-border-strong)] bg-white/80 backdrop-blur-sm">
+            <div className="shrink-0 border-t border-[var(--color-border-strong)] bg-[var(--color-bg)]/85 backdrop-blur-sm">
               <TimelineStrip
                 project={project}
                 activeId={activeId}
@@ -286,7 +286,7 @@ export function Workspace({ projectId, onBack }: { projectId: string; onBack: ()
 
           {/* Right panel — Scene Inspector, only when a scene is selected */}
           {activeScene && (
-            <aside className="hidden w-[340px] shrink-0 border-l border-[var(--color-border-strong)] bg-white lg:block">
+            <aside className="hidden w-[340px] shrink-0 border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] lg:block">
               <SceneInspector
                 project={project}
                 scene={activeScene}
@@ -403,8 +403,8 @@ function MobileNavBtn({
       className={cn(
         "flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-medium transition-colors",
         primary
-          ? "bg-[#121212] text-white"
-          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+          ? "bg-[var(--ff-haiti)] text-white"
+          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]",
       )}
     >
       {children}
@@ -445,7 +445,7 @@ function WorkspaceRail({
   return (
     <nav
       className={cn(
-        "hidden shrink-0 flex-col gap-0.5 border-r border-[var(--color-border-strong)] bg-[var(--color-surface-2)] p-2 transition-[width] duration-200 md:flex",
+        "hidden shrink-0 flex-col gap-0.5 border-r border-[var(--color-border)] bg-white/72 p-2 transition-[width] duration-200 md:flex",
         expanded ? "w-52 max-lg:w-16" : "w-16",
       )}
     >
@@ -453,14 +453,14 @@ function WorkspaceRail({
       <div className={cn("mb-2 flex items-center", expanded ? "justify-between pl-1.5 pr-0.5 max-lg:justify-center max-lg:px-0" : "justify-center")}>
         <a href="/" title="Go to home page" className="flex items-center gap-2 transition-transform hover:scale-[1.03]">
           <img src="/black.svg" alt="Framefore home" className="h-7 w-7" />
-          {expanded && <span className="text-sm font-semibold tracking-tight text-[var(--color-ink)] max-lg:hidden">Framefore</span>}
+          {expanded && <span className="text-sm font-semibold text-[var(--color-ink)] max-lg:hidden">Framefore</span>}
         </a>
         {expanded && (
           <button
             onClick={() => setExpanded(false)}
             title="Collapse sidebar"
             aria-label="Collapse sidebar"
-            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)] max-lg:hidden"
+            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)] max-lg:hidden"
           >
             <ChevronsLeft size={16} />
           </button>
@@ -484,7 +484,7 @@ function WorkspaceRail({
           onClick={() => setExpanded(true)}
           title="Expand sidebar"
           aria-label="Expand sidebar"
-          className="mt-auto grid h-10 w-10 place-items-center self-center rounded-[12px] text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]"
+          className="mt-auto grid h-10 w-10 place-items-center self-center rounded-[12px] text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
         >
           <ChevronsLeft size={18} className="rotate-180" />
         </button>
@@ -515,8 +515,8 @@ function RailItem({
         "flex h-10 items-center rounded-[12px] text-sm font-medium transition-colors",
         expanded ? "gap-3 px-3 max-lg:w-10 max-lg:justify-center max-lg:self-center max-lg:px-0" : "w-10 justify-center self-center px-0",
         active
-          ? "bg-[#121212] text-white"
-          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+          ? "bg-[var(--ff-haiti)] text-white shadow-[var(--ff-shadow-button)]"
+          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]",
       )}
     >
       <span className="grid shrink-0 place-items-center">{children}</span>
@@ -545,8 +545,8 @@ function ViewToggle({
       className={cn(
         "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
         active
-          ? "bg-[#121212] text-white"
-          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+          ? "bg-[var(--ff-haiti)] text-white"
+          : "text-[var(--color-ink-faint)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]",
       )}
     >
       {children}
@@ -558,7 +558,7 @@ function ViewToggle({
 function BoardEmpty({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-strong)] py-20 text-center">
-      <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-neutral-900 text-white">
+      <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--ff-haiti)] text-white">
         <Film size={24} />
       </div>
       <h3 className="text-lg font-semibold">Start your story flow</h3>

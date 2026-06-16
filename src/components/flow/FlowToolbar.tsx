@@ -65,7 +65,7 @@ export function FlowToolbar({
   const checks = project ? productionChecklist(project).filter((c) => c.count > 0) : [];
 
   return (
-    <div className="relative flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white/95 p-1.5 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.45)] backdrop-blur max-sm:gap-0.5 max-sm:p-2">
+    <div className="relative flex items-center gap-1 rounded-full border border-[var(--color-border-strong)] bg-white/95 p-1.5 shadow-[0_18px_44px_-28px_rgba(18,43,165,0.32)] backdrop-blur max-sm:gap-0.5 max-sm:p-2">
       {/* 1 · Work mode */}
       <div className="flex items-center gap-1" aria-label="Canvas modes">
         <ToolBtn label="Select (V)" active={toolMode === "select"} onClick={() => onToolModeChange("select")}>
@@ -111,7 +111,7 @@ export function FlowToolbar({
           <ToolBtn label="More tools & checks" active={moreOpen} onClick={() => setMoreOpen((o) => !o)}>
             <MoreHorizontal size={16} />
             {checks.length > 0 && (
-              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
+              <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--ff-yellow)] ring-1 ring-[var(--ff-haiti)]/20" aria-hidden />
             )}
           </ToolBtn>
           {moreOpen && (
@@ -131,7 +131,7 @@ export function FlowToolbar({
                 <MenuBtn label="Zoom in" onClick={() => zoomIn({ duration: 150 })}><Plus size={15} /></MenuBtn>
                 <MenuBtn label="Zoom out" onClick={() => zoomOut({ duration: 150 })}><Minus size={15} /></MenuBtn>
                 <MenuDivider />
-                <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)]">
+                <div className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase text-[var(--color-ink-faint)]">
                   <span className="flex items-center gap-1.5"><ListChecks size={12} /> Production checklist</span>
                 </div>
                 {checks.length === 0 ? (
@@ -140,7 +140,7 @@ export function FlowToolbar({
                   checks.map((c) => (
                     <div key={c.key} className="flex items-center justify-between gap-2 px-3 py-1 text-[12px] text-[var(--color-ink-soft)]">
                       <span>{c.label}</span>
-                      <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">{c.count}</span>
+                      <span className="shrink-0 rounded-full bg-[var(--ff-yellow-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--ff-haiti)] ring-1 ring-inset ring-[#F0E100]/60">{c.count}</span>
                     </div>
                   ))
                 )}
@@ -158,7 +158,7 @@ export function FlowToolbar({
       </ToolBtn>
       {shortcutsOpen && (
         <div className="absolute bottom-full right-0 mb-2 w-72 overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-white p-2 text-sm shadow-xl">
-          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)]">
+          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase text-[var(--color-ink-faint)]">
             Shortcuts
           </div>
           <div className="max-h-[60vh] overflow-auto">
@@ -214,8 +214,8 @@ function ToolBtn({
         disabled
           ? "cursor-not-allowed text-[var(--color-ink-faint)] opacity-35"
           : active
-            ? "bg-[#121212] text-white shadow-sm"
-            : "text-[var(--color-ink-soft)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-ink)]",
+            ? "bg-[var(--ff-haiti)] text-white shadow-sm"
+            : "text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]",
         className,
       )}
     >

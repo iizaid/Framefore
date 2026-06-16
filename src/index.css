@@ -1,74 +1,125 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sometype+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
 
-/* ShotBoard — "Family" design system.
-   Warm cream canvas, graphite ink, midnight pill buttons, ember-orange as a
-   rare accent, inset warm-stone borders instead of drop shadows. */
+/* Framefore visual identity.
+   Design-folder driven tokens: violet-led brand moments, Haiti/ink contrast,
+   Blue Chalk canvas, restrained yellow signal states, and subtle blue shadows. */
 @theme {
-  /* ── Family brand palette ── */
-  --color-warm-canvas: #fbfaf9;
-  --color-stone-surface: #f2f0ed;
-  --color-parchment-card: #f8f7f4;
-  --color-graphite: #474645;
-  --color-charcoal: #343433;
-  --color-midnight: #121212;
-  --color-ash: #848281;
-  --color-fog: #c6c6c6;
-  --color-smoke: #a7a7a7;
-  --color-ember: #ff3e00;
-  --color-meadow: #00ca48;
-  --color-sky: #0090ff;
-  --color-sunburst: #ffbb26;
+  /* ── Framefore brand palette ── */
+  --ff-violet: #834DFB;
+  --ff-violet-base: #7B68EE;
+  --ff-violet-deep: #6647F0;
+  --ff-violet-muted: #514B81;
 
-  /* ── Override Tailwind neutral steps so existing neutral-* utilities adopt
-        the warm Family tones automatically (no per-component edits). ── */
-  --color-neutral-50: #f8f7f4;
-  --color-neutral-100: #f2f0ed;
-  --color-neutral-200: #ece9e4;
-  --color-neutral-300: #ddd9d3;
-  --color-neutral-400: #a7a7a7;
-  --color-neutral-500: #848281;
-  --color-neutral-600: #5c5b59;
-  --color-neutral-700: #474645;
-  --color-neutral-800: #343433;
-  --color-neutral-900: #121212;
+  --ff-yellow: #F0E100;
+  --ff-yellow-soft: #FFF8B8;
+  --ff-yellow-muted: #B9A900;
+
+  --ff-haiti: #18102B;
+  --ff-ink: #090C1D;
+  --ff-carbon: #202023;
+  --ff-charcoal: #292D34;
+  --ff-slate: #646464;
+  --ff-steel: #7C828D;
+
+  --ff-blue-chalk: #F5F3FF;
+  --ff-paper: #F8F9FA;
+  --ff-linen: #E9EBF0;
+  --ff-cloud: #E8E8E8;
+  --ff-mist: #D9D9D9;
+  --ff-white: #FFFFFF;
+
+  --ff-canvas-bg: #F5F3FF;
+  --ff-canvas-dot: rgba(24, 16, 43, 0.10);
+  --ff-canvas-dot-strong: rgba(131, 77, 251, 0.12);
+
+  --ff-radius-button: 9px;
+  --ff-radius-card: 12px;
+  --ff-radius-large: 24px;
+  --ff-radius-pill: 54px;
+
+  --ff-shadow-card: rgba(18, 43, 165, 0.04) 0px 1px 1px -0.5px,
+                    rgba(18, 43, 165, 0.04) 0px 3px 3px -1.5px,
+                    rgba(18, 43, 165, 0.04) 0px 6px 6px -3px,
+                    rgba(18, 43, 165, 0.04) 0px 12px 12px -6px;
+  --ff-shadow-button: rgba(13, 21, 48, 0.04) 0px 4px 4px 0px;
+
+  /* Design reference aliases from public/design. */
+  --color-brand-violet: var(--ff-violet);
+  --color-signal-blue: #0091ff;
+  --color-ultra-violet: var(--ff-violet-deep);
+  --color-muted-violet: var(--ff-violet-muted);
+  --color-midnight-ink: var(--ff-ink);
+  --color-charcoal: var(--ff-charcoal);
+  --color-carbon: var(--ff-carbon);
+  --color-graphite: #1a202c;
+  --color-slate: var(--ff-slate);
+  --color-steel: var(--ff-steel);
+  --color-fog: #b3b3b3;
+  --color-ash: #838383;
+  --color-mist: var(--ff-mist);
+  --color-cloud: var(--ff-cloud);
+  --color-paper: var(--ff-paper);
+  --color-frost: #edf6fd;
+  --color-linen: var(--ff-linen);
+  --color-pure-white: var(--ff-white);
+  --color-true-black: #000000;
+  --color-abyss: #090909;
+  --color-violet-glow: #b38cff;
+
+  /* Compatibility aliases used by existing components. */
+  --color-warm-canvas: var(--ff-blue-chalk);
+  --color-stone-surface: var(--ff-linen);
+  --color-parchment-card: var(--ff-paper);
+  --color-midnight: var(--ff-haiti);
+  --color-smoke: var(--ff-steel);
+  --color-ember: var(--ff-violet);
+  --color-meadow: #2f9e73;
+  --color-sky: #0091ff;
+  --color-sunburst: var(--ff-yellow);
+
+  /* ── Override Tailwind neutral steps to adopt the cool product palette. ── */
+  --color-neutral-50: var(--ff-paper);
+  --color-neutral-100: var(--ff-blue-chalk);
+  --color-neutral-200: var(--ff-linen);
+  --color-neutral-300: var(--ff-mist);
+  --color-neutral-400: var(--ff-steel);
+  --color-neutral-500: var(--ff-slate);
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: var(--ff-charcoal);
+  --color-neutral-800: var(--ff-carbon);
+  --color-neutral-900: var(--ff-haiti);
 
   /* ── Semantic tokens used throughout the app ── */
-  --color-bg: #fbfaf9;
-  --color-surface: #ffffff;
-  --color-surface-2: #f8f7f4;
-  --color-elevated: #ffffff;
-  --color-border: #f2f0ed;
-  --color-border-strong: #e7e3dd;
-  --color-ink: #343433;
-  --color-ink-soft: #474645;
-  --color-ink-faint: #848281;
-  --color-accent: #121212;
-  --color-accent-soft: #343433;
-  --color-accent-glow: #00000010;
-  --color-ember: #ff3e00;
+  --color-bg: var(--ff-blue-chalk);
+  --color-surface: var(--ff-white);
+  --color-surface-2: var(--ff-paper);
+  --color-elevated: var(--ff-white);
+  --color-border: var(--ff-cloud);
+  --color-border-strong: var(--ff-mist);
+  --color-ink: var(--ff-ink);
+  --color-ink-soft: var(--ff-charcoal);
+  --color-ink-faint: var(--ff-slate);
+  --color-accent: var(--ff-violet);
+  --color-accent-soft: var(--ff-violet-deep);
+  --color-accent-glow: rgba(131, 77, 251, 0.14);
+  --color-warning: var(--ff-yellow);
 
-  --radius-card: 10px;
+  /* ── Canvas-specific tokens ── */
+  --color-canvas-bg: var(--ff-canvas-bg);
+  --color-canvas-grid: var(--ff-canvas-dot);
+  --color-canvas-grid-strong: var(--ff-canvas-dot-strong);
+
+  --radius-card: var(--ff-radius-card);
+  --radius-button: var(--ff-radius-button);
+  --radius-large: var(--ff-radius-large);
+  --radius-pill: var(--ff-radius-pill);
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", "Tahoma", sans-serif;
-  --font-display: "Fraunces", "Playfair Display", Georgia, serif;
-
-  /* ── Hero / big-title display face ──────────────────────────────────────────
-     Used only for the landing hero headline and large section titles — never for
-     body copy. Direction: editorial + a slightly technical, pixel-leaning
-     personality. We ship NO font file (no unlicensed downloads). To upgrade,
-     drop a licensed font into /public/fonts and uncomment the @font-face below,
-     then this variable picks it up automatically.
-
-     @font-face {
-       font-family: "FrameforeDisplay";
-       src: url("/fonts/your-licensed-font.woff2") format("woff2");
-       font-weight: 400 700;
-       font-display: swap;
-     }
-     …and add "FrameforeDisplay" to the front of --font-hero. */
-  --font-hero: "Fraunces", "Times New Roman", Georgia, serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-hero: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "Sometype Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @layer base {
@@ -96,7 +147,7 @@
     background-color: var(--color-bg);
     color: var(--color-ink-soft);
     font-family: var(--font-sans);
-    letter-spacing: -0.011em;
+    letter-spacing: 0;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
@@ -107,46 +158,50 @@
 }
 
 @layer utilities {
-  /* Inset warm-stone border — the Family card definition mechanism. */
+  /* Flat product card surface with subtle design-reference shadow. */
   .card-surface {
     background: var(--color-surface);
-    box-shadow: var(--color-stone-surface) 0 0 0 1px inset;
+    box-shadow:
+      var(--color-border) 0 0 0 1px inset,
+      var(--ff-shadow-card);
   }
   .card-surface-hover:hover {
     box-shadow:
-      var(--color-stone-surface) 0 0 0 1px inset,
-      rgba(0, 0, 0, 0.04) 0px 1px 6px 0px,
-      rgba(0, 0, 0, 0.05) 0px 0px 24px 0px;
+      var(--color-border-strong) 0 0 0 1px inset,
+      rgba(18, 43, 165, 0.06) 0px 10px 30px -18px;
   }
   .glass {
     background: color-mix(in srgb, var(--color-bg) 86%, transparent);
     backdrop-filter: blur(12px);
   }
-  /* Subtle dotted work-canvas — faint graphite dots, faded toward the edges so
-     content stays the focus. Used only on the workspace board area. */
+  /* Subtle dotted work-canvas on Blue Chalk. */
   .dot-canvas {
-    background-image: radial-gradient(rgba(18, 18, 18, 0.09) 1px, transparent 1px);
+    background-color: var(--color-canvas-bg);
+    background-image:
+      radial-gradient(var(--color-canvas-grid) 1px, transparent 1px),
+      radial-gradient(var(--color-canvas-grid-strong) 1px, transparent 1px);
     background-size: 18px 18px;
-    background-position: -1px -1px;
+    background-position: -1px -1px, -1px -1px;
   }
   .card-glow:hover {
     box-shadow:
-      var(--color-stone-surface) 0 0 0 1px inset,
-      rgba(0, 0, 0, 0.04) 0px 1px 6px 0px,
-      rgba(0, 0, 0, 0.06) 0px 8px 28px -6px;
+      var(--color-border-strong) 0 0 0 1px inset,
+      rgba(18, 43, 165, 0.08) 0px 14px 36px -22px;
   }
   .font-display {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.03em;
+    font-weight: 700;
+    letter-spacing: 0;
   }
-  /* Hero / large display headings. Tight tracking + optical weight for a
-     confident, editorial presence. */
+  /* Hero / large display headings. Heavy, compact hierarchy without negative tracking. */
   .font-hero {
     font-family: var(--font-hero);
-    font-weight: 600;
-    letter-spacing: -0.035em;
+    font-weight: 800;
+    letter-spacing: 0;
     font-feature-settings: "ss01" 1;
+  }
+  .font-mono-ui {
+    font-family: var(--font-mono);
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -163,7 +218,7 @@
    The library ships neutral defaults; we override handles, selection, and the
    pane background so the canvas reads as part of the app, not a bolt-on. */
 .react-flow {
-  background: var(--color-surface-2);
+  background: var(--color-canvas-bg);
 }
 .flow-canvas--connect .react-flow__pane {
   cursor: crosshair;
@@ -193,7 +248,7 @@
     transform 0.12s ease,
     box-shadow 0.12s ease,
     background-color 0.12s ease;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 4px rgba(24, 16, 43, 0.18);
   z-index: 5;
 }
 .react-flow__handle.scene-handle::after {
@@ -215,10 +270,10 @@
   opacity: 1;
 }
 .react-flow__handle.scene-handle--in {
-  background: var(--color-neutral-400);
+  background: var(--ff-violet-muted);
 }
 .react-flow__handle.scene-handle--out {
-  background: var(--color-neutral-900);
+  background: var(--ff-violet);
   cursor: crosshair;
 }
 .react-flow__handle.note-handle {
@@ -234,42 +289,42 @@
   background: rgba(255, 255, 255, 0.98);
 }
 .react-flow__handle.note-handle--out {
-  background: var(--color-neutral-600);
+  background: var(--ff-violet-muted);
 }
 .flow-canvas--connect .react-flow__handle.note-handle {
   opacity: 0.96;
 }
 .react-flow__handle.note-handle:hover {
-  border-color: var(--color-neutral-500);
+  border-color: var(--ff-violet);
   background: #fff;
   box-shadow:
-    0 0 0 5px rgba(18, 18, 18, 0.07),
-    0 3px 8px rgba(0, 0, 0, 0.16);
+    0 0 0 5px rgba(131, 77, 251, 0.10),
+    0 3px 8px rgba(24, 16, 43, 0.16);
 }
 .react-flow__handle-left.scene-handle:hover {
   transform: translate(-50%, -50%) scale(1.18);
   box-shadow:
-    0 0 0 4px rgba(18, 18, 18, 0.08),
-    0 3px 8px rgba(0, 0, 0, 0.2);
+    0 0 0 4px rgba(131, 77, 251, 0.12),
+    0 3px 8px rgba(24, 16, 43, 0.2);
 }
 .react-flow__handle-right.scene-handle:hover {
   transform: translate(50%, -50%) scale(1.18);
   box-shadow:
-    0 0 0 4px rgba(18, 18, 18, 0.08),
-    0 3px 8px rgba(0, 0, 0, 0.2);
+    0 0 0 4px rgba(131, 77, 251, 0.12),
+    0 3px 8px rgba(24, 16, 43, 0.2);
 }
 /* While a connection is being dragged, light up valid target handles. */
 .react-flow__handle-connecting,
 .react-flow__handle-valid {
   opacity: 1 !important;
-  background: var(--color-neutral-900) !important;
+  background: var(--ff-violet) !important;
   box-shadow:
-    0 0 0 5px rgba(18, 18, 18, 0.1),
-    0 3px 8px rgba(0, 0, 0, 0.22) !important;
+    0 0 0 5px rgba(131, 77, 251, 0.14),
+    0 3px 8px rgba(24, 16, 43, 0.22) !important;
 }
 .react-flow__handle-connecting:not(.react-flow__handle-valid) {
   background: var(--color-neutral-300) !important;
-  box-shadow: 0 0 0 4px rgba(18, 18, 18, 0.04) !important;
+  box-shadow: 0 0 0 4px rgba(24, 16, 43, 0.04) !important;
 }
 .workflow-connection-line {
   pointer-events: none;
@@ -317,6 +372,6 @@
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-smoke);
+  background: var(--color-steel);
   background-clip: content-box;
 }

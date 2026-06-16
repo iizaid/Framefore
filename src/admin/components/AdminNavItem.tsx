@@ -31,7 +31,7 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, collapsed = f
         {!iconOnly && (
           <>
             <span className="min-w-0 flex-1 truncate">{label}</span>
-            <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#6b7280]">
+            <span className="shrink-0 text-[9px] font-semibold uppercase text-white/35">
               Soon
             </span>
           </>
@@ -50,7 +50,7 @@ export function AdminNavItem({ icon: Icon, label, to, end = false, collapsed = f
           BASE_CLASS,
           iconOnly ? "justify-center" : "gap-2.5",
           isActive
-            ? "bg-[#1a1a1a] font-medium text-white shadow-sm ring-1 ring-white/10 before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-white"
+            ? "bg-white/[0.08] font-medium text-white shadow-sm ring-1 ring-white/10 before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-[var(--ff-violet)]"
             : "text-[#9ca3af] hover:bg-white/[0.04] hover:text-white"
         )
       }

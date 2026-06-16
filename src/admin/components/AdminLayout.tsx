@@ -11,7 +11,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7] text-[#111111]">
+    <div className="min-h-screen bg-[var(--ff-blue-chalk)] text-[var(--ff-ink)]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

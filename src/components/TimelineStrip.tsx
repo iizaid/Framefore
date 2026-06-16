@@ -15,7 +15,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { Project, Scene } from "@/types";
 import { cn, formatDuration } from "@/lib/utils";
-import { essentialGaps } from "@/lib/colors";
+import { essentialGaps, sceneColor } from "@/lib/colors";
+import { getAutoSceneColor } from "@/lib/sceneColors";
 import { totalSceneSeconds } from "@/lib/estimate";
 
 // Clean monochrome "production overview" docked under the board. Each scene is a
@@ -51,17 +52,18 @@ export function TimelineStrip({
     }
   };
 
+  /* Docked timeline wrapper — Blue Chalk/Paper surface, not pure white. */
   return (
     <div className="px-4 py-2.5 sm:px-8">
       <div className="mx-auto max-w-6xl">
         {/* Header row — also the collapse control */}
         <button
           onClick={onToggle}
-          className="mb-2 flex w-full items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
+          className="mb-2 flex w-full items-center gap-2 text-[11px] font-semibold uppercase text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
         >
           <ChevronDown size={13} className={cn("transition-transform", !open && "-rotate-90")} />
           Timeline
-          <span className="ml-auto flex items-center gap-1.5 font-sans text-[11px] font-medium normal-case tracking-normal text-[var(--color-ink-soft)]">
+          <span className="ml-auto flex items-center gap-1.5 font-sans text-[11px] font-medium normal-case text-[var(--color-ink-soft)]">
             <Clock size={11} className="text-[var(--color-ink-faint)]" />
             {formatDuration(total)} · {scenes.length} scene{scenes.length === 1 ? "" : "s"}
           </span>
@@ -111,7 +113,15 @@ function TimelineSegment({
   const gaps = essentialGaps(scene);
   const grow = Math.max(scene.durationSec, 1);
 
-  const style: React.CSSProperties = {
+  // Resolve scene accent — same logic as CanvasCard so card ↔ timeline always match.
+  const autoColor = getAutoSceneColor(scene.id, index);
+  const userColor = scene.color !== "none" ? sceneColor(scene.color) : null;
+  const accent = userColor ? userColor.hex : autoColor.accent;
+  // softBg from userColor is a Tailwind class name; for inline style we use autoColor.soft for auto ones.
+  const segmentSoftBg = userColor ? undefined : autoColor.soft;
+  const segmentBorder = userColor ? undefined : autoColor.border;
+
+  const dndStyle: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     flexGrow: grow,
@@ -119,20 +129,37 @@ function TimelineSegment({
     zIndex: isDragging ? 50 : undefined,
   };
 
+  // Inline style for the segment container — safe from Tailwind purging
+  const segmentInlineStyle: React.CSSProperties = {
+    ...dndStyle,
+    borderColor: isDragging
+      ? undefined
+      : isActive
+        ? accent
+        : segmentBorder ?? undefined,
+    backgroundColor: isDragging
+      ? "var(--color-surface)"
+      : isActive
+        ? segmentSoftBg ?? "var(--color-surface)"
+        : segmentSoftBg ?? "var(--color-surface)",
+    borderTopWidth: 2,
+    borderTopColor: isDragging ? undefined : accent,
+    borderTopStyle: "solid",
+  };
+
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={segmentInlineStyle}
       {...attributes}
       {...listeners}
       title={`Scene ${String(index + 1).padStart(2, "0")}${scene.title ? ` — ${scene.title}` : ""} · ${formatDuration(scene.durationSec)} · drag to reorder`}
       className={cn(
         "group/seg relative flex min-h-12 min-w-[72px] cursor-grab touch-none select-none flex-col justify-between overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors active:cursor-grabbing sm:min-h-0 sm:min-w-[52px]",
-        isDragging
-          ? "border-neutral-400 bg-white text-[var(--color-ink)] shadow-lg"
-          : isActive
-            ? "border-neutral-900 bg-neutral-900 text-white"
-          : "border-[var(--color-border-strong)] bg-white text-[var(--color-ink-soft)] hover:border-neutral-300 hover:bg-[var(--color-surface-2)]",
+        isDragging && "shadow-lg",
+        isActive && "ring-1",
+        userColor && !isActive && !isDragging && userColor.segment,
+        userColor && isActive && "bg-white",
       )}
     >
       <button
@@ -141,23 +168,25 @@ function TimelineSegment({
         className="absolute inset-0"
         aria-label={`Select scene ${index + 1}`}
       />
-      <div className="pointer-events-none flex items-center justify-between gap-1">
-        <span className="text-[11px] font-semibold tabular-nums leading-none">
+      {/* Colored top border accent strip */}
+      <div
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: accent }}
+      />
+      <div className="pointer-events-none flex items-center justify-between gap-1 pt-1">
+        <span
+          style={{ color: isActive ? accent : "var(--color-ink-soft)" }}
+          className="text-[11px] font-semibold tabular-nums leading-none"
+        >
           {String(index + 1).padStart(2, "0")}
         </span>
         {gaps.length > 0 && (
           <span
-            className={cn("h-1.5 w-1.5 shrink-0 rounded-full", isActive && !isDragging ? "bg-white" : "bg-neutral-400")}
+            className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--ff-yellow)] ring-1 ring-[var(--ff-haiti)]/20"
             title={`Missing: ${gaps.join(", ")}`}
           />
         )}
       </div>
-      <span
-        className={cn(
-          "pointer-events-none mt-1 truncate text-[10px] font-medium leading-none",
-          isActive && !isDragging ? "text-white/80" : "text-[var(--color-ink-faint)]",
-        )}
-      >
+      <span className="pointer-events-none mt-1 truncate text-[10px] font-medium leading-none text-[var(--color-ink-faint)]">
         {formatDuration(scene.durationSec)}
       </span>
       {isActive && (onMoveLeft || onMoveRight) && (
@@ -166,19 +195,21 @@ function TimelineSegment({
             type="button"
             disabled={!onMoveLeft}
             onClick={(e) => { e.stopPropagation(); onMoveLeft?.(); }}
-            className="grid h-6 flex-1 place-items-center rounded bg-white/15 text-white disabled:opacity-30"
+            style={{ background: `${accent}30` }}
+            className="grid h-6 flex-1 place-items-center rounded disabled:opacity-30"
             aria-label="Move scene left"
           >
-            <ChevronLeft size={13} />
+            <ChevronLeft size={13} style={{ color: accent }} />
           </button>
           <button
             type="button"
             disabled={!onMoveRight}
             onClick={(e) => { e.stopPropagation(); onMoveRight?.(); }}
-            className="grid h-6 flex-1 place-items-center rounded bg-white/15 text-white disabled:opacity-30"
+            style={{ background: `${accent}30` }}
+            className="grid h-6 flex-1 place-items-center rounded disabled:opacity-30"
             aria-label="Move scene right"
           >
-            <ChevronRight size={13} />
+            <ChevronRight size={13} style={{ color: accent }} />
           </button>
         </div>
       )}
